@@ -63,6 +63,9 @@ let main argv =
             | [ StorageArgs.Write results ] ->
                 let entityId = results.GetResult(WriteArgs.EntityId)
                 do! writeToConsole storage entityId
+            | [ StorageArgs.Delete results ] ->
+                let entityId = results.GetResult(DeleteArgs.EntityId) |> EntityId
+                do! storage.Delete(entityId)
             | [ StorageArgs.Files results ] ->
                 match results.GetAllResults() with
                 | [ FilesArgs.Stream ] -> do! printFilesFromConsole storage

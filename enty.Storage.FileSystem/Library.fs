@@ -12,10 +12,12 @@ open enty.Core
 type IStorage =
     abstract Write: reader: PipeReader * entityId: EntityId -> Async<unit>
     abstract Read: writer: PipeWriter * entityId: EntityId -> Async<unit>
+    abstract Delete: entityId: EntityId -> Async<unit>
 
 type IFileSystemStorage =
     inherit IStorage
     abstract GetFiles: entityIds: AsyncSeq<EntityId> -> AsyncSeq<string>
+
 
 type FileSystemStorage(path: string, ?nestingLevel) =
     let nestingLevel =
@@ -47,8 +49,15 @@ type FileSystemStorage(path: string, ?nestingLevel) =
             do! fileReader.CopyToAsync(writer) |> Async.AwaitTask
         }
 
+        member this.Delete(entityId) = async {
+            let entityFilePath = getEntityFilePath entityId
+            // TODO: Cleanup the containing folder if it became empty
+            do File.Delete(entityFilePath)
+        }
+
         member this.GetFiles(entityIds) = asyncSeq {
             for entityId in entityIds do
                 let path = getEntityFilePath entityId
                 yield path
         }
+
