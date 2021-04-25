@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="ClaParsing.fs" />
         <Compile Include="Args.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>

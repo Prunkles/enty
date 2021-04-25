@@ -2,7 +2,6 @@
 ```
 add: EntityId * Sense -> IO ()
 remove: EntityId -> IO ()
-modify: EntityId * Sense -> IO ()
 
 query: Query -> EntityId[]
 ```

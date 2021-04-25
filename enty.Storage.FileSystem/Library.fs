@@ -1,8 +1,5 @@
 ﻿namespace enty.Storage.FileSystem
 
-open System
-open System.Collections.Generic
-open System.Diagnostics
 open System.IO
 open System.IO.Pipelines
 open FSharp.Control

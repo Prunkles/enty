@@ -11,6 +11,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Utils", "enty.Utils\en
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Storage.FileSystem", "enty.Storage.FileSystem\enty.Storage.FileSystem.fsproj", "{65B33B6E-F615-46F8-8E5E-0398BDDA2A14}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind", "enty.Mind\enty.Mind.fsproj", "{FD71CE1D-D379-4E41-81CB-59B59E916767}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,17 @@ Global
 		{65B33B6E-F615-46F8-8E5E-0398BDDA2A14}.Release|x64.Build.0 = Release|Any CPU
 		{65B33B6E-F615-46F8-8E5E-0398BDDA2A14}.Release|x86.ActiveCfg = Release|Any CPU
 		{65B33B6E-F615-46F8-8E5E-0398BDDA2A14}.Release|x86.Build.0 = Release|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Debug|x64.Build.0 = Debug|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Debug|x86.Build.0 = Debug|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Release|x64.ActiveCfg = Release|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Release|x64.Build.0 = Release|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Release|x86.ActiveCfg = Release|Any CPU
+		{FD71CE1D-D379-4E41-81CB-59B59E916767}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
