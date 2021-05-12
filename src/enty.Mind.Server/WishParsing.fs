@@ -135,9 +135,8 @@ module Grammar =
         <|> value
         <?> "value"
     
-    
     let listExpr =
-        let element = wishExpr |>> ListExpr.Element
+        let element = wishExpr <?> "list element" |>> ListExpr.Element
         
         let operator = genericOperatorExpr element ListExpr.Operator
         
@@ -172,12 +171,82 @@ module Wish =
     open FParsec
     open Grammar
     
-    let rec private parsedToWish (expr: WishExpr) =
-        expr
-    
-    let parse input =
+    let parseExpr input =
         let p = ws >>. wishExpr .>> ws .>> eof
         let result = runParserOnString p () "" input
         match result with
-        | Success (p, _, _) -> Result.Ok (parsedToWish p)
+        | Success (expr, _, _) -> Result.Ok expr
         | Failure (err, _, _) -> Result.Error err
+    
+    let private exprToWish (expr: WishExpr) : Wish =
+        
+        let rec appendPath path wish =
+            match wish with
+            | Wish.ValueIs (path', value) -> Wish.ValueIs (path @ path', value)
+            | Wish.ListContains (path', element) -> Wish.ListContains (path @ path', element)
+            | Wish.MapFieldIs (path', fieldKey, fieldValue) -> Wish.MapFieldIs (path @ path', fieldKey, fieldValue)
+            | Wish.And (lhs, rhs) -> Wish.And (appendPath path lhs, appendPath path rhs)
+            | Wish.Or (lhs, rhs) -> Wish.Or (appendPath path lhs, appendPath path rhs)
+            | Wish.Not (wish) -> Wish.Not (appendPath path wish)
+        
+        let operatorExprToWish mapping operatorExpr =
+            match operatorExpr with
+            | OperatorExpr.And (lhs, rhs, _) ->
+                Wish.And (mapping lhs, mapping rhs)
+            | OperatorExpr.Or (lhs, rhs) ->
+                Wish.Or (mapping lhs, mapping rhs)
+            | OperatorExpr.Not (valueExpr) ->
+                Wish.Not (mapping valueExpr)
+        
+        let rec valueExprToWish (valueExpr: ValueExpr) : Wish =
+            match valueExpr with
+            | ValueExpr.Value v -> Wish.ValueIs ([], v)
+            | ValueExpr.Operator op -> operatorExprToWish valueExprToWish op
+        
+        and listExprToWish (listExpr: ListExpr) : Wish =
+            match listExpr with
+            | ListExpr.Element elWishExpr ->
+                match elWishExpr with
+                | WishExpr.Value valueExpr ->
+                    let rec valueExprInListExprToWish valueExpr =
+                        match valueExpr with
+                        | ValueExpr.Value value ->
+                            let path = []
+                            Wish.ListContains (path, value)
+                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInListExprToWish
+                    valueExprInListExprToWish valueExpr
+                | WishExpr.List listExpr ->
+                    listExprToWish listExpr |> appendPath [ WishPathEntry.ListEntry ]
+                | WishExpr.Map mapExpr ->
+                    mapExprToWish mapExpr |> appendPath [ WishPathEntry.ListEntry ]
+            | ListExpr.Operator op -> operatorExprToWish listExprToWish op
+            
+        and mapExprToWish (mapExpr: MapExpr) : Wish =
+            match mapExpr with
+            | MapExpr.Field (path, fieldKey, fieldWishExpr) ->
+                match fieldWishExpr with
+                | WishExpr.Value valueExpr ->
+                    let rec valueExprInMapToWish valueExpr =
+                        match valueExpr with
+                        | ValueExpr.Value value ->
+                            let path = path |> List.map WishPathEntry.MapEntry
+                            Wish.MapFieldIs (path, fieldKey, value)
+                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInMapToWish
+                    valueExprInMapToWish valueExpr
+                | WishExpr.List listExpr ->
+                    let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
+                    listExprToWish listExpr |> appendPath path
+                | WishExpr.Map mapExpr ->
+                    let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
+                    mapExprToWish mapExpr |> appendPath path
+            | MapExpr.Operator op -> operatorExprToWish mapExprToWish op
+        
+        and wishExprToWish (expr: WishExpr) : Wish =
+            match expr with
+            | WishExpr.Value valueExpr -> valueExprToWish valueExpr
+            | WishExpr.List listExpr -> listExprToWish listExpr
+            | WishExpr.Map mapExpr -> mapExprToWish mapExpr
+        
+        wishExprToWish expr
+    
+    let parse input = parseExpr input |> Result.map exprToWish
