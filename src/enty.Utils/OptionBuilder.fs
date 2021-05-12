@@ -8,3 +8,9 @@ type OptionBuilder() =
 [<AutoOpen>]
 module OptionBuilderImpl =
     let option = OptionBuilder()
+
+module Option =
+    
+    let ofTryByref = function
+        | true, v -> Some v
+        | false, _ -> None
