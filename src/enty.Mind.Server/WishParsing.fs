@@ -185,23 +185,26 @@ module Wish =
             | Wish.ValueIs (path', value) -> Wish.ValueIs (path @ path', value)
             | Wish.ListContains (path', element) -> Wish.ListContains (path @ path', element)
             | Wish.MapFieldIs (path', fieldKey, fieldValue) -> Wish.MapFieldIs (path @ path', fieldKey, fieldValue)
-            | Wish.And (lhs, rhs) -> Wish.And (appendPath path lhs, appendPath path rhs)
-            | Wish.Or (lhs, rhs) -> Wish.Or (appendPath path lhs, appendPath path rhs)
-            | Wish.Not (wish) -> Wish.Not (appendPath path wish)
+            | Wish.Operator op ->
+                match op with
+                | WishOperator.And (lhs, rhs) -> WishOperator.And (appendPath path lhs, appendPath path rhs)
+                | WishOperator.Or (lhs, rhs) -> WishOperator.Or (appendPath path lhs, appendPath path rhs)
+                | WishOperator.Not (wish) -> WishOperator.Not (appendPath path wish)
+                |> Wish.Operator
         
         let operatorExprToWish mapping operatorExpr =
             match operatorExpr with
             | OperatorExpr.And (lhs, rhs, _) ->
-                Wish.And (mapping lhs, mapping rhs)
+                WishOperator.And (mapping lhs, mapping rhs)
             | OperatorExpr.Or (lhs, rhs) ->
-                Wish.Or (mapping lhs, mapping rhs)
+                WishOperator.Or (mapping lhs, mapping rhs)
             | OperatorExpr.Not (valueExpr) ->
-                Wish.Not (mapping valueExpr)
+                WishOperator.Not (mapping valueExpr)
         
         let rec valueExprToWish (valueExpr: ValueExpr) : Wish =
             match valueExpr with
             | ValueExpr.Value v -> Wish.ValueIs ([], v)
-            | ValueExpr.Operator op -> operatorExprToWish valueExprToWish op
+            | ValueExpr.Operator op -> operatorExprToWish valueExprToWish op |> Wish.Operator
         
         and listExprToWish (listExpr: ListExpr) : Wish =
             match listExpr with
@@ -213,13 +216,13 @@ module Wish =
                         | ValueExpr.Value value ->
                             let path = []
                             Wish.ListContains (path, value)
-                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInListExprToWish
+                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInListExprToWish |> Wish.Operator
                     valueExprInListExprToWish valueExpr
                 | WishExpr.List listExpr ->
                     listExprToWish listExpr |> appendPath [ WishPathEntry.ListEntry ]
                 | WishExpr.Map mapExpr ->
                     mapExprToWish mapExpr |> appendPath [ WishPathEntry.ListEntry ]
-            | ListExpr.Operator op -> operatorExprToWish listExprToWish op
+            | ListExpr.Operator op -> operatorExprToWish listExprToWish op |> Wish.Operator
             
         and mapExprToWish (mapExpr: MapExpr) : Wish =
             match mapExpr with
@@ -231,7 +234,7 @@ module Wish =
                         | ValueExpr.Value value ->
                             let path = path |> List.map WishPathEntry.MapEntry
                             Wish.MapFieldIs (path, fieldKey, value)
-                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInMapToWish
+                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInMapToWish |> Wish.Operator
                     valueExprInMapToWish valueExpr
                 | WishExpr.List listExpr ->
                     let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
@@ -239,7 +242,7 @@ module Wish =
                 | WishExpr.Map mapExpr ->
                     let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
                     mapExprToWish mapExpr |> appendPath path
-            | MapExpr.Operator op -> operatorExprToWish mapExprToWish op
+            | MapExpr.Operator op -> operatorExprToWish mapExprToWish op |> Wish.Operator
         
         and wishExprToWish (expr: WishExpr) : Wish =
             match expr with

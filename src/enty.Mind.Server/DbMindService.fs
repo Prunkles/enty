@@ -62,48 +62,67 @@ type DbMindService(db: EntyDataConnection) =
         }
     
         member this.Wish(wish) = asyncSeq {
+            let selectEntitiesByIds ids = query {
+                for e in db.Entities do
+                join id in ids on (e.Id = id)
+                select e
+            }
+            let stringPath path =
+                path
+                |> Seq.map (function
+                    | WishPathEntry.ListEntry -> "[*]"
+                    | WishPathEntry.MapEntry key -> $".{key}"
+                )
+                |> String.concat ""
+            let selectEntitiesByJsonpath jsonpath = query {
+                for entity in db.Entities do
+                where (Sql.Json.op_AtAt(entity.Sense, jsonpath))
+                select entity
+            }
+            
             let rec queryWish wish =
                 match wish with
+                | Wish.ValueIs (path, value) ->
+                    let path = stringPath path
+                    let jsonpath = $"${path} == \"{value}\""
+                    selectEntitiesByJsonpath jsonpath
                 | Wish.MapFieldIs (path, key, value) ->
-                    let path = path |> List.toArray
-                    query {
-                        for entity in db.Entities do
-                        where (Sql.Json.PathText(entity.Sense, path) = value)
-                        select entity
-                    }
+                    let path = stringPath path
+                    let jsonpath = $"${path}.{key} == \"{value}\""
+                    selectEntitiesByJsonpath jsonpath
                 | Wish.ListContains (path, value) ->
-                    let path = path |> List.toArray
-                    query {
-                        for e in db.Entities do
-                        where (Sql.Json.Contains(Sql.Json.Path(e.Sense, path), value))
-                        select e
-                    }
-                | Wish.Not wish ->
+                    let path = stringPath path
+                    let jsonpath = $"${path}[*] == \"{value}\""
+                    selectEntitiesByJsonpath jsonpath
+                | Wish.Operator wishOperator -> queryWishOperator wishOperator
+            
+            and queryWishOperator wishOperator =
+                match wishOperator with
+                | WishOperator.Not wish ->
                     let nes = queryWish wish
-                    let ids = db.Entities.Select(fun e -> e.Id).Except(nes.Select(fun ne -> ne.Id))
-                    query {
-                        for e in db.Entities do
-                        join id in ids on (e.Id = id)
-                        select e
-                    }
-                | Wish.And (wish1, wish2) ->
+                    let ids =
+                        db.Entities.Select(fun e -> e.Id)
+                            .Except(nes.Select(fun ne -> ne.Id))
+                    selectEntitiesByIds ids
+                | WishOperator.And (wish1, wish2) ->
                     let e1s = queryWish wish1
                     let e2s = queryWish wish2
-                    query {
+                    let ids = query {
                         for e1 in e1s do
                         join e2 in e2s
                             on (e1.Id = e2.Id)
-                        select e1
+                        select e1.Id
                     }
-                | Wish.Or (wish1, wish2) ->
+                    selectEntitiesByIds (ids.Distinct())
+                | WishOperator.Or (wish1, wish2) ->
                     let e1s = queryWish wish1
                     let e2s = queryWish wish2
-                    let ids = e1s.Select(fun e1 -> e1.Id).Union(e2s.Select(fun e2 -> e2.Id)).Distinct()
-                    query {
-                        for e in db.Entities do
-                        join u in ids on (e.Id = u)
-                        select e
-                    }
+                    let ids =
+                        e1s.Select(fun e1 -> e1.Id)
+                            .Union(e2s.Select(fun e2 -> e2.Id))
+                            .Distinct()
+                    selectEntitiesByIds ids
+                
             
             let q = query {
                 for e in queryWish wish do

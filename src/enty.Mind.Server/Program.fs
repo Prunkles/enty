@@ -17,26 +17,30 @@ open LinqToDB.AspNet.Logging
 open enty.Core
 open enty.Mind
 open enty.Mind.Server
+open enty.Mind.WishParsing
 open enty.Mind.Server.Database
 
 
-type Worker(mindService: IMindService) =
+type Worker(mindService: IMindService, logger: ILogger<Worker>) =
     inherit BackgroundService()
 
     override this.ExecuteAsync(stoppingToken) =
         let work = async {
+            let wishInput = """{
+                sys {
+                    file:name <!"test1.png">
+                } &
+                tags [ t00 & t02 | t11 ]
+            }"""
             let wish =
-                WishAst.Or (
-                    WishAst.Not <| WishAst.Equals (["a"], "1"),
-                    WishAst.Equals (["a"], "2")
-                )
-//                WishAst.Not (WishAst.Equals (["a"], "2"))
-//                WishAst.Equals (["b"], "1")
+                Wish.parse wishInput
+                |> function Ok x -> x | Error err -> logger.LogError($"Failed parsing: {err}"); failwith err
+            logger.LogDebug($"Parsed wish: %A{wish}")
             
             let entityIds = mindService.Wish(wish)
-            do!
-                entityIds
-                |> AsyncSeq.iter (printfn "%A")
+            let! entityIds = entityIds |> AsyncSeq.toArrayAsync
+            let eIdsStr = entityIds |> Seq.map (fun (EntityId x) -> string x) |> String.concat "\n"
+            logger.LogInformation($"Found entities:\n{eIdsStr}")
         }
         Async.StartAsTask(work, cancellationToken=stoppingToken) :> Task
 

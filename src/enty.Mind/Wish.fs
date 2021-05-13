@@ -5,13 +5,17 @@ type WishPathEntry =
     | MapEntry of key: string
     | ListEntry
 
+    
+
 [<RequireQualifiedAccess>]
-type WishAst =
+type Wish =
     | MapFieldIs of path: WishPathEntry list * key: string * value: string
     | ListContains of path: WishPathEntry list * value: string
     | ValueIs of path: WishPathEntry list * value: string
-    | And of WishAst * WishAst
-    | Or of WishAst * WishAst
-    | Not of WishAst
+    | Operator of WishOperator
 
-type Wish = WishAst
+and [<RequireQualifiedAccess>]
+    WishOperator =
+    | And of Wish * Wish
+    | Or of Wish * Wish
+    | Not of Wish
