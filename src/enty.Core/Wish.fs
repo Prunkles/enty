@@ -1,11 +1,9 @@
-namespace enty.Mind
+namespace enty.Core
 
 [<RequireQualifiedAccess>]
 type WishPathEntry =
     | MapEntry of key: string
     | ListEntry
-
-    
 
 [<RequireQualifiedAccess>]
 type Wish =

@@ -10,11 +10,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
+      <ProjectReference Include="..\Khonsu\Khonsu.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.0.3" />
+      <PackageReference Include="Fable.Core" Version="3.2.7" />
+      <PackageReference Include="Thoth.Json" Version="5.1.0" />
     </ItemGroup>
 
 </Project>

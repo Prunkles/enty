@@ -7,6 +7,7 @@
 
     <ItemGroup>
       <Compile Include="OptionBuilder.fs" />
+      <Compile Include="Result.fs" />
     </ItemGroup>
 
 </Project>

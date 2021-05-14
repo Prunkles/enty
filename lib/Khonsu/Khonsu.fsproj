@@ -6,15 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Coding.fs" />
         <Compile Include="Library.fs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.0.3" />
     </ItemGroup>
 
 </Project>

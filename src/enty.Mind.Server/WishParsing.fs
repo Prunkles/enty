@@ -1,6 +1,7 @@
 module enty.Mind.WishParsing
 
 open FParsec
+open enty.Core
 
 
 module Grammar =

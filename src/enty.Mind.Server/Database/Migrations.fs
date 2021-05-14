@@ -6,6 +6,7 @@ open FSharp.Control.Tasks.V2
 open FluentMigrator
 open FluentMigrator.Postgres
 open FluentMigrator.Runner
+open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 
@@ -25,6 +26,7 @@ type Init() =
 
 let configureMigrations (services: IServiceCollection) (connectionString: string) =
     services
+//        .AddLogging(fun b -> b.AddFluentMigratorConsole() |> ignore)
         .AddFluentMigratorCore()
         .ConfigureRunner(fun b ->
             b.AddPostgres()
@@ -33,14 +35,7 @@ let configureMigrations (services: IServiceCollection) (connectionString: string
             |> ignore
         )
 
-//let updateDatabase (services: IServiceProvider) =
-//    let runner = services.GetRequiredService<IMigrationRunner>()
-//    runner.MigrateUp()
-
-type MigratorService(runner: IMigrationRunner) =
-    inherit BackgroundService()
-
-    override this.ExecuteAsync(stoppingToken) =
-        task {
-            runner.MigrateUp()
-        } :> Task
+let migrate (app: IApplicationBuilder) =
+    use scope = app.ApplicationServices.CreateScope()
+    let runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>()
+    runner.MigrateUp()

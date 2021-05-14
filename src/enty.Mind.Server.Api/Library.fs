@@ -16,8 +16,19 @@ type GetSenseRequest =
 type GetSenseResponse =
     { Sense: JsonValue }
 
-type QueryRequest =
-    { Query: JsonValue }
+type PaginationRequest =
+    { Page: int
+      PageSize: int }
 
-//type QueryResponse =
-//    {  }
+type PaginationResponse =
+    { Page: int
+      PageSize: int
+      Pages: int }
+
+type WishRequest =
+    { WishString: string
+      Pagination: PaginationRequest }
+
+type WishResponse =
+    { EntityIds: Guid[]
+      Pagination: PaginationResponse }
