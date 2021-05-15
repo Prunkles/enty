@@ -8,8 +8,10 @@
     <ItemGroup>
         <Compile Include="Library.fs" />
         <Compile Include="Sense.fs" />
+        <Compile Include="Traits.fs" />
         <Compile Include="Wish.fs" />
         <Compile Include="Experimental.fs" />
+        <Compile Include="Entity.fs" />
     </ItemGroup>
 
     <ItemGroup>

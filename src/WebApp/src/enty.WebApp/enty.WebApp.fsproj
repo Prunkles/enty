@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <Content Include="index.html" />
+      <Compile Include="EntityRendering.fs" />
       <Compile Include="Program.fs" />
     </ItemGroup>
 
