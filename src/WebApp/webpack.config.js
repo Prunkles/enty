@@ -18,6 +18,15 @@ const CONFIG = {
     devServer: {
         port: 8080,
         host: '0.0.0.0',
+        proxy: {
+            '/mind/**': {
+                target: 'http://localhost:' + '5000',
+                changeOrigin: true,
+                pathRewrite: {
+                    '^/mind': '',
+                },
+            }
+        }
     }
 }
 
@@ -79,15 +88,7 @@ module.exports = {
         port: CONFIG.devServer.port,
         hot: true,
         inline: true,
-        proxy: {
-            '/api/**': {
-                target: 'http://localhost:' + '5000',
-                changeOrigin: true,
-                pathRewrite: {
-                    '^/api': '',
-                },
-            }
-        }
+        proxy: CONFIG.devServer.proxy,
     },
     // - babel-loader: transforms JS to old syntax (compatible with old browsers)
     // - file-loader: Moves files referenced in the code (fonts, images) into output folder

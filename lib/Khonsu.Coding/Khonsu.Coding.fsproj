@@ -6,8 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Coding.fs" />
-        <Compile Include="Library.fs" />
+        <Compile Include="Decoding.fs" />
+        <Compile Include="Encoding.fs" />
     </ItemGroup>
 
 </Project>

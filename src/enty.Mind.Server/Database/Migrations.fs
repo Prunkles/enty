@@ -1,14 +1,11 @@
 module enty.Mind.Server.Database.Migrations
 
 open System
-open System.Threading.Tasks
-open FSharp.Control.Tasks.V2
 open FluentMigrator
-open FluentMigrator.Postgres
 open FluentMigrator.Runner
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
-open Microsoft.Extensions.Hosting
+
 
 [<Migration(20210508172000L)>]
 type Init() =
@@ -23,6 +20,7 @@ type Init() =
     override this.Down() =
         this.Delete.Table("Entities")
         |> ignore
+
 
 let configureMigrations (services: IServiceCollection) (connectionString: string) =
     services

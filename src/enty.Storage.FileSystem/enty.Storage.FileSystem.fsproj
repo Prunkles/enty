@@ -6,7 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Mime.fs" />
         <Compile Include="Library.fs" />
     </ItemGroup>
 

@@ -6,16 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
+        <Compile Include="Json.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.0.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Include="Library.fs" />
-      <Compile Include="Wish.fs" />
+      <ProjectReference Include="..\Khonsu.Coding\Khonsu.Coding.fsproj" />
     </ItemGroup>
 
 </Project>

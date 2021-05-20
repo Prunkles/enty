@@ -27,38 +27,23 @@ open enty.Mind.WishParsing
 open enty.Mind.Server.Database
 
 
-//type Worker(mindService: IMindService, logger: ILogger<Worker>) =
-//    inherit BackgroundService()
-//
-//    override this.ExecuteAsync(stoppingToken) =
-//        let work = async {
-//            let wishInput = """{
-//                sys {
-//                    file:name <!"test1.png">
-//                } &
-//                tags [ t00 & t02 | t11 ]
-//            }"""
-//            let wish =
-//                Wish.parse wishInput
-//                |> function Ok x -> x | Error err -> logger.LogError($"Failed parsing: {err}"); failwith err
-//            logger.LogDebug($"Parsed wish: %A{wish}")
-//            
-//            let entityIds = mindService.Wish(wish)
-//            let! entityIds = entityIds |> AsyncSeq.toArrayAsync
-//            let eIdsStr = entityIds |> Seq.map (fun (EntityId x) -> string x) |> String.concat "\n"
-//            logger.LogInformation($"Found entities:\n{eIdsStr}")
-//        }
-//        Async.StartAsTask(work, cancellationToken=stoppingToken) :> Task
-
 module Startup =
 
+    open Khonsu.Coding.Json
+    open Khonsu.Coding.Json.Net
     open Microsoft.AspNetCore.Builder
+    open Newtonsoft.Json.Linq
+    open enty.Mind.Server.Api
     open enty.Mind.Server.Database.Migrations
     
     let configureServices (host: WebHostBuilderContext) (services: IServiceCollection) : unit =
         let connectionString = host.Configuration.GetConnectionString("Default")
+        
+        services.AddTransient<IJsonDecoding<JsonValue>, ThothJsonDecoding>() |> ignore
+        services.AddTransient<IJsonEncoding<JsonValue>, ThothJsonEncoding>() |> ignore
 
-        services.AddTransient<IMindService, DbMindService>() |> ignore
+        services.AddTransient<IMind, DbMind>() |> ignore
+        services.AddTransient<IMindApi<JToken>, MindApi>() |> ignore
         
         // Migrations
         configureMigrations services connectionString |> ignore
@@ -84,8 +69,8 @@ module Startup =
     
     let configureApp (host: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
         app.UseCors("_AllowAll") |> ignore
-        app.UseGiraffeErrorHandler(HttpHandler.errorHandler) |> ignore
-        app.UseGiraffe(HttpHandler.app)
+        app.UseGiraffeErrorHandler(HttpHandlers.errorHandler) |> ignore
+        app.UseGiraffe(HttpHandlers.server)
         
         migrate app
 
@@ -108,6 +93,5 @@ let createHostBuilder args =
 
 [<EntryPoint>]
 let main argv =
-    printfn $"{TestDefine.runtime}: %A{TestDefine.result}"
     (createHostBuilder argv).Build().Run()
     0

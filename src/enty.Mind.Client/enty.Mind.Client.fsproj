@@ -14,4 +14,9 @@
       <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="TaskBuilder.fs" Version="2.1.0" />
+      <PackageReference Include="Thoth.Json.Net" Version="5.0.0" />
+    </ItemGroup>
+
 </Project>

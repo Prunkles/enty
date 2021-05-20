@@ -1,13 +1,20 @@
 module enty.WebApp.Program
 
 open System
-open Fable
 open Fable.Core
-open Browser.Types
 open Feliz
 open Feliz.MaterialUI
 open enty.Core
 open enty.Mind.Client.Fable
+open enty.Mind.Server.Api
+
+open MindServiceImpl
+
+
+[<ReactComponent>]
+let EntityList (entities: Entity seq) =
+    Html.div []
+
 
 [<ReactComponent>]
 let WishInput onConfirm clearOnConfirm =
@@ -33,16 +40,20 @@ let WishInput onConfirm clearOnConfirm =
 
 [<ReactComponent>]
 let App () =
-    let entityIds, setEntityIds = React.useState([| |])
-    let wishString strWish =
-        promise {
-            let! ids = MindService.wish strWish 0 10
-            setEntityIds ids
-        } |> Promise.start
+    let eids, setEids = React.useState([| |])
+    let stringWish wishString =
+        printfn "Search..."
+        async {
+            try
+                let! eids, total = mindService.Wish(wishString, 0, 10)
+                setEids eids
+            with ex ->
+                eprintfn $"ERR: {ex}"
+        } |> Async.StartImmediate
     Mui.container [
-        WishInput wishString false
+        WishInput stringWish false
         Html.div [
-            for entityId in entityIds ->
+            for entityId in eids ->
                 Html.div [
                     prop.text $"%A{entityId}"
                 ]
@@ -50,7 +61,5 @@ let App () =
     ]
 
 open Browser.Dom
-
-printfn $"{TestDefine.runtime}: %A{TestDefine.result}"
 
 ReactDOM.render(App, document.getElementById("app"))

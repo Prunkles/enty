@@ -7,14 +7,7 @@
 
     <ItemGroup>
         <Compile Include="Library.fs" />
-        <Compile Include="Sense.fs" />
-        <Compile Include="Entity.fs" />
-        <Compile Include="Traits.fs" />
-        <Compile Include="Experimental.fs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\enty.Utils\enty.Utils.fsproj" />
+        <Compile Include="Http.fs" />
     </ItemGroup>
 
 </Project>

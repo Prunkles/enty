@@ -10,14 +10,17 @@
         <Compile Include="WishParsing.fs" />
         <Compile Include="SenseParsing.fs" />
         <Compile Include="LinqToDbPostgresExtensions.fs" />
-        <Compile Include="SenseJson.fs" />
-        <Compile Include="DbMindService.fs" />
+        <Compile Include="SenseJToken.fs" />
+        <Compile Include="Mind.fs" />
+        <Compile Include="DbMind.fs" />
         <Compile Include="Database\Migrations.fs" />
-        <Compile Include="HttpHandler.fs" />
+        <Compile Include="ServiceMindApi.fs" />
+        <Compile Include="HttpHandlers.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\lib\Khonsu.Coding.Json.Net\Khonsu.Coding.Json.Net.fsproj" />
       <ProjectReference Include="..\..\lib\TestDefine\TestDefine.fsproj" />
       <ProjectReference Include="..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />
       <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />

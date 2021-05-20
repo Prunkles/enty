@@ -3,15 +3,16 @@ namespace enty.Mind.Server
 open System
 open System.Linq
 open FSharp.Control
-open FSharp.Data
 open LinqToDB
 open LinqToDB.Configuration
 open LinqToDB.Data
 open LinqToDB.Mapping
+open Newtonsoft.Json.Linq
 open enty.Core
 open enty.Mind
-open enty.Mind.Server.SenseJson
+open enty.Mind.Server.SenseJToken
 open enty.Mind.Server.LinqToDbPostgresExtensions
+
 
 
 [<Table(Name="Entities")>]
@@ -24,14 +25,11 @@ type EntyDataConnection(options: LinqToDbConnectionOptions<EntyDataConnection>) 
     member this.Entities = this.GetTable<EntityDao>()
 
 
-type DbMindService(db: EntyDataConnection) =
+type DbMind(db: EntyDataConnection) =
     
-    interface IMindService with
+    interface IMind with
         member this.Remember(EntityId entityId, sense) = async {
-            let senseJson =
-                sense
-                |> Sense.toJson
-                |> string
+            let senseJson = (Sense.toJToken sense).ToString()
             do! db.Entities
                     .Value((fun x -> x.Id), entityId)
                     .Value((fun x -> x.Sense), ((fun () -> Sql.Json.AsJsonb(senseJson))))
@@ -50,18 +48,26 @@ type DbMindService(db: EntyDataConnection) =
             do! q.DeleteAsync() |> Async.AwaitTask |> Async.Ignore
         }
     
-        member this.GetSense(EntityId entityId) = async {
+        member this.GetEntities(eids) = async {
+            let eids = eids |> Seq.map (fun (EntityId x) -> x)
             let q = query {
                 for entity in db.Entities do
-                where (entity.Id = entityId)
-                yield Sql.AsText(entity.Sense)
+                where (eids.Contains(entity.Id))
+                select (entity.Id, Sql.AsText(entity.Sense))
             }
-            let! senseJson = q.FirstAsync() |> Async.AwaitTask
-            let sense = JsonValue.Parse(senseJson) |> Sense.ofJson
-            return sense
+            let! entityDaos = q.ToListAsync() |> Async.AwaitTask
+            let entities =
+                entityDaos
+                |> Seq.map (fun (eid, senseString) ->
+                    { Entity.Id = EntityId eid
+                      Sense = JToken.Parse(senseString) |> Sense.ofJToken }
+                )
+                |> Seq.toArray
+            
+            return entities
         }
     
-        member this.Wish(wish) = asyncSeq {
+        member this.Wish(wish, offset, limit) = async {
             let selectEntitiesByIds ids = query {
                 for e in db.Entities do
                 join id in ids on (e.Id = id)
@@ -128,8 +134,9 @@ type DbMindService(db: EntyDataConnection) =
                 for e in queryWish wish do
                 select e.Id
             }
-            yield!
-                q.AsAsyncEnumerable()
-                |> AsyncSeq.ofAsyncEnum
-                |> AsyncSeq.map EntityId
+            
+            let! total = q.CountAsync() |> Async.AwaitTask
+            let! eids = q.Skip(offset).Take(limit).Select(EntityId).ToArrayAsync() |> Async.AwaitTask
+            
+            return eids, total
         }

@@ -10,7 +10,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Khonsu\Khonsu.fsproj" />
+      <ProjectReference Include="..\Khonsu.ApiSpec\Khonsu.ApiSpec.fsproj" />
+      <ProjectReference Include="..\Khonsu.Coding\Khonsu.Coding.fsproj" />
     </ItemGroup>
 
     <ItemGroup>

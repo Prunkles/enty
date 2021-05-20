@@ -35,6 +35,7 @@ module Grammar =
     (ab)c = a(bc)
     ab = ba
     
+    { k <v1 | v2> }  <==>  { k v1 | k v 2 }
     
     *)
     

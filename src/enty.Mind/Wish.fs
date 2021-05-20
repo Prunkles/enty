@@ -1,4 +1,4 @@
-namespace enty.Core
+namespace enty.Mind
 
 [<RequireQualifiedAccess>]
 type WishPathEntry =

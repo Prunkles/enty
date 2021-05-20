@@ -6,13 +6,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\lib\TestDefine\TestDefine.fsproj" />
+      <ProjectReference Include="..\..\..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />
       <ProjectReference Include="..\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
       <Content Include="index.html" />
       <Compile Include="EntityRendering.fs" />
+      <Compile Include="MindService.fs" />
       <Compile Include="Program.fs" />
     </ItemGroup>
 

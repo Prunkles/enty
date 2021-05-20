@@ -7,13 +7,15 @@ open FSharp.Control.Tasks.V2
 open enty.Storage.FileSystem
 
 
-let readHandler (eid: EntityId) : HttpHandler =
-    fun next ctx -> task {
-        let storage = ctx.GetService<IStorage>()
-        let writer = ctx.Response.BodyWriter
+let readHandler (eid: EntityId) : HttpHandler = fun next ctx -> task {
+    let storage = ctx.GetService<IStorage>()
+    let writer = ctx.Response.BodyWriter
+    try
         do! storage.Read(writer, eid)
         return! next ctx
-    }
+    with _ ->
+        return! RequestErrors.BAD_REQUEST "EntityId not found" next ctx
+}
 
 let writeHandler (eid: EntityId) : HttpHandler = fun next ctx -> task {
     let storage = ctx.GetService<IStorage>()

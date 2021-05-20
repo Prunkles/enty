@@ -10,11 +10,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Khonsu\Khonsu.fsproj" />
+      <ProjectReference Include="..\Khonsu.ApiSpec\Khonsu.ApiSpec.fsproj" />
+      <ProjectReference Include="..\Khonsu.Coding\Khonsu.Coding.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Fable.Core" Version="3.2.7" />
+      <PackageReference Include="Thoth.Fetch" Version="2.0.0" />
       <PackageReference Include="Thoth.Json" Version="5.1.0" />
     </ItemGroup>
 

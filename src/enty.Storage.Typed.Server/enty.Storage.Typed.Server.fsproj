@@ -6,7 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="appsettings.json" />
         <Compile Include="HttpHandlers.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
@@ -16,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
+      <ProjectReference Include="..\enty.Mind.Client\enty.Mind.Client.fsproj" />
       <ProjectReference Include="..\enty.Storage.FileSystem\enty.Storage.FileSystem.fsproj" />
     </ItemGroup>
 

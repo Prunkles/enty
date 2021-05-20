@@ -1,3 +1,4 @@
+[<System.Obsolete "Experimental">]
 module enty.Core.Experimental
 
 type Sense =
