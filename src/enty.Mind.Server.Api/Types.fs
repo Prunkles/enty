@@ -18,7 +18,7 @@ type EntityDto<'JsonValue> =
       Sense: SenseDto<'JsonValue> }
     static member Decoder() = jsonADecoder {
         let! id = Decode.field "id" Decode.guid
-        let! sense = SenseDto.Decoder<_>()
+        let! sense = Decode.field "sense" (SenseDto.Decoder<_>())
         return { Id = id; Sense = sense }
     }
     static member Encoder() = fun entity -> Encode.object [
@@ -50,7 +50,7 @@ type ForgetRequest =
 type GetEntitiesRequest =
     { EntityIds: Guid[] }
     static member Decoder() = jsonADecoder {
-        let! eids = Decode.array Decode.guid
+        let! eids = Decode.field "eids" (Decode.array Decode.guid)
         return { EntityIds = eids }
     }
     static member Encoder() = fun rq -> Encode.object [
@@ -60,7 +60,7 @@ type GetEntitiesRequest =
 type GetEntitiesResponse<'JsonValue> =
     { Entities: EntityDto<'JsonValue>[] }
     static member Decoder() = jsonADecoder {
-        let! entities = Decode.array (EntityDto.Decoder<_>())
+        let! entities = Decode.field "entities" (Decode.array (EntityDto.Decoder<_>()))
         return { Entities = entities }
     }
     static member Encoder() = fun rp -> Encode.object [

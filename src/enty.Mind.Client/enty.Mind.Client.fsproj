@@ -11,7 +11,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />
-      <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
+<!--      <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />-->
     </ItemGroup>
 
     <ItemGroup>

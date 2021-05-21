@@ -21,18 +21,18 @@ let readHandler (eidGuid: Guid) : HttpHandler = fun next ctx -> task {
     match mime with
     | None -> return! skipPipeline
     | Some mime ->
-        let client = ctx.GetService<IHttpClientFactory>().CreateClient()
-        let pipe = Pipe()
+        let client = ctx.GetService<IHttpClientFactory>().CreateClient("storage")
         let! resp = client.GetAsync($"/read/{eidGuid}")
-        do! resp.Content.CopyToAsync(pipe.Writer.AsStream())
+        let! respStream = resp.Content.ReadAsStreamAsync()
         ctx.SetContentType(mime)
-        do! pipe.Reader.CopyToAsync(ctx.Response.BodyWriter)
+        do! respStream.CopyToAsync(ctx.Response.Body)
+        do! ctx.Response.CompleteAsync()
         return! earlyReturn ctx
 }
 
 let getStorageOrigin (cont: string -> HttpHandler) : HttpHandler = fun next ctx -> task {
     let configuration = ctx.GetService<IConfiguration>()
-    let path = configuration.["Storage:Origin"]
+    let path = configuration.["Storage:Url"]
     return! cont path next ctx
 }
 

@@ -15,6 +15,7 @@
       <Compile Include="EntityRendering.fs" />
       <Compile Include="MindService.fs" />
       <Compile Include="Program.fs" />
+      <Compile Include="SenseInputing.fs" />
     </ItemGroup>
 
     <ItemGroup>

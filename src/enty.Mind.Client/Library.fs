@@ -1,8 +1,12 @@
 ﻿namespace enty.Mind.Client
 
 open System.Net.Http
+//open Newtonsoft.Json.Linq
 open enty.Core
 open enty.Mind
+open enty.Mind.Server.Api
+
+type JsonValue = Newtonsoft.Json.Linq.JToken
 
 [<RequireQualifiedAccess>]
 module Sense =
@@ -102,6 +106,7 @@ module MindApi =
         use content = new StringContent(requestJson.ToString())
         content.Headers.ContentType <- MediaTypeHeaderValue.Parse(MediaTypeNames.Application.Json)
         
+        printfn $"BA: {client.BaseAddress}; path: {path}"
         let! response = client.PostAsync(path, content)
         
         let! responseString = response.Content.ReadAsStringAsync()
@@ -112,30 +117,27 @@ module MindApi =
                 eid, sense
             )))
         let result = Decode.fromString decoder responseString
-        return result |> function Ok x -> x | _ -> failwith ""
+        return result |> function Ok x -> x | Error err -> failwith $"{err}"
     }
 
 
-type ApiMindService(client: HttpClient) =
-    interface IMindService with
-        member this.Forget(EntityId eidG) = async {
-            do! MindApi.forget client eidG |> Async.AwaitTask
+type ClientMindApi(client) =
+    interface IMindApi<JsonValue> with
+        member this.Forget(request) = async {
+            do! MindApi.forget client request.EntityId |> Async.AwaitTask
         }
-        member this.GetEntities(eids) = async {
-            let eidGs = eids |> Array.map (fun (EntityId x) -> x)
-            let! entities = MindApi.getEntities client eidGs |> Async.AwaitTask
-            let entities =
-                entities
-                |> Array.map (fun (eidG, senseJ) ->
-                    { Id = EntityId eidG
-                      Sense = senseJ |> Sense.ofJToken }
-                )
-            return entities
+        member this.GetEntities(request) = async {
+            let! entities = MindApi.getEntities client request.EntityIds |> Async.AwaitTask
+            let entities = entities |> Array.map (fun (eidG, sense) -> { Id = eidG; Sense = SenseDto sense })
+            let response = { Entities = entities }
+            return response
         }
-        member this.Remember(EntityId eidG, sense) = async {
-            let senseJ = sense |> Sense.toJToken
-            do! MindApi.remember client eidG senseJ |> Async.AwaitTask
+        member this.Remember(request) = async {
+            let (SenseDto sense) = request.Sense
+            do! MindApi.remember client request.EntityId sense |> Async.AwaitTask
         }
-        member this.Wish(wish, offset, limit) = async {
-            
+        member this.Wish(request) = async {
+            let! (eids, total) = MindApi.wish client request.WishString request.Offset request.Limit |> Async.AwaitTask
+            let response = { EntityIds = eids; Total = total }
+            return response
         }
