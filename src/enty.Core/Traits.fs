@@ -11,6 +11,8 @@ module Utils =
     let (|ByPath|_|) path sense = Sense.tryGet path sense
     
 
+//type ImageSense = {| Image: {| Size: {| W: int; H: int |} |} |}
+
 module Sense =
 
     module Feature =
@@ -54,8 +56,16 @@ module Sense =
                     | ByPath ["feature";"file";"mime"] (Sense.Value mime) -> Some mime
                     | _ -> None
         
-        module Image =
+    module Image =
+        
+        let isImage sense =
+            sense
+            |> Sense.tryGetValue ["image"; "is-image"]
+            |> Option.bind (function "T" -> Some true | "F" -> Some false | _ -> None)
+        
+        module Preview =
             
-            let preview sense =
-                sense |> Sense.tryGetValue ["feature";"image";"preview"]
+            let link sense =
+                sense
+                |> Sense.tryGetValue ["image";"preview";"link"]
                 |> Option.map (Guid.Parse >> EntityId)

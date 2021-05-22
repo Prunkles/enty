@@ -12,10 +12,10 @@
 
     <ItemGroup>
       <Content Include="index.html" />
-      <Compile Include="EntityRendering.fs" />
       <Compile Include="MindService.fs" />
+      <Compile Include="EntityRendering.fs" />
+      <Compile Include="EntityCreating.fs" />
       <Compile Include="Program.fs" />
-      <Compile Include="SenseInputing.fs" />
     </ItemGroup>
 
     <ItemGroup>

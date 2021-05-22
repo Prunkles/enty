@@ -1,5 +1,7 @@
-module enty.Mind.Server.Api.Endpoints
+namespace global
 
+//module enty.Mind.Server.Api.Endpoints
+//
 //open System
 //open Khonsu.ApiSpec.Http
 //open Khonsu.Coding

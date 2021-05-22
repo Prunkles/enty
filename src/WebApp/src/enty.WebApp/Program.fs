@@ -8,6 +8,7 @@ open enty.Core
 open enty.Mind.Client.Fable
 open enty.Mind.Server.Api
 
+open EntityCreating
 open MindServiceImpl
 
 
@@ -51,6 +52,7 @@ let App () =
                 eprintfn $"ERR: {ex}"
         } |> Async.StartImmediate
     Mui.container [
+        CreateEntity ()
         WishInput stringWish false
         Html.div [
             for entityId in eids ->

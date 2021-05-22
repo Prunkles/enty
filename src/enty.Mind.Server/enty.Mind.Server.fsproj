@@ -22,6 +22,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\lib\Khonsu.Coding.Json.Net\Khonsu.Coding.Json.Net.fsproj" />
       <ProjectReference Include="..\..\lib\TestDefine\TestDefine.fsproj" />
+      <ProjectReference Include="..\enty.Mind.Grpc.Server\enty.Mind.Grpc.Server.csproj" />
       <ProjectReference Include="..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />
       <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
     </ItemGroup>

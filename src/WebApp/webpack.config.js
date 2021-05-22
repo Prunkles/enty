@@ -20,11 +20,16 @@ const CONFIG = {
         host: '0.0.0.0',
         proxy: {
             '/mind/**': {
-                target: 'http://localhost:' + '5000',
+                target: 'http://localhost:' + '5010',
                 changeOrigin: true,
                 pathRewrite: {
                     '^/mind': '',
                 },
+            },
+            '/storage/**': {
+                target: 'http://localhost:' + '5021',
+                changeOrigin: true,
+                pathRewrite: { '^/storage': '' },
             }
         }
     }

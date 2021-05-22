@@ -10,8 +10,6 @@ open enty.Mind.Server.Api
 
 open Fetch
 
-type JsonValue = obj
-
 type FetchMindApi() =
     let jsonEncoding = ThothJsonEncoding() :> IJsonEncoding<_>
     let jsonDecoder = ThothJsonDecoding() :> IJsonDecoding<_>
