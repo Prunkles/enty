@@ -1,32 +1,30 @@
-namespace global
+namespace enty.Mind.Gateway.Api
 
-//namespace enty.Mind.Server.Api
-//
 //open enty.Core
 //
+//type IMindRawApi<'JsonValue> =
+//    abstract Remember: request: RememberRequest -> Async<unit>
+//    abstract Forget: request: ForgetRequest -> Async<unit>
+//    abstract Wish: request: WishRequest -> Async<WishResponse>
+//    abstract GetEntities: request: GetEntitiesRequest -> Async<GetEntitiesResponse<'JsonValue>>
 //
-//type GetEntitiesError =
-//    | InvalidWishString of errorMessage: string
-//    
-//
-//type IMindService =
+//type IMindApi =
 //    abstract Remember: eid: EntityId * senseString: string -> Async<unit>
 //    abstract Forget: eid: EntityId -> Async<unit>
 //    abstract Wish: wishString: string * offset: int * limit: int -> Async<EntityId[] * int>
 //    abstract GetEntities: eids: EntityId[] -> Async<Entity[]>
 //
-//
-//type ApiMindService<'JsonValue>(mindApi: IMindApi<'JsonValue>, decodeSense) =
-//    interface IMindService with
+//type RawMindApi<'JsonValue>(mindRawApi: IMindRawApi<'JsonValue>, decodeSense) =
+//    interface IMindApi with
 //        member this.Forget(EntityId eidG) = async {
 //            let rq = { EntityId = eidG }
-//            let! () = mindApi.Forget(rq)
+//            let! () = mindRawApi.Forget(rq)
 //            return ()
 //        }
 //        member this.GetEntities(eids) = async {
 //            let eidGs = Array.map (fun (EntityId x) -> x) eids
 //            let rq = { EntityIds = eidGs }
-//            let! rp = mindApi.GetEntities(rq)
+//            let! rp = mindRawApi.GetEntities(rq)
 //            let entities =
 //                rp.Entities
 //                |> Array.map (fun entityDto ->
@@ -39,14 +37,14 @@ namespace global
 //            let rq =
 //                { EntityId = eidG
 //                  SenseString = senseString }
-//            let! () = mindApi.Remember(rq)
+//            let! () = mindRawApi.Remember(rq)
 //            return ()
 //        }
 //        member this.Wish(wishString, offset, limit) = async {
 //            let rq =
 //                { WishString = wishString
 //                  Offset = offset; Limit = limit }
-//            let! rp = mindApi.Wish(rq)
+//            let! rp = mindRawApi.Wish(rq)
 //            let eids = rp.EntityIds |> Array.map EntityId
 //            let total = rp.Total
 //            return eids, total

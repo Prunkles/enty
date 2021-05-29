@@ -9,14 +9,10 @@ open Microsoft.Extensions.Configuration
 open enty.Core
 open enty.Core.Traits
 open enty.Mind
-open enty.Mind.Server.Api
 open enty.Storage.FileSystem
 
 let readHandler (eidGuid: Guid) : HttpHandler = fun next ctx -> task {
-    let mindService = ctx.GetService<IMindService>()
     let eid = EntityId eidGuid
-    let! entities = mindService.GetEntities([|eid|])
-    let entity = entities.[0]
     let mime = Sense.Feature.File.Mime.mime entity.Sense
     match mime with
     | None -> return! skipPipeline

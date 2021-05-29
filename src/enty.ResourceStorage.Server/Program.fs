@@ -1,4 +1,6 @@
-﻿open System
+﻿module enty.ResourceStorage.Server.Program
+
+open System
 
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
@@ -10,14 +12,13 @@ open Microsoft.AspNetCore.Hosting
 module Startup =
     
     open Giraffe
-    open enty.Storage.FileSystem
-    open enty.Storage.Server
+    open enty.ResourceStorage.FileSystem
 
     let configureServices (ctx: WebHostBuilderContext) (services: IServiceCollection) : unit =
-        services.AddTransient<IStorage>(fun sp ->
+        services.AddTransient<IDataStorage>(fun sp ->
             let path = ctx.Configuration.["Storage:Path"]
             let nestingLevel = 1
-            upcast FileSystemStorage(path, nestingLevel)
+            upcast FileSystemDataStorage(path, nestingLevel)
         ) |> ignore
         services.AddGiraffe() |> ignore
     

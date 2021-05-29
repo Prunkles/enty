@@ -5,16 +5,10 @@ open Fable.Core
 open Feliz
 open Feliz.MaterialUI
 open enty.Core
-open enty.Mind.Client.Fable
-open enty.Mind.Server.Api
+open enty.WebApp
 
 open EntityCreating
-open MindServiceImpl
 
-
-[<ReactComponent>]
-let EntityList (entities: Entity seq) =
-    Html.div []
 
 
 [<ReactComponent>]
@@ -40,26 +34,24 @@ let WishInput onConfirm clearOnConfirm =
     ]
 
 [<ReactComponent>]
-let App () =
-    let eids, setEids = React.useState([| |])
-    let stringWish wishString =
-        printfn "Search..."
+let WishPage () =
+    let entities, setEntities = React.useState([| |])
+    let onWishString wishString =
         async {
-            try
-                let! eids, total = mindService.Wish(wishString, 0, 10)
-                setEids eids
-            with ex ->
-                eprintfn $"ERR: {ex}"
+            let! eids, total = MindApiImpl.mindApi.Wish(wishString, 0, 10)
+            let! entities = MindApiImpl.mindApi.GetEntities(eids)
+            setEntities entities
         } |> Async.StartImmediate
+    Html.div [
+        yield WishInput onWishString true
+        for entity in entities do
+            yield EntityRendering.Entity entity
+    ]
+
+[<ReactComponent>]
+let App () =
     Mui.container [
         CreateEntity ()
-        WishInput stringWish false
-        Html.div [
-            for entityId in eids ->
-                Html.div [
-                    prop.text $"%A{entityId}"
-                ]
-        ]
     ]
 
 open Browser.Dom

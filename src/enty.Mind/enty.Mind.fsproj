@@ -16,6 +16,7 @@
     <ItemGroup>
       <Compile Include="Library.fs" />
       <Compile Include="Wish.fs" />
+      <Compile Include="WishExp.fs" />
     </ItemGroup>
 
 </Project>

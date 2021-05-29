@@ -6,17 +6,21 @@ open Fable.Core.JsInterop
 open Khonsu.Coding.Json
 open Khonsu.Coding.Json.Fable
 open enty.Core
-open enty.Mind.Server.Api
 
 open Fetch
 
-type FetchMindApi() =
+type IMindApi =
+    abstract Remember: eid: EntityId * senseString: string -> Async<unit>
+    abstract Forget: eid: EntityId -> Async<unit>
+    abstract Wish: wishString: string * offset: int * limit: int -> Async<EntityId[] * int>
+    abstract GetEntities: eids: EntityId[] -> Async<Entity[]>
+
+type FetchMindApi(baseAddress: string) =
     let jsonEncoding = ThothJsonEncoding() :> IJsonEncoding<_>
     let jsonDecoder = ThothJsonDecoding() :> IJsonDecoding<_>
-    let baseRoute = "/mind"
     let fetchR route (request: 'q) encoder =
         promise {
-            let url = baseRoute + route
+            let url = baseAddress + route
             let jv: 'j = encoder request jsonEncoding
             let bodyString = jsonEncoding.EncodeToString(jv)
             let! fetchResponse =
@@ -35,20 +39,20 @@ type FetchMindApi() =
         | Ok response -> response
         | Error err -> failwith $"{err}"
     
-    interface IMindApi<JsonValue> with
-        member this.Forget(request) = async {
-            let! rpBodyString = fetchR "/forget" request (ForgetRequest.Encoder())
-            return ()
+    interface IMindApi with
+        member this.Forget(EntityId eidG) = async {
+            fetch (baseAddress + "/forget/" + string eidG) []
+            ()
         }
-        member this.GetEntities(request) = async {
+        member this.GetEntities(eids) = async {
             let! rpBodyString = fetchR "/getEntities" request (GetEntitiesRequest.Encoder())
             return mkResponse rpBodyString (GetEntitiesResponse.Decoder<_>())
         }
-        member this.Remember(request) = async {
+        member this.Remember(eid, senseString) = async {
             let! rpBodyString = fetchR "/remember" request (RememberRequest.Encoder<_>())
             return ()
         }
-        member this.Wish(request) = async {
+        member this.Wish(wishString, offset, limit) = async {
             printfn "wish api"
             let! rpBodyString = fetchR "/wish" request (WishRequest.Encoder())
             return mkResponse rpBodyString (WishResponse.Decoder())

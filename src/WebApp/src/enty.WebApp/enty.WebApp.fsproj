@@ -5,14 +5,19 @@
         <DefineConstants>FABLE_COMPILER</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />
-      <ProjectReference Include="..\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj" />
+    <ItemGroup><!--      <ProjectReference Include="..\..\..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />-->
+<!--      <ProjectReference Include="..\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj" />-->
+    
+      <ProjectReference Include="..\..\..\enty.Core\enty.Core.fsproj" />
+    
+      <ProjectReference Include="..\..\..\enty.ImagePreviewService.Client.Fable\enty.ImagePreviewService.Client.Fable.fsproj" />
+      <ProjectReference Include="..\..\..\enty.Utils\enty.Utils.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
       <Content Include="index.html" />
-      <Compile Include="MindService.fs" />
+      <Compile Include="MindApi.fs" />
+      <Compile Include="ImagePreviewService.fs" />
       <Compile Include="EntityRendering.fs" />
       <Compile Include="EntityCreating.fs" />
       <Compile Include="Program.fs" />

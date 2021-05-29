@@ -6,10 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Library.fs" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
       <ProjectReference Include="..\enty.Utils\enty.Utils.fsproj" />
     </ItemGroup>

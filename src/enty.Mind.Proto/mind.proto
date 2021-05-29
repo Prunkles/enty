@@ -14,19 +14,75 @@ message SenseList {
   repeated Sense elements = 1;
 }
 
-message SenseMapEntry {
-  string key = 1;
-  Sense value = 2;
-}
 message SenseMap {
   map<string, Sense> map = 1;
 }
 
 message Sense {
   oneof sense {
-    SenseValue senseValue = 1;
-    SenseList senseList = 2;
-    SenseMap senseMap = 3;
+    SenseValue sense_value = 1;
+    SenseList sense_list = 2;
+    SenseMap sense_map = 3;
+  }
+}
+
+// Wish
+
+message WishAndOperator {
+  Wish rhs = 1;
+  Wish lhs = 2;
+}
+message WishOrOperator {
+  Wish rhs = 1;
+  Wish lhs = 2;
+}
+message WishNotOperator {
+  Wish wish = 1;
+}
+message WishOperator {
+  oneof operator {
+      WishAndOperator and = 1;
+      WishOrOperator or = 2;
+      WishNotOperator not = 3;
+  }
+}
+
+//message WishListItemIs {
+//  int32 item = 1;
+//  Wish wish = 2;
+//}
+
+message WishPathEntry {
+  oneof entry {
+    string map_key = 1;
+    google.protobuf.Empty list = 2;
+  }
+}
+
+message WishPath {
+  repeated WishPathEntry entries = 1;
+}
+
+message WishValueIs {
+  WishPath path = 1;
+  string value = 2;
+}
+message WishMapFieldIs {
+  WishPath path = 1;
+  string key = 2;
+  string value = 3;
+}
+message WishListContains {
+  WishPath path = 1;
+  string value = 2;
+}
+
+message Wish {
+  oneof wish {
+    WishOperator operator = 1;
+    WishValueIs value_is = 2;
+    WishListContains list_contains = 3;
+    WishMapFieldIs map_field_is = 4;
   }
 }
 
@@ -38,11 +94,11 @@ message ForgetRequest {
 
 message RememberRequest {
   string eid = 1;
-  string senseString = 2;
+  Sense sense = 2;
 }
 
 message WishRequest {
-  string wishString = 1;
+  Wish wish = 1;
   int32 offset = 2;
   int32 limit = 3;
 }

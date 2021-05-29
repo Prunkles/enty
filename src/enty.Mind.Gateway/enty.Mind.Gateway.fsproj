@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="appsettings.json" />
+        <Compile Include="WishParsing.fs" />
+        <Compile Include="SenseParsing.fs" />
+        <Compile Include="SenseJToken.fs" />
+        <Compile Include="Endpoints.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FParsec" Version="1.1.1" />
+      <PackageReference Include="Giraffe" Version="5.0.0" />
+      <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.37.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\enty.Mind.Client\enty.Mind.Client.fsproj" />
+      <ProjectReference Include="..\enty.Mind.Grpc.Client\enty.Mind.Grpc.Client.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-module enty.Mind.Server.SenseParsing
+module enty.Mind.SenseParsing
 
 
 module Grammar =

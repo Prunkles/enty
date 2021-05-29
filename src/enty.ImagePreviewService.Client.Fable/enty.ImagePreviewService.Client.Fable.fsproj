@@ -6,14 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="SenseObs.fs" />
-        <Compile Include="Sense.fs" />
         <Compile Include="Library.fs" />
-        <Compile Include="Traits.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enty.Utils\enty.Utils.fsproj" />
+      <PackageReference Include="Fable.Core" Version="3.2.7" />
     </ItemGroup>
 
 </Project>

@@ -5,36 +5,37 @@ open Feliz.MaterialUI
 open enty.Utils
 open enty.Core
 open enty.Core.Traits
-open enty.WebApp.MindServiceImpl
+open enty.WebApp.MindApiImpl
 
 
 [<RequireQualifiedAccess>]
 module Image =
 
-    [<ReactComponent>]
-    let EntityElement (sourceEid: EntityId) =
-        let previewEid, setPreviewEid = React.useState(None)
-        let fetchPreviewId () = async {
-            let wishString = sprintf """{ image:preview:link "%s" }""" (let (EntityId eidG) = sourceEid in string eidG)
-            let! eids, total = mindService.Wish(wishString, 0, 1)
-            setPreviewEid (Some eids.[0])
+    open enty.ImagePreviewService.Client.Fable
+    
+    type ImageEntity =
+        { MasterSizeUrl: string }
+    
+    module ImageEntity =
+        let parse entity = option {
+            let! originalSizeUrl =
+                entity.Sense
+                |> Sense.byMapPath [ "image"; "sizes"; "original"; "resource-url" ]
+                |> Option.bind Sense.asValue
+            return { MasterSizeUrl = originalSizeUrl }
         }
-        React.useEffect(fetchPreviewId >> Async.StartImmediate, [| box sourceEid |])
-        match previewEid with
-        | Some (EntityId previewEidG) ->
-            Html.img [
-                prop.src $"/storage/{previewEidG}"
-                prop.alt $"{previewEidG}"
-            ]
-        | None ->
-            Mui.circularProgress [ ]
+
+    [<ReactComponent>]
+    let EntityElement (entity: ImageEntity) =
+        let sampleUrl = ImagePreview.GetUrl(entity.MasterSizeUrl, width=100)
+        Html.img [
+            prop.src sampleUrl
+        ]
     
     [<ReactComponent>]
-    let Entity (eid: EntityId) =
-        let (EntityId eidG) = eid
+    let Entity (entity: ImageEntity) =
         Html.img [
-            prop.src $"/storage/{eidG}"
-            prop.alt $"{eidG}"
+            prop.src entity.MasterSizeUrl
         ]
 
 
@@ -55,17 +56,13 @@ module Undefined =
 [<ReactComponent>]
 let EntityElement (entity: Entity) =
     Option.choose [
-        option {
-            let! isImage = Sense.Image.isImage entity.Sense
-            if not isImage then return! None else
-            return Image.EntityElement entity.Id
-        }
+        entity |> Image.ImageEntity.parse |> Option.map Image.EntityElement
     ]
     |> Option.defaultWith (fun () -> Undefined.EntityElement entity)
 
 [<ReactComponent>]
 let Entity (entity: Entity) =
     Option.choose [
-        
+        entity |> Image.ImageEntity.parse |> Option.map Image.Entity
     ]
     |> Option.defaultWith (fun () -> Undefined.Entity entity)

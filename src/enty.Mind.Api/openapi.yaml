@@ -1,0 +1,145 @@
+openapi: 3.0.1
+info:
+  title: enty API
+  description: '...'
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+servers:
+  - url: ''
+
+paths:
+  /wish:
+    post:
+      parameters:
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            maximum: 64
+            default: 16
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wishString:
+                  type: string
+      responses:
+        200:
+          description: 'TBD'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eids:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EntityId'
+                  total:
+                    type: integer
+  
+  /remember/{eid}:
+    post:
+      parameters:
+        - name: eid
+          in: path
+          required: true
+          schema: 
+            $ref: '#/components/schemas/EntityId'
+      requestBody: 
+        content:
+          application/json:
+            schema: 
+              type: object
+              properties: 
+                sense:
+                  $ref: '#/components/schemas/Sense'
+      responses: 
+        200:
+          description: 'TBD'
+  
+  /forget/{eid}:
+    post:
+      parameters:
+        - name: eid
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EntityId'
+      responses: 
+        200:
+          description: 'Entity deleted'
+        404:
+          description: 'Entity not found'
+  
+  /getEntities:
+    post:
+      requestBody: 
+        description: 'TBD'
+        content: 
+          application/json:
+            schema: 
+              type: object
+              properties: 
+                eids:
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/EntityId'
+      responses: 
+        200:
+          description: 'TBD'
+          content: 
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  entities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Entity'
+
+#  /resource/{rid}:
+#    get:
+#      parameters:
+#        - name: rid
+#          in: path
+#          schema: 
+#            type: string
+#            format: uuid
+#        - name: type
+#          in: query
+#          schema:
+#            type: string
+#      responses:
+#        200:
+#          description: ''
+#          headers:
+#            Content-Type:
+#              description: 'Any, depending on '
+
+components: 
+  schemas: 
+    EntityId:
+      type: string
+      format: uuid
+    Sense:
+      type: object
+      additionalProperties:
+        type: object
+    Entity:
+      type: object
+      properties: 
+        eid:
+          $ref: '#/components/schemas/EntityId'
+        sense:
+          $ref: '#/components/schemas/Sense'
+    

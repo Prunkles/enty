@@ -1,8 +1,6 @@
 module enty.Mind.WishParsing
 
 open FParsec
-open enty.Core
-
 
 module Grammar =
     
@@ -52,18 +50,17 @@ module Grammar =
     // a (< b c >) d
     // ""a | b" | !c"
     
-    
-    [<RequireQualifiedAccess>]
-    type WishExpr =
-        | Value of ValueExpr
-        | Map of MapExpr
-        | List of ListExpr
-    
-    and [<RequireQualifiedAccess>]
+    type [<RequireQualifiedAccess>]
         OperatorExpr<'SubExpr> =
         | And of lhs: 'SubExpr * rhs: 'SubExpr * implicit: bool
         | Or of lhs: 'SubExpr * rhs: 'SubExpr
         | Not of expr: 'SubExpr
+    
+    type [<RequireQualifiedAccess>]
+        WishExpr =
+        | Value of ValueExpr
+        | Map of MapExpr
+        | List of ListExpr
     
     and [<RequireQualifiedAccess>]
         MapExpr =

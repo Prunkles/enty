@@ -32,8 +32,6 @@ module Startup =
     open Khonsu.Coding.Json
     open Khonsu.Coding.Json.Net
     open Microsoft.AspNetCore.Builder
-    open Newtonsoft.Json.Linq
-    open enty.Mind.Server.Api
     open enty.Mind.Server.Database.Migrations
     
     let configureServices (host: WebHostBuilderContext) (services: IServiceCollection) : unit =
@@ -43,7 +41,6 @@ module Startup =
         services.AddTransient<IJsonEncoding<JsonValue>, ThothJsonEncoding>() |> ignore
 
         services.AddTransient<IMind, DbMind>() |> ignore
-        services.AddTransient<IMindApi<JToken>, MindApi>() |> ignore
         
         // Migrations
         configureMigrations services connectionString |> ignore
@@ -68,9 +65,9 @@ module Startup =
         services.AddGiraffe() |> ignore
     
     let configureApp (host: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
-        app.UseCors("_AllowAll") |> ignore
-        app.UseGiraffeErrorHandler(HttpHandlers.errorHandler) |> ignore
-        app.UseGiraffe(HttpHandlers.server)
+        app.UseEndpoints(fun endpoints ->
+            endpoints.MapGrpcService<GrpcServerMindService>() |> ignore
+        ) |> ignore
         
         migrate app
 

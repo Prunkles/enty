@@ -1,6 +1,4 @@
-﻿namespace global
-
-//namespace enty.Mind.Server.Api
+﻿namespace enty.Mind.Gateway.Api
 //
 //open System
 //
@@ -9,6 +7,7 @@
 //
 //module Decode = JsonADecode
 //module Encode = JsonAEncode
+//
 //
 //type SenseDto<'JsonValue> =
 //    | SenseDto of 'JsonValue
@@ -39,7 +38,7 @@
 //    }
 //    static member Encoder() = fun rq -> Encode.object [
 //        "eid", Encode.guid rq.EntityId
-//        "sense", Encode.string rq.SenseString
+//        "senseString", Encode.string rq.SenseString
 //    ]
 //
 //
@@ -104,8 +103,3 @@
 //    ]
 //
 //
-//type IMindApi<'JsonValue> =
-//    abstract Remember: request: RememberRequest -> Async<unit>
-//    abstract Forget: request: ForgetRequest -> Async<unit>
-//    abstract Wish: request: WishRequest -> Async<WishResponse>
-//    abstract GetEntities: request: GetEntitiesRequest -> Async<GetEntitiesResponse<'JsonValue>>

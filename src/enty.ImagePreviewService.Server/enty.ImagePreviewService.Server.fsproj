@@ -6,18 +6,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="appsettings.json" />
-        <Compile Include="HttpHandlers.fs" />
+        <Folder Include="wwwroot" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Giraffe" Version="4.1.0" />
+      <PackageReference Include="Giraffe" Version="5.0.0" />
+      <PackageReference Include="SixLabors.ImageSharp.Web" Version="1.0.3" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
-      <ProjectReference Include="..\enty.Storage.FileSystem\enty.Storage.FileSystem.fsproj" />
+      <ProjectReference Include="..\enty.Utils\enty.Utils.fsproj" />
     </ItemGroup>
 
 </Project>
