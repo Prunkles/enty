@@ -7,15 +7,16 @@
 
     <ItemGroup>
         <Content Include="appsettings.json" />
+        <Compile Include="Domain.fs" />
         <Compile Include="Service.fs" />
-        <Compile Include="Library.fs" />
+        <Compile Include="FileSystemResourceStorage.fs" />
         <Compile Include="HttpHandlers.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Giraffe" Version="4.1.0" />
-      <PackageReference Include="MediaTypeMap" Version="2.1.0" />
+      <PackageReference Include="Giraffe" Version="5.0.0" />
+<!--      <PackageReference Include="MediaTypeMap" Version="2.1.0" />-->
     </ItemGroup>
 
     <ItemGroup>

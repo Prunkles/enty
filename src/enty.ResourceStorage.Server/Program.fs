@@ -9,30 +9,37 @@ open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 
 module Startup =
-    
+
     open Giraffe
+    open Giraffe.EndpointRouting
     open enty.ResourceStorage
     open enty.ResourceStorage.FileSystem
 
     let configureServices (ctx: WebHostBuilderContext) (services: IServiceCollection) : unit =
         services.AddTransient<IResourceStorage>(fun sp ->
+            let logger = sp.GetRequiredService<ILogger<FileSystemResourceStorage>>()
             let path = ctx.Configuration.["Storage:Path"]
             let nestingLevel = 1
-            upcast FileSystemResourceStorage(path, nestingLevel)
+            upcast FileSystemResourceStorage(logger, path, nestingLevel)
         ) |> ignore
         services.AddGiraffe() |> ignore
-    
+
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
-        app.UseGiraffe(HttpHandlers.server)
-    
+        app
+            .UseRouting()
+            .UseEndpoints(fun endpoint ->
+                endpoint.MapGiraffeEndpoints(HttpHandlers.endpoints)
+            )
+        |> ignore
+
     let configureLogging (ctx: WebHostBuilderContext) (logging: ILoggingBuilder) : unit =
         ()
 
 
 let createHostBuilder args =
     Host.CreateDefaultBuilder()
-        .ConfigureWebHostDefaults(fun webhost ->
-            webhost
+        .ConfigureWebHostDefaults(fun webBuilder ->
+            webBuilder
                 .ConfigureServices(Startup.configureServices)
                 .Configure(Startup.configureApp)
                 .ConfigureLogging(Startup.configureLogging)
