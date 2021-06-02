@@ -6,7 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="wwwroot" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
@@ -17,6 +16,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\enty.Utils\enty.Utils.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="wwwroot\**" />
     </ItemGroup>
 
 </Project>
