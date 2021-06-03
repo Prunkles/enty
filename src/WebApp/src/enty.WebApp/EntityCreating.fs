@@ -14,7 +14,8 @@ open MindApiImpl
 let SenseInput () =
     let input, setInput = React.useState("")
     Mui.textareaAutosize [
-
+        prop.value input
+        prop.onChange setInput
     ]
 
 let writeResource formData = async {
