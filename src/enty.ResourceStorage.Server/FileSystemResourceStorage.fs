@@ -31,7 +31,7 @@ type FileSystemResourceStorage(logger: ILogger<FileSystemResourceStorage>, path:
         let! lines = File.ReadAllLinesAsync(path) |> Async.AwaitTask
         let resMeta =
             lines
-            |> Seq.map ^fun s -> let x = s.Split(':') in x.[0], x.[1]
+            |> Seq.map ^fun s -> let x = s.Split(':', 2) in x.[0], x.[1]
             |> Map.ofSeq
             |> ResourceMeta.ofMap
         match resMeta with

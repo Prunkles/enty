@@ -41,11 +41,12 @@ let readHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     | Ok (resReader, resMeta) ->
         do ctx.SetHttpHeader("Content-Type", resMeta.ContentType)
         do ctx.SetHttpHeader("ETag", resMeta.ETag)
+        ctx.Response.GetTypedHeaders().LastModified <- resMeta.LastModified
         do! resReader.CopyToAsync(ctx.Response.BodyWriter)
         do! resReader.CompleteAsync()
         return! Successful.ok id next ctx
     | Error () ->
-        return! RequestErrors.notFound (text $"Resource {rid.Unwrap} not found") next ctx
+        return! RequestErrors.notFound (text $"Resource {ResourceId.Unwrap rid} not found") next ctx
 }
 
 let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
@@ -67,8 +68,10 @@ let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     let resMeta =
         let contentType = file.ContentType
         let eTag = sprintf "\"%s\"" hashS
+        let lastModified = DateTimeOffset.Now
         { ContentType = contentType
-          ETag = eTag }
+          ETag = eTag
+          LastModified = lastModified }
 
     let! resWriter = storage.Write(rid, resMeta)
     use resWriterStream = resWriter.AsStream()
