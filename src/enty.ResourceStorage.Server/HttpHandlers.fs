@@ -4,6 +4,8 @@ open System
 open System.IO
 open System.IO.Pipelines
 open System.Net.Mime
+open System.Security.Cryptography
+open System.Text
 open Giraffe
 open FSharp.Control.Tasks
 open Microsoft.AspNetCore.Http
@@ -38,6 +40,7 @@ let readHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     match! storage.Read(rid) with
     | Ok (resReader, resMeta) ->
         do ctx.SetHttpHeader("Content-Type", resMeta.ContentType)
+        do ctx.SetHttpHeader("ETag", resMeta.ETag)
         do! resReader.CopyToAsync(ctx.Response.BodyWriter)
         do! resReader.CompleteAsync()
         return! Successful.ok id next ctx
@@ -46,14 +49,31 @@ let readHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
 }
 
 let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
+    use hashAlg: HashAlgorithm = upcast MD5.Create()
     let storage = getStorage ctx
+
     let file = ctx.Request.Form.Files.[0]
+    use resStream = new MemoryStream()
+    do! file.CopyToAsync(resStream)
+
+    resStream.Position <- 0L
+    let! hashBs = hashAlg.ComputeHashAsync(resStream)
+    let hashS =
+        let sb = StringBuilder()
+        for b in hashBs do
+            sb.Append(b.ToString("x2")) |> ignore
+        sb.ToString()
+
     let resMeta =
         let contentType = file.ContentType
-        { ContentType = contentType }
+        let eTag = sprintf "\"%s\"" hashS
+        { ContentType = contentType
+          ETag = eTag }
+
     let! resWriter = storage.Write(rid, resMeta)
     use resWriterStream = resWriter.AsStream()
-    do! file.CopyToAsync(resWriterStream)
+    resStream.Position <- 0L
+    do! resStream.CopyToAsync(resWriterStream)
     do! resWriter.CompleteAsync()
     return! Successful.ok id next ctx
 }

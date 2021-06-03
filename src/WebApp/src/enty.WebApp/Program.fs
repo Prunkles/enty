@@ -52,6 +52,8 @@ let WishPage () =
 let App () =
     Mui.container [
         CreateEntity ()
+        Mui.divider []
+        WishPage ()
     ]
 
 open Browser.Dom

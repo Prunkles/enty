@@ -7,13 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="SenseJsObject.fs" />
         <Compile Include="Library.fs" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\..\lib\Khonsu.Coding.Json.Fable\Khonsu.Coding.Json.Fable.fsproj" />
       <ProjectReference Include="..\..\..\enty.Core\enty.Core.fsproj" />
-      <ProjectReference Include="..\..\..\enty.Mind.Gateway.Api\enty.Mind.Gateway.Api.fsproj" />
+<!--      <ProjectReference Include="..\..\..\enty.Mind.Gateway.Api\enty.Mind.Gateway.Api.fsproj" />-->
 <!--      <ProjectReference Include="..\..\..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj">-->
 <!--          <Properties>DefineConstants=FABLE_COMPILER</Properties>-->
 <!--      </ProjectReference>-->

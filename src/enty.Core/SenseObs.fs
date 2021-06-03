@@ -1,6 +1,7 @@
 //[<System.Obsolete>]
 namespace enty.Core
 
+open enty.Utils
 
 type Sense =
     | Value of string
@@ -29,8 +30,10 @@ module Sense =
                 }
             | _ -> None
         | [] -> Some sense
-    
+
     let tryGetValue path sense =
         match tryGet path sense with
         | Some (Sense.Value v) -> Some v
         | _ -> None
+
+    let tryAsValue sense = match sense with Sense.Value v -> Some v | _ -> None

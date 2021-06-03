@@ -6,6 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="..\enty.Mind.Api\openapi.yaml">
+          <Link>openapi.yaml</Link>
+        </None>
         <Content Include="appsettings.json" />
         <Compile Include="WishParsing.fs" />
         <Compile Include="SenseParsing.fs" />

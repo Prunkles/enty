@@ -4,15 +4,11 @@ open Feliz
 open Feliz.MaterialUI
 open enty.Utils
 open enty.Core
-open enty.Core.Traits
-open enty.WebApp.MindApiImpl
 
 
 [<RequireQualifiedAccess>]
 module Image =
 
-    open enty.ImagePreviewService.Client.Fable
-    
     type ImageEntity =
         { MasterSizeUrl: string }
     
@@ -20,14 +16,13 @@ module Image =
         let parse entity = option {
             let! originalSizeUrl =
                 entity.Sense
-                |> Sense.byMapPath [ "image"; "sizes"; "original"; "resource-url" ]
-                |> Option.bind Sense.asValue
+                |> Sense.tryGetValue [ "image"; "sizes"; "original"; "resource-url" ]
             return { MasterSizeUrl = originalSizeUrl }
         }
 
     [<ReactComponent>]
     let EntityElement (entity: ImageEntity) =
-        let sampleUrl = ImagePreview.GetUrl(entity.MasterSizeUrl, width=100)
+        let sampleUrl = ImagePreviewServiceImpl.imagePreview.GetUrl(entity.MasterSizeUrl, width=100)
         Html.img [
             prop.src sampleUrl
         ]

@@ -6,11 +6,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="appsettings.json" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Giraffe" Version="5.0.0" />
+<!--      <PackageReference Include="Giraffe" Version="5.0.0" />-->
+      <PackageReference Include="Ply" Version="0.3.1" />
       <PackageReference Include="SixLabors.ImageSharp.Web" Version="1.0.3" />
     </ItemGroup>
 

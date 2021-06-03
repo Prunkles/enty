@@ -6,12 +6,11 @@ open System.Net.Http
 open Microsoft.Extensions.Hosting
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Logging
-open SixLabors.ImageSharp
-open SixLabors.ImageSharp.Metadata
 open SixLabors.ImageSharp.Web
 open SixLabors.ImageSharp.Web.Providers
 open FSharp.Control.Tasks
 open SixLabors.ImageSharp.Web.Resolvers
+open enty.Utils
 
 type HttpResponseImageResolver(response: HttpResponseMessage) =
     interface IImageResolver with
@@ -19,7 +18,8 @@ type HttpResponseImageResolver(response: HttpResponseMessage) =
             let metadata =
                 option {
                     let! lastModified = response.Content.Headers.LastModified |> Option.ofNullable
-                    let! contentLength = response.Content.Headers.ContentLength |> Option.ofNullable
+                    and! contentLength = response.Content.Headers.ContentLength |> Option.ofNullable
+
                     return ImageMetadata(lastModified.DateTime, contentLength)
                 }
                 |> Option.defaultWith (fun () -> ImageMetadata())
@@ -30,12 +30,12 @@ type HttpResponseImageResolver(response: HttpResponseMessage) =
         }
 
 type UrlImageProvider(logger: ILogger<UrlImageProvider>, httpClientFactory: IHttpClientFactory) =
+    let mutable match' = Func<_, _>(fun _ -> true)
     interface IImageProvider with
         member this.ProcessingBehavior = ProcessingBehavior.CommandOnly
-        member this.Match with get() = Func<_, _>(fun _ -> true) and set _ = ()
+        member this.Match with get() = match' and set v = match' <- v
         member this.IsValidRequest(context) =
-            logger.LogDebug($"Path: {context.Request.Path}")
-            true
+            context.Request.Query.ContainsKey("url")
         member this.GetAsync(context) = task {
             let url = context.Request.Query.["url"].[0]
             let client = httpClientFactory.CreateClient()
@@ -43,33 +43,23 @@ type UrlImageProvider(logger: ILogger<UrlImageProvider>, httpClientFactory: IHtt
             return upcast HttpResponseImageResolver(response)
         }
 
-module Endpoints =
-    
-    open Giraffe
-    
-    let endpoint: HttpHandler =
-        choose [
-            RequestErrors.notFound (text "Not found")
-        ]
 
 module Startup =
 
     open Microsoft.AspNetCore.Builder
-    open Microsoft.AspNetCore.Hosting
     open Microsoft.Extensions.DependencyInjection
     open SixLabors.ImageSharp.Web.DependencyInjection
-    open Giraffe
-    
+
     let configureServices (ctx: WebHostBuilderContext) (services: IServiceCollection) : unit =
         services.AddHttpClient() |> ignore
         services.AddImageSharp()
             .RemoveProvider<PhysicalFileSystemProvider>()
             .AddProvider<UrlImageProvider>()
         |> ignore
-    
+
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
         app.UseImageSharp() |> ignore
-        app.UseGiraffe(Endpoints.endpoint)
+        app.UseRouting() |> ignore
 
 let createWebHostBuilder args =
     Host.CreateDefaultBuilder(args)

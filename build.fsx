@@ -1,8 +1,11 @@
 #r "paket:
 nuget Fake.DotNet.Cli
 nuget Fake.IO.FileSystem
-nuget Fake.Core.Target //"
+nuget Fake.Core.Target
+nuget Fake.JavaScript.Npm
+//"
 #load ".fake/build.fsx/intellisense.fsx"
+
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
@@ -15,11 +18,12 @@ Target.initEnvironment ()
 Target.create "Clean" (fun _ ->
     !! "src/**/bin"
     ++ "src/**/obj"
-    |> Shell.cleanDirs 
+    |> Shell.cleanDirs
 )
 
 Target.create "Build" (fun _ ->
     !! "src/**/*.*proj"
+    -- "src/WebApp/build/**"
     |> Seq.iter (DotNet.build id)
 )
 

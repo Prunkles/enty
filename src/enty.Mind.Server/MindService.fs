@@ -11,8 +11,8 @@ open enty.Core
 open enty.Mind
 //open enty.Mind.Server.Api
 
-open WishParsing
-open SenseParsing
+//open WishParsing
+//open SenseParsing
 open SenseJToken
 
 //type JsonValue = Newtonsoft.Json.Linq.JToken
@@ -50,9 +50,9 @@ open SenseJToken
 //        }
 
 module Sense =
-    
+
     type ProtoSense = enty.Mind.Proto.Sense
-    
+
     let rec toProto (sense: Sense) : ProtoSense =
         let protoSense = ProtoSense()
         match sense with
@@ -69,7 +69,7 @@ module Sense =
                 protoSenseMap.Map.Add(k, toProto v)
             protoSense.SenseMap <- protoSenseMap
         protoSense
-    
+
     let rec ofProto (protoSense: ProtoSense) : Sense =
         match protoSense.SenseCase with
         | ProtoSense.SenseOneofCase.SenseValue ->
@@ -87,7 +87,7 @@ module Sense =
 
 
 module Wish =
-    
+
     let private protoPathToPath (protoPath: Proto.WishPath) : WishPathEntry list =
         [
             for pEntry in protoPath.Entries do
@@ -117,7 +117,7 @@ module Wish =
 
 type GrpcServerMindService(mind: IMind) =
     inherit enty.Mind.Proto.MindService.MindServiceBase()
-    
+
     override this.Forget(request, context) = task {
         let eid = request.Eid |> Guid.Parse |> EntityId
         do! mind.Forget(eid)
