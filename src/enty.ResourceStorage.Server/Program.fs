@@ -22,12 +22,21 @@ module Startup =
             let nestingLevel = 1
             upcast FileSystemResourceStorage(logger, path, nestingLevel)
         ) |> ignore
+        services.AddCors(fun cors ->
+            cors.AddPolicy("_AllowAll", fun builder ->
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                |> ignore
+            )
+        ) |> ignore
         services.AddGiraffe() |> ignore
 
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
-        app
-            .UseRouting()
-            .UseEndpoints(fun endpoint ->
+        app.UseRouting() |> ignore
+        app.UseCors("_AllowAll") |> ignore
+        app.UseEndpoints(fun endpoint ->
                 endpoint.MapGiraffeEndpoints(HttpHandlers.endpoints)
             )
         |> ignore

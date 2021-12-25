@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DefineConstants>FABLE_COMPILER</DefineConstants>
     </PropertyGroup>
@@ -21,9 +21,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Fable.Core" Version="3.2.6" />
-      <PackageReference Include="Thoth.Fetch" Version="2.0.0" />
-      <PackageReference Include="Thoth.Json" Version="5.1.0" />
+      <PackageReference Include="Fable.Core" Version="3.6.1" />
+      <PackageReference Include="Thoth.Fetch" Version="3.0.1" />
+      <PackageReference Include="Thoth.Json" Version="6.0.0" />
     </ItemGroup>
 
 </Project>

@@ -26,7 +26,7 @@ type EntyDataConnection(options: LinqToDbConnectionOptions<EntyDataConnection>) 
 
 
 type DbMind(db: EntyDataConnection) =
-    
+
     interface IMind with
         member this.Remember(EntityId entityId, sense) = async {
             let senseJson = (Sense.toJToken sense).ToString()
@@ -38,16 +38,16 @@ type DbMind(db: EntyDataConnection) =
                 |> Async.Ignore
             ()
         }
-    
+
         member this.Forget(EntityId entityId) = async {
             let q = query {
                 for entity in db.Entities do
                 where (entity.Id = entityId)
             }
-            
+
             do! q.DeleteAsync() |> Async.AwaitTask |> Async.Ignore
         }
-    
+
         member this.GetEntities(eids) = async {
             let eids = eids |> Seq.map (fun (EntityId x) -> x)
             let q = query {
@@ -63,10 +63,10 @@ type DbMind(db: EntyDataConnection) =
                       Sense = JToken.Parse(senseString) |> Sense.ofJToken }
                 )
                 |> Seq.toArray
-            
+
             return entities
         }
-    
+
         member this.Wish(wish, offset, limit) = async {
             let selectEntitiesByIds ids = query {
                 for e in db.Entities do
@@ -85,7 +85,7 @@ type DbMind(db: EntyDataConnection) =
                 where (Sql.Json.op_AtAt(entity.Sense, jsonpath))
                 select entity
             }
-            
+
             let rec queryWish wish =
                 match wish with
                 | Wish.ValueIs (path, value) ->
@@ -101,7 +101,7 @@ type DbMind(db: EntyDataConnection) =
                     let jsonpath = $"${path}[*] == \"{value}\""
                     selectEntitiesByJsonpath jsonpath
                 | Wish.Operator wishOperator -> queryWishOperator wishOperator
-            
+
             and queryWishOperator wishOperator =
                 match wishOperator with
                 | WishOperator.Not wish ->
@@ -128,15 +128,15 @@ type DbMind(db: EntyDataConnection) =
                             .Union(e2s.Select(fun e2 -> e2.Id))
                             .Distinct()
                     selectEntitiesByIds ids
-                
-            
+
+
             let q = query {
                 for e in queryWish wish do
                 select e.Id
             }
-            
+
             let! total = q.CountAsync() |> Async.AwaitTask
             let! eids = q.Skip(offset).Take(limit).Select(EntityId).ToArrayAsync() |> Async.AwaitTask
-            
+
             return eids, total
         }

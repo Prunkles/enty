@@ -57,9 +57,12 @@ module Startup =
             )
         ) |> ignore
 
-        services.AddGiraffe() |> ignore
+        services.AddGrpc() |> ignore
+
+//        services.AddGiraffe() |> ignore
 
     let configureApp (host: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
+        app.UseRouting() |> ignore
         app.UseEndpoints(fun endpoints ->
             endpoints.MapGrpcService<GrpcServerMindService>() |> ignore
         ) |> ignore

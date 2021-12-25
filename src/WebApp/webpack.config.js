@@ -1,11 +1,12 @@
 const path = require('path')
 const webpack = require('webpack')
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 // If we're running the webpack-dev-server, assume we're in development mode
-const isProduction = 
+const isProduction =
     // !process.argv.find(v => v.indexOf('webpack-dev-server') !== -1)
     process.env.NODE_ENV === 'production'
 const isDevelopment = !isProduction && process.env.NODE_ENV !== 'production'
@@ -20,14 +21,14 @@ const CONFIG = {
         host: '0.0.0.0',
         proxy: {
             '/mind/**': {
-                target: 'http://localhost:' + '5010',
+                target: 'http://localhost:' + '5015',
                 changeOrigin: true,
                 pathRewrite: {
                     '^/mind': '',
                 },
             },
             '/storage/**': {
-                target: 'http://localhost:' + '5021',
+                target: 'http://localhost:' + '5020',
                 changeOrigin: true,
                 pathRewrite: { '^/storage': '' },
             }
@@ -38,6 +39,7 @@ const CONFIG = {
 console.log("Bundling for " + (isProduction ? "production" : "development") + "...")
 
 const commonPlugins = [
+    new NodePolyfillPlugin(),
     new HtmlWebpackPlugin({
         filename: 'index.html',
         template: CONFIG.indexHtmlTemplate,
@@ -71,7 +73,7 @@ module.exports = {
         isProduction ? [
             new CopyWebpackPlugin({
                 patterns: [
-                    { 
+                    {
                         from: resolve(CONFIG.assetsDir),
                         noErrorOnMissing: true,
                     }

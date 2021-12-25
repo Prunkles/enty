@@ -2,6 +2,7 @@ namespace enty.Mind.Server
 
 open System
 open System.Threading.Tasks
+open FSharp.Control
 open FSharp.Control.Tasks.V2
 open Google.Protobuf.Collections
 open Grpc.Core
@@ -9,6 +10,7 @@ open Google.Protobuf.WellKnownTypes
 open enty.Utils
 open enty.Core
 open enty.Mind
+open System.Linq
 //open enty.Mind.Server.Api
 
 //open WishParsing
@@ -133,16 +135,7 @@ type GrpcServerMindService(mind: IMind) =
     override this.GetEntities(requestStream, responseStream, context) =
         task {
             // TODO: Process stream-like
-            let! requests = task {
-                let requests = ResizeArray()
-                let! moved = requestStream.MoveNext(context.CancellationToken)
-                let mutable moved = moved
-                while moved do
-                    requests.Add(requestStream.Current)
-                    let! moved' = requestStream.MoveNext(context.CancellationToken)
-                    moved <- moved'
-                return requests
-            }
+            let! requests = requestStream.ReadAllAsync() |> AsyncSeq.ofAsyncEnum |> AsyncSeq.toArrayAsync
             let eids = requests |> Seq.map (fun rq -> EntityId (Guid.Parse(rq.Eid))) |> Seq.toArray
             let! entities = mind.GetEntities(eids)
             for entity in entities do

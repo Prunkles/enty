@@ -93,7 +93,7 @@ type FetchMindApi(baseAddress: string) =
                 ]
                 RequestProperties.Body !^requestBodyString
             ]
-            if not response.Ok then return failwith "%A" response else
+            if not response.Ok then return failwithf "%A" response else
             let! responseBodyString = response.text()
             let decodeResult =
                 let decoder = jsonADecoder {
@@ -102,6 +102,6 @@ type FetchMindApi(baseAddress: string) =
                     return Array.map EntityId eidGs, total
                 }
                 jsonDecoding.DecodeFromString(responseBodyString, decoder jsonDecoding)
-            let eids, total = decodeResult |> function Ok x -> x | Error err -> failwith "%A" err
+            let eids, total = decodeResult |> function Ok x -> x | Error err -> failwithf "%A" err
             return eids, total
         }

@@ -1,14 +1,17 @@
 module enty.Mind.Gateway.Endpoints
 
+open Microsoft.Extensions.Logging
 open Giraffe
 open Giraffe.EndpointRouting
 open FSharp.Control.Tasks
 open Khonsu.Coding.Json
 open Khonsu.Coding.Json.Net
+open enty.Utils
 open enty.Core
 open enty.Mind
 open enty.Mind.Client
 open WishParsing
+open SenseParsing
 open SenseJToken
 
 let wishHandler : HttpHandler = fun next ctx -> task {
@@ -19,9 +22,9 @@ let wishHandler : HttpHandler = fun next ctx -> task {
     let! jsonRequest = ctx.BindJsonAsync<{| wishString: string |}>()
     let wishString = jsonRequest.wishString
     let wish = Wish.parse wishString |> function Ok wish -> wish | Error err -> failwith err
-    
+
     let! eids, total = mindService.Wish(wish, offset, limit)
-    
+
     let eidGs = eids |> Array.map EntityId.Unwrap
     return! ctx.WriteJsonAsync({| eids = eidGs; total = total |})
 }
@@ -30,10 +33,14 @@ let rememberHandler eidG : HttpHandler = fun next ctx -> task {
     let mindService = ctx.GetService<IMindService>()
     let eid = EntityId eidG
     let! requestBodyString = ctx.ReadBodyFromRequestAsync()
+    ctx.GetLogger().LogDebug($"BodyString:\n{requestBodyString}")
     let json = JsonValue.Parse(requestBodyString)
-    let decode = JsonADecode.field "sense" JsonADecode.raw (ThothJsonDecoding())
-    let jsonSense = decode json |> function Ok x -> x | Error err -> failwithf "%A" err
-    let sense = Sense.ofJToken jsonSense
+//    let decode = JsonADecode.field "sense" JsonADecode.raw (ThothJsonDecoding())
+//    let jsonSense = decode json |> function Ok x -> x | Error err -> failwithf "%A" err
+//    let sense = Sense.ofJToken jsonSense
+    let decoder = JsonADecode.field "senseString" JsonADecode.string (ThothJsonDecoding())
+    let senseString = decoder json |> Result.getOk
+    let sense = Sense.parse senseString |> Result.getOk
     do! mindService.Remember(eid, sense)
     return! Successful.OK "" next ctx
 }
@@ -54,9 +61,9 @@ let getEntitiesHandler : HttpHandler = fun next ctx -> task {
         decoding.DecodeFromString(requestBodyString, decoder)
         |> function Ok x -> x | Error err -> failwithf "%A" err
     let eids = eidGs |> Array.map EntityId
-    
+
     let! entities = mindService.GetEntities(eids)
-    
+
     let r =
         let encoding: IJsonEncoding<_> = upcast ThothJsonEncoding()
         let encodeEntity (entity: Entity) =
@@ -67,7 +74,7 @@ let getEntitiesHandler : HttpHandler = fun next ctx -> task {
         let encoder = JsonAEncode.object [ "entities", JsonAEncode.array (entities |> Array.map encodeEntity) ]
         let json = encoder encoding
         encoding.EncodeToString(json)
-    
+
     do ctx.SetContentType("application/json")
     return! ctx.WriteStringAsync(r)
 }

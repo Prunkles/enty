@@ -11,12 +11,12 @@ module Image =
 
     type ImageEntity =
         { MasterSizeUrl: string }
-    
+
     module ImageEntity =
         let parse entity = option {
             let! originalSizeUrl =
                 entity.Sense
-                |> Sense.tryGetValue [ "image"; "sizes"; "original"; "resource-url" ]
+                |> Sense.tryGetValue [ "image"; "source-uri" ]
             return { MasterSizeUrl = originalSizeUrl }
         }
 
@@ -26,7 +26,7 @@ module Image =
         Html.img [
             prop.src sampleUrl
         ]
-    
+
     [<ReactComponent>]
     let Entity (entity: ImageEntity) =
         Html.img [
@@ -35,13 +35,13 @@ module Image =
 
 
 module Undefined =
-    
+
     [<ReactComponent>]
     let EntityElement { Id = EntityId eidG } =
         Html.div [
             prop.text $"Entity {eidG}"
         ]
-    
+
     [<ReactComponent>]
     let Entity { Id = EntityId eidG } =
         Html.div [
@@ -52,6 +52,7 @@ module Undefined =
 let EntityElement (entity: Entity) =
     Option.choose [
         entity |> Image.ImageEntity.parse |> Option.map Image.EntityElement
+        // ...
     ]
     |> Option.defaultWith (fun () -> Undefined.EntityElement entity)
 

@@ -6,6 +6,7 @@ open Feliz
 open Feliz.MaterialUI
 open enty.Core
 open enty.WebApp
+open enty.WebApp.Utils
 
 open EntityCreating
 
@@ -41,19 +42,20 @@ let WishPage () =
             let! eids, total = MindApiImpl.mindApi.Wish(wishString, 0, 10)
             let! entities = MindApiImpl.mindApi.GetEntities(eids)
             setEntities entities
-        } |> Async.StartImmediate
+        } |> Async.startSafe
     Html.div [
         yield WishInput onWishString true
         for entity in entities do
             yield EntityRendering.Entity entity
     ]
 
+let forms = [ ImageTraitForm ]
 [<ReactComponent>]
 let App () =
     Mui.container [
-        CreateEntity ()
-        Mui.divider []
-        WishPage ()
+        EntityCreateForm (printfn "%A") forms
+//        Mui.divider []
+//        WishPage ()
     ]
 
 open Browser.Dom

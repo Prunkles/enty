@@ -15,11 +15,11 @@ module GrpcMindServiceImpl =
 
     open System
     open System.Threading
-    
+
     module Sense =
-        
+
         type ProtoSense = enty.Mind.Proto.Sense
-        
+
         let rec toProto (sense: Sense) : ProtoSense =
             let protoSense = ProtoSense()
             match sense with
@@ -36,7 +36,7 @@ module GrpcMindServiceImpl =
                     protoSenseMap.Map.Add(k, toProto v)
                 protoSense.SenseMap <- protoSenseMap
             protoSense
-        
+
         let rec ofProto (protoSense: ProtoSense) : Sense =
             match protoSense.SenseCase with
             | ProtoSense.SenseOneofCase.SenseValue ->
@@ -51,11 +51,11 @@ module GrpcMindServiceImpl =
                 let mp = mp |> Seq.map (fun (KeyValue(k, v)) -> k, ofProto v) |> Map.ofSeq
                 Sense.Map mp
             | _ -> invalidArg (nameof protoSense) ""
-    
+
     module Wish =
 
         open Google.Protobuf.WellKnownTypes
-        
+
         let private pathToProtoPath (path: WishPathEntry list) : Proto.WishPath =
             let pWishPath = Proto.WishPath()
             for entry in path do
@@ -69,7 +69,7 @@ module GrpcMindServiceImpl =
                     pEntry.MapKey <- key
                     pWishPath.Entries.Add(pEntry)
             pWishPath
-        
+
         let rec toProto (wish: Wish) : Proto.Wish =
             let pWish = Proto.Wish()
             match wish with
@@ -98,11 +98,11 @@ module GrpcMindServiceImpl =
                     pOperator.Not <- Proto.WishNotOperator(Wish = toProto op)
                 pWish.Operator <- pOperator
             pWish
-    
-     
+
+
     open enty.Mind.Proto
     open FSharp.Control.Tasks.V2
-    
+
     type GrpcClientMindService(client: MindService.MindServiceClient) =
         interface IMindService with
             member this.Forget(eid) = async {
@@ -114,10 +114,12 @@ module GrpcMindServiceImpl =
             member this.GetEntities(eids) = async {
                 return! Async.AwaitTask(task {
                     let call = client.GetEntities()
+                    let requestStream = call.RequestStream
+                    let responseStream = call.ResponseStream
                     for EntityId eidG in eids do
                         let request = GetEntitiesRequest(Eid = string eidG)
-                        do! call.RequestStream.WriteAsync(request)
-                    let responseStream = call.ResponseStream
+                        do! requestStream.WriteAsync(request)
+                    do! requestStream.CompleteAsync()
                     let! responses = task {
                         let requests = ResizeArray()
                         let! moved = responseStream.MoveNext(CancellationToken.None)
@@ -169,7 +171,7 @@ module GrpcMindServiceImpl =
 //module Sense =
 //
 //    open Newtonsoft.Json.Linq
-//    
+//
 //    let rec ofJToken (token: JToken) : Sense =
 //        match token.Type with
 //        | JTokenType.Array ->
@@ -185,7 +187,7 @@ module GrpcMindServiceImpl =
 //            let mp = jObj.Properties() |> Seq.map (fun jp -> jp.Name, ofJToken jp.Value) |> Map.ofSeq
 //            Sense.Map mp
 //        | _ -> invalidOp ""
-//    
+//
 //    let rec toJToken (sense: Sense) : JToken =
 //        match sense with
 //        | Sense.Value value ->
@@ -196,10 +198,10 @@ module GrpcMindServiceImpl =
 //        | Sense.Map mp ->
 //            let content = mp |> Seq.map (fun (KeyValue (k, v)) -> JProperty(k, toJToken v))
 //            upcast JObject(content)
-//    
+//
 //
 //module MindApi =
-//    
+//
 //    open System
 //    open System.Net.Http
 //    open System.Net.Http.Headers
@@ -208,20 +210,20 @@ module GrpcMindServiceImpl =
 //    open FSharp.Control.Tasks.V2
 //    open Khonsu.Coding.Json
 //    open Khonsu.Coding.Json.Net
-//    
+//
 //    let remember (client: HttpClient) (jsonEncoding: IJsonEncoding<JsonValue>) (eidGuid: Guid) (senseString: string) : Task<unit> = task {
 //        let path = "/remember"
 //        let json = Encode.object [
 //            "eid", Encode.guid eidGuid
 //            "sense", sense
 //        ]
-//        
+//
 //        use content = new StringContent(json.ToString())
 //        content.Headers.ContentType <- MediaTypeHeaderValue.Parse("application/json")
 //        let! response = client.PostAsync(path, content)
 //        return ()
 //    }
-//    
+//
 //    let forget (client: HttpClient) (eidGuid: Guid) : Task<unit> = task {
 //        let path = "/forget"
 //        let json = Encode.object [
@@ -232,7 +234,7 @@ module GrpcMindServiceImpl =
 //        let! response = client.PostAsync(path, content)
 //        return ()
 //    }
-//    
+//
 //    let wish (client: HttpClient) (wishString: string) (offset: int) (limit: int) : Task<Guid[] * int> = task {
 //        let path = "/wish"
 //        let json = Encode.object [
@@ -245,9 +247,9 @@ module GrpcMindServiceImpl =
 //        use content = new StringContent(json.ToString())
 //        content.Headers.ContentType <- MediaTypeHeaderValue.Parse(MediaTypeNames.Application.Json)
 //        let! response = client.PostAsync(path, content)
-//        
+//
 //        let! json = response.Content.ReadAsStringAsync()
-//        let decoder = 
+//        let decoder =
 //            Decode.object (fun get ->
 //                let eidGs = get.Required.Field "eids" (Decode.array Decode.guid)
 //                let total = get.Required.Field "pgn" (Decode.field "total" Decode.int)
@@ -256,7 +258,7 @@ module GrpcMindServiceImpl =
 //        let result = Decode.fromString decoder json
 //        return result |> function Ok x -> x | _ -> failwith ""
 //    }
-//    
+//
 //    let getEntities (client: HttpClient) (eidGs: Guid[]) : Task<(Guid * JsonValue)[]> = task {
 //        let path = "/getEntities"
 //        let requestJson = Encode.object [
@@ -264,10 +266,10 @@ module GrpcMindServiceImpl =
 //        ]
 //        use content = new StringContent(requestJson.ToString())
 //        content.Headers.ContentType <- MediaTypeHeaderValue.Parse(MediaTypeNames.Application.Json)
-//        
+//
 //        printfn $"BA: {client.BaseAddress}; path: {path}"
 //        let! response = client.PostAsync(path, content)
-//        
+//
 //        let! responseString = response.Content.ReadAsStringAsync()
 //        let decoder =
 //            Decode.field "entities" (Decode.array (Decode.object (fun get ->
@@ -283,12 +285,12 @@ module GrpcMindServiceImpl =
 //type ClientMindApi(client: HttpClient) =
 //    let jsonEncoding = ThothJsonEncoding() :> IJsonEncoding<_>
 //    let jsonDecoding = ThothJsonDecoding() :> IJsonDecoding<_>
-//    
+//
 //    let postR (route: string) (request: 'q) encoder = task {
 //        let requestString = jsonEncoding.EncodeToString(encoder request jsonEncoding)
 //        use content = new StringContent(requestString)
 //        content.Headers.ContentType <- MediaTypeHeaderValue.Parse(MediaTypeNames.Application.Json)
-//        
+//
 //        let! httpResponseMsg = client.PostAsync(route, content)
 //        return! httpResponseMsg.Content.ReadAsStringAsync()
 //    }
@@ -297,7 +299,7 @@ module GrpcMindServiceImpl =
 //        match responseResult with
 //        | Ok response -> response
 //        | Error err -> failwith $"{err}"
-//    
+//
 //    interface IMindApi<JsonValue> with
 //        member this.Forget(request) = async {
 //            let! _ = postR "/forget" request (ForgetRequest.Encoder()) |> Async.AwaitTask
