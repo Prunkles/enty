@@ -19,5 +19,3 @@ and [<RequireQualifiedAccess>]
     | And of Wish * Wish
     | Or of Wish * Wish
     | Not of Wish
-
-

@@ -61,6 +61,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.ImagePreviewService.Se
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.ImagePreviewService.Client.Fable", "src\enty.ImagePreviewService.Client.Fable\enty.ImagePreviewService.Client.Fable.fsproj", "{30E68FB1-4AE0-45F8-8368-053B1D8C4B53}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{50648B47-AA4B-42D4-9EE9-2F4045DD5BE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

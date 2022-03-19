@@ -3,7 +3,6 @@ module enty.Mind.Gateway.Endpoints
 open Microsoft.Extensions.Logging
 open Giraffe
 open Giraffe.EndpointRouting
-open FSharp.Control.Tasks
 open Khonsu.Coding.Json
 open Khonsu.Coding.Json.Net
 open enty.Utils
@@ -13,6 +12,7 @@ open enty.Mind.Client
 open WishParsing
 open SenseParsing
 open SenseJToken
+
 
 let wishHandler : HttpHandler = fun next ctx -> task {
     let mindService = ctx.GetService<IMindService>()

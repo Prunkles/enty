@@ -3,7 +3,6 @@ namespace enty.Mind.Server
 open System
 open System.Threading.Tasks
 open FSharp.Control
-open FSharp.Control.Tasks.V2
 open Google.Protobuf.Collections
 open Grpc.Core
 open Google.Protobuf.WellKnownTypes

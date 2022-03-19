@@ -2,7 +2,6 @@ namespace enty.Mind.Server
 
 open System
 open System.Linq
-open FSharp.Control
 open LinqToDB
 open LinqToDB.Configuration
 open LinqToDB.Data

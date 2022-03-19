@@ -46,27 +46,27 @@ paths:
                       $ref: '#/components/schemas/EntityId'
                   total:
                     type: integer
-  
+
   /remember/{eid}:
     post:
       parameters:
         - name: eid
           in: path
           required: true
-          schema: 
+          schema:
             $ref: '#/components/schemas/EntityId'
-      requestBody: 
+      requestBody:
         content:
           application/json:
-            schema: 
+            schema:
               type: object
-              properties: 
-                sense:
-                  $ref: '#/components/schemas/Sense'
-      responses: 
+              properties:
+                senseString:
+                  type: string
+      responses:
         200:
           description: 'TBD'
-  
+
   /forget/{eid}:
     post:
       parameters:
@@ -75,33 +75,33 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/EntityId'
-      responses: 
+      responses:
         200:
           description: 'Entity deleted'
         404:
           description: 'Entity not found'
-  
+
   /getEntities:
     post:
-      requestBody: 
+      requestBody:
         description: 'TBD'
-        content: 
+        content:
           application/json:
-            schema: 
+            schema:
               type: object
-              properties: 
+              properties:
                 eids:
                   type: array
-                  items: 
+                  items:
                     $ref: '#/components/schemas/EntityId'
-      responses: 
+      responses:
         200:
           description: 'TBD'
-          content: 
+          content:
             application/json:
-              schema: 
+              schema:
                 type: object
-                properties: 
+                properties:
                   entities:
                     type: array
                     items:
@@ -112,7 +112,7 @@ paths:
 #      parameters:
 #        - name: rid
 #          in: path
-#          schema: 
+#          schema:
 #            type: string
 #            format: uuid
 #        - name: type
@@ -126,8 +126,8 @@ paths:
 #            Content-Type:
 #              description: 'Any, depending on '
 
-components: 
-  schemas: 
+components:
+  schemas:
     EntityId:
       type: string
       format: uuid
@@ -137,9 +137,8 @@ components:
         type: object
     Entity:
       type: object
-      properties: 
+      properties:
         eid:
           $ref: '#/components/schemas/EntityId'
         sense:
           $ref: '#/components/schemas/Sense'
-    

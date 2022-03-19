@@ -30,6 +30,8 @@ module Startup =
         services.AddGiraffe() |> ignore
 
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
+        if ctx.HostingEnvironment.IsDevelopment() then
+            app.UseDeveloperExceptionPage() |> ignore
         app.UseRouting() |> ignore
         app.UseEndpoints(fun endpoint ->
             endpoint.MapGiraffeEndpoints(Endpoints.endpoints)

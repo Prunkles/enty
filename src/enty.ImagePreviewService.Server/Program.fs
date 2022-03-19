@@ -8,7 +8,6 @@ open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Logging
 open SixLabors.ImageSharp.Web
 open SixLabors.ImageSharp.Web.Providers
-open FSharp.Control.Tasks
 open SixLabors.ImageSharp.Web.Resolvers
 open enty.Utils
 
@@ -40,7 +39,7 @@ type UrlImageProvider(logger: ILogger<UrlImageProvider>, httpClientFactory: IHtt
             let url = context.Request.Query.["url"].[0]
             let client = httpClientFactory.CreateClient()
             let! response = client.GetAsync(url)
-            return upcast HttpResponseImageResolver(response)
+            return HttpResponseImageResolver(response) :> IImageResolver
         }
 
 
