@@ -97,7 +97,7 @@ module Wish =
                     WishPathEntry.ListEntry
                 | Proto.WishPathEntry.EntryOneofCase.MapKey ->
                     WishPathEntry.MapEntry pEntry.MapKey
-                | _ -> failwith "unreachable"
+                | c -> invalidOp $"Invalid proto path entry: %A{c}"
         ]
 
     let rec ofProto (protoWish: Proto.Wish) : Wish =
@@ -113,7 +113,24 @@ module Wish =
             let pMapFieldIs = protoWish.MapFieldIs
             let path = protoPathToPath pMapFieldIs.Path
             Wish.MapFieldIs (path, pMapFieldIs.Key, pMapFieldIs.Value)
-        | _ -> failwith "unreachable"
+        | Proto.Wish.WishOneofCase.Operator ->
+            let pOperator = protoWish.Operator
+            let wishOperator =
+                match pOperator.OperatorCase with
+                | Proto.WishOperator.OperatorOneofCase.And ->
+                    let lhs = ofProto pOperator.And.Lhs
+                    let rhs = ofProto pOperator.And.Rhs
+                    WishOperator.And (lhs, rhs)
+                | Proto.WishOperator.OperatorOneofCase.Or ->
+                    let lhs = ofProto pOperator.Or.Lhs
+                    let rhs = ofProto pOperator.Or.Rhs
+                    WishOperator.Or (lhs, rhs)
+                | Proto.WishOperator.OperatorOneofCase.Not ->
+                    let innerWish = ofProto pOperator.Not.Wish
+                    WishOperator.Not innerWish
+                | c -> invalidOp $"Invalid proto wish: %A{c}"
+            Wish.Operator wishOperator
+        | c -> invalidOp $"Invalid proto wish: %A{c}"
 
 
 type GrpcServerMindService(mind: IMind) =
