@@ -6,10 +6,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="Properties\launchSettings.json" />
         <None Include="..\enty.Mind.Api\openapi.yaml">
-          <Link>openapi.yaml</Link>
+            <Link>openapi.yaml</Link>
         </None>
         <Content Include="appsettings.json" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="WishParsing.fs" />
         <Compile Include="SenseParsing.fs" />
         <Compile Include="SenseJToken.fs" />
@@ -18,18 +22,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FParsec" Version="1.1.1" />
-      <PackageReference Include="Giraffe" Version="5.0.0" />
-      <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.37.0" />
+        <PackageReference Include="FParsec" Version="1.1.1" />
+        <PackageReference Include="Giraffe" Version="5.0.0" />
+        <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.37.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enty.Mind.Client\enty.Mind.Client.fsproj" />
-      <ProjectReference Include="..\enty.Mind.Grpc.Client\enty.Mind.Grpc.Client.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Include="Properties\launchSettings.json" />
+        <ProjectReference Include="..\enty.Mind.Client\enty.Mind.Client.fsproj" />
+        <ProjectReference Include="..\enty.Mind.Grpc.Client\enty.Mind.Grpc.Client.csproj" />
     </ItemGroup>
 
 </Project>
