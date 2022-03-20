@@ -12,13 +12,13 @@ type Init() =
     inherit Migration()
 
     override this.Up() =
-        this.Create.Table("Entities")
-            .WithColumn("Id").AsGuid().PrimaryKey().NotNullable()
-            .WithColumn("Sense").AsCustom("jsonb").NotNullable()
+        this.Create.Table("entities")
+            .WithColumn("id").AsGuid().PrimaryKey().NotNullable()
+            .WithColumn("sense").AsCustom("jsonb").NotNullable()
         |> ignore
-    
+
     override this.Down() =
-        this.Delete.Table("Entities")
+        this.Delete.Table("entities")
         |> ignore
 
 

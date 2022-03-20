@@ -14,10 +14,10 @@ open enty.Mind.Server.LinqToDbPostgresExtensions
 
 
 
-[<Table(Name="Entities")>]
+[<Table(Name="entities")>]
 type EntityDao =
-    { [<Column "Id">] Id: Guid
-      [<Column "Sense">] Sense: obj }
+    { [<Column "id">] Id: Guid
+      [<Column "sense">] Sense: obj }
 
 type EntyDataConnection(options: LinqToDbConnectionOptions<EntyDataConnection>) =
     inherit DataConnection(options)
