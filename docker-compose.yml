@@ -1,0 +1,56 @@
+version: '3.4'
+
+services:
+    db:
+        image: postgres
+        restart: always
+        ports:
+            - 5433:5432
+        volumes:
+            - ./.cache/docker/db/data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: enty
+            PGDATA: /var/lib/postgresql/data
+    mind:
+        container_name: mind
+        image: mcr.microsoft.com/dotnet/sdk:6.0
+        ports:
+            - 5010:5010
+        environment:
+            - Kestrel__Endpoints__Http__Url=https://0.0.0.0:5010
+            - ConnectionStrings__Default=Database=enty; User ID=postgres; Password=password; Host=db; Port=5432;
+        volumes:
+            - ./src:/enty/src
+            - ./lib:/enty/lib
+            - ./.cache/docker/mind/.dotnet:/root/.dotnet
+            - ./.cache/docker/mind/.local/share/NuGet:/root/.local/share/NuGet
+            - ./.cache/docker/mind/.nuget:/root/.nuget
+        working_dir: /enty/src/enty.Mind.Server
+        depends_on:
+            - db
+        command: >
+            bash -c "
+                set -e
+                dotnet dev-certs https --trust
+                dotnet watch run
+            "
+    mind-gateway:
+        container_name: mind-gateway
+        image: mcr.microsoft.com/dotnet/sdk:6.0
+        ports:
+            - 5015:5015
+        environment:
+            - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5015
+            - Mind__Address=https://mind:5010
+        volumes:
+            - ./src:/enty/src
+            - ./lib:/enty/lib
+            - ./.cache/docker/mind-gateway/.dotnet:/root/.dotnet
+            - ./.cache/docker/mind-gateway/.local/share/NuGet:/root/.local/share/NuGet
+            - ./.cache/docker/mind-gateway/.nuget:/root/.nuget
+        working_dir: /enty/src/enty.Mind.Gateway
+        depends_on:
+            - mind
+        command: dotnet watch run

@@ -7,3 +7,6 @@ bin/
 *.DotSettings.user
 
 /.fake/
+
+/.local/
+/.cache/
