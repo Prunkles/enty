@@ -22,49 +22,6 @@ open enty.WebApp.Utils
 open MindApiImpl
 
 
-module Seq =
-
-    let trySequentiallyCompose (funs: ('a -> 'a) seq) : ('a -> 'a) option =
-        Seq.fold (fun s x -> Some ^ match s with None -> x | Some f -> f >> x) None funs
-
-module Result =
-
-    let allIsOk (results: Result<'a, 'e> list) : Result<'a list, 'e> =
-        ((None: Result<'a list, 'e> option), results) ||> List.fold (fun s r ->
-            match s with
-            | None ->
-                match r with
-                | Ok x -> Ok [x]
-                | Error e -> Error e
-            | Some s ->
-                match s with
-                | Error e -> Error e
-                | Ok s ->
-                    match r with
-                    | Ok x -> Ok [ yield! s; yield x ]
-                    | Error e -> Error e
-            |> Some
-        )
-        |> Option.get
-
-    // let allIsOk (results: Result<'a, 'e> seq) : Result<'a seq, 'e> =
-    //     ((None: Result<'a seq, 'e> option), results) ||> Seq.fold (fun s r ->
-    //         match s with
-    //         | None ->
-    //             match r with
-    //             | Ok x -> Ok (seq { x })
-    //             | Error e -> Error e
-    //         | Some s ->
-    //             match s with
-    //             | Error e -> Error e
-    //             | Ok s ->
-    //                 match r with
-    //                 | Ok x -> Ok (seq { yield! s; yield x })
-    //                 | Error e -> Error e
-    //         |> Some
-    //     )
-    //     |> Option.get
-
 [<RequireQualifiedAccess>]
 module Sense =
 
@@ -107,15 +64,6 @@ module Sense =
             let appendLineIndent (s: string) = sb.AppendLine(s).Append(String(' ', 4 * indent)) |> ignore
             let appendLineIndentIndented (s: string) = sb.AppendLine(s).Append(String(' ', 4 * (indent + 1))) |> ignore
             let appendSenseIndented sense = appendSense sb (indent + 1) sense
-            // let appendSenses (separator: string) senses =
-            //     match senses with
-            //     | head :: _ -> appendSenseIndented head | _ -> ()
-            //     match senses with
-            //     | _ :: tail ->
-            //         for sense in tail do
-            //             append separator
-            //             appendSenseIndented sense
-            //     | _ -> ()
             match sense with
             | Sense.Value value ->
                 if isValueSimple value
@@ -143,27 +91,6 @@ module Sense =
 
 // ----
 
-
-type IResourceStorage =
-    abstract Create: formData: FormData -> Async<Result<Uri, string>>
-
-type ResourceStorage(baseUrl: string) =
-    interface IResourceStorage with
-        member _.Create(formData) = async {
-            let rid = Guid.NewGuid()
-            let! response =
-                Http.request $"{baseUrl}/{string rid}"
-                |> Http.method POST
-                |> Http.content (BodyContent.Form formData)
-                |> Http.send
-            if response.statusCode = 200 then
-                return Ok (Uri($"{baseUrl}/{string rid}"))
-            else
-                return Error response.responseText
-        }
-
-let resourceStorage: IResourceStorage = ResourceStorage("http://localhost:5020")
-
 type ImageShapeUrlStatus =
     | Empty
     | Set of Uri
@@ -171,7 +98,7 @@ type ImageShapeUrlStatus =
     | Loading
 
 [<ReactComponent>]
-let ImageSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
+let ImageSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
     let urlInput, setUrlInput = React.useState("")
     let state, setState = React.useState(ImageShapeUrlStatus.Empty)
     let setState s =
@@ -183,12 +110,14 @@ let ImageSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
                         "uri", string uri
                     }
                 }
-            senseChanged (Ok sense)
-        | ImageShapeUrlStatus.Invalid -> senseChanged (Error "Invalid URI")
-        | ImageShapeUrlStatus.Empty -> senseChanged (Error "No URI")
+            onSenseChanged (Ok sense)
+        | ImageShapeUrlStatus.Invalid ->
+            onSenseChanged (Error "Invalid URI")
+        | ImageShapeUrlStatus.Empty ->
+            onSenseChanged (Error "No URI")
         | _ -> ()
         setState s
-    let onUrlChanged (urlInput: string) =
+    let handleUrlInputChanged (urlInput: string) =
         setUrlInput urlInput
         match Uri.TryCreate(urlInput, UriKind.Absolute) with
         | true, uri -> setState (ImageShapeUrlStatus.Set uri)
@@ -197,7 +126,7 @@ let ImageSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
         Mui.textField [
             textField.label "URL"
             textField.variant.outlined
-            textField.onChange onUrlChanged
+            textField.onChange handleUrlInputChanged
             textField.value urlInput
             match state with
             | ImageShapeUrlStatus.Invalid ->
@@ -222,7 +151,7 @@ let ImageSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
                             |> FormData.appendNamedFile "File" selectedFile.name selectedFile
                         async {
                             setState ImageShapeUrlStatus.Loading
-                            let! result = resourceStorage.Create(formData)
+                            let! result = ResourceStorageHardcodeImpl.resourceStorage.Create(formData)
                             match result with
                             | Ok uri ->
                                 setState (ImageShapeUrlStatus.Set uri)
@@ -239,9 +168,9 @@ let ImageSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
 
 // TODO: Remove quotes
 [<ReactComponent>]
-let TagSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
+let TagSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
     let tags, setTags = React.useState([])
-    let onTagInputChange (input: string) =
+    let handleTagInputChange (input: string) =
         let tags =
             // TODO: Wait https://github.com/fable-compiler/Fable/issues/2845 fix
             // // (?<=")(?:\\\\|\\"|.)*(?=")|[A-Za-z0-9_-]+
@@ -256,7 +185,7 @@ let TagSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
                     yield! tags
                 }
             }
-        senseChanged (Ok sense)
+        onSenseChanged (Ok sense)
     Mui.paper [
         Mui.grid [
             grid.container true
@@ -264,7 +193,7 @@ let TagSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
             grid.children [
                 Mui.textField [
                     textField.label "Tags"
-                    textField.onChange onTagInputChange
+                    textField.onChange handleTagInputChange
                 ]
                 Mui.stack [
                     stack.direction.row
@@ -294,13 +223,13 @@ type SenseShapeForm =
       Name: string }
 
 [<ReactComponent>]
-let SenseShapeSelector (forms: (SenseShapeFormId * string) list) (formSelected: SenseShapeFormId -> bool -> unit) =
+let SenseShapeSelector (forms: (SenseShapeFormId * string) list) (onFormSelected: SenseShapeFormId -> bool -> unit) =
     Mui.formGroup [
         for formId, formName in forms do
             Mui.formControlLabel [
                 let switchElement =
                     Mui.switch [
-                        switch.onChange (fun (active: bool) -> formSelected formId active)
+                        switch.onChange (fun (active: bool) -> onFormSelected formId active)
                     ]
                 formControlLabel.control switchElement
                 formControlLabel.label formName
@@ -358,9 +287,9 @@ let forms =
 [<ReactComponent>]
 let EntityCreateForm () =
     let state, dispatch = React.useElmish(EntityCreateForm.init, EntityCreateForm.update, forms)
-    let onFormSelected formId active =
+    let handleFormSelected formId active =
         if active then dispatch (EntityCreateForm.Msg.SelectForm formId) else dispatch (EntityCreateForm.Msg.DeselectForm formId)
-    let onFormSenseChanged (formId: SenseShapeFormId) (sense: Result<_, _>) =
+    let handleFormSenseChanged (formId: SenseShapeFormId) (sense: Result<_, _>) =
         dispatch (EntityCreateForm.Msg.FormSenseChanged (formId, sense))
     Mui.grid [
         grid.container true
@@ -370,7 +299,7 @@ let EntityCreateForm () =
                 grid.xs._2
                 grid.children [
                     let forms = [ for form in forms -> form.Id, form.Name ]
-                    SenseShapeSelector forms onFormSelected
+                    SenseShapeSelector forms handleFormSelected
                 ]
             ]
             Mui.grid [
@@ -391,7 +320,7 @@ let EntityCreateForm () =
                                     Html.div [
                                         prop.key (formId |> fun (SenseShapeFormId x) -> x)
                                         prop.children [
-                                            formElement (onFormSenseChanged formId)
+                                            formElement (handleFormSenseChanged formId)
                                         ]
                                     ]
                                 match state.Sense with

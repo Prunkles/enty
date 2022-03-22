@@ -6,8 +6,10 @@ open Feliz.MaterialUI
 
 module MuiHelpers =
     let inline createElementImportDefault path = createElement (importDefault path)
-    let mkAttr = Interop.mkAttr
+    let inline mkAttr key value = Interop.mkAttr key value
 open MuiHelpers
+
+// ----
 
 
 type stack =
@@ -45,4 +47,3 @@ type Mui =
     static member inline formGroup(children: ReactElement seq) = createElementImportDefault "@mui/material/FormGroup" [ formGroup.children children ]
 
     static member inline formControlLabel(props) = createElementImportDefault "@mui/material/FormControlLabel" props
-
