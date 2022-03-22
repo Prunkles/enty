@@ -35,7 +35,7 @@ module Sense =
         | Sense.Map mp1, Sense.Map mp2 ->
             Sense.Map ^ Map.mergeWith merge mp1 mp2
         | (Sense.Value _ as vl1), (Sense.Value _ as vl2) -> Sense.List [ vl1; vl2 ]
-        | _ -> failwith "ъеъ"
+        | _ -> invalidOp $"Cannot merge {sense1} and {sense2}"
 
     let rec tryGet (path: string list) sense =
         match path with
