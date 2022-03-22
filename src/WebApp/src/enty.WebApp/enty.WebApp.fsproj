@@ -15,6 +15,7 @@
     <ItemGroup>
         <Content Include="index.html" />
         <Compile Include="Utils.fs" />
+        <Compile Include="SenseFormatting.fs" />
         <Compile Include="Mui5.fs" />
         <Compile Include="MindApi.fs" />
         <Compile Include="ImagePreviewService.fs" />
