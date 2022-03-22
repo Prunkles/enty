@@ -2,8 +2,11 @@ module enty.WebApp.Program
 
 open System
 open Fable.Core
+
 open Feliz
 open Feliz.MaterialUI
+open Feliz.MaterialUI.Mui5
+
 open enty.Core
 open enty.WebApp
 open enty.WebApp.Utils
@@ -49,11 +52,11 @@ let WishPage () =
             yield EntityRendering.Entity entity
     ]
 
-let forms = [ ImageTraitForm ]
+// let forms = [ ImageTraitForm ]
 [<ReactComponent>]
 let App () =
     Mui.container [
-        EntityCreateForm (printfn "%A") forms
+        EntityCreateForm ()
 //        Mui.divider []
 //        WishPage ()
     ]

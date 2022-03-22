@@ -1,16 +1,23 @@
 module enty.WebApp.EntityCreating
 
 open System
-open System.Collections.Generic
 open System.Text
+open System.Text.RegularExpressions
+
 open Fable.Core
 open Fable.Core.JsInterop
-open Browser.Types
-open Feliz
-open Feliz.MaterialUI
 open Fable.SimpleHttp
+open Browser.Types
+
+open Elmish
+open Feliz
+open Feliz.UseElmish
+open Feliz.MaterialUI
+open Feliz.MaterialUI.Mui5
+
 open enty.Core
 open enty.Utils
+open enty.WebApp
 open enty.WebApp.Utils
 open MindApiImpl
 
@@ -58,126 +65,354 @@ module Result =
     //     )
     //     |> Option.get
 
-//[<RequireQualifiedAccess>]
-//module Sense =
-//
-//    let display (sense: Sense) : string =
-//        let sb = StringBuilder()
-//        let rec printSense (sb: StringBuilder) sense =
-//            match sense with
-//            | Sense.Value v -> sb.Append('"').Append(v).Append('"') |> ignore
-//            | Sense.List l ->
-//                sb.Append('[') |> ignore
-//                for e in l do
-//                    printSense sb e
-//                    sb.Append(' ') |> ignore
-//                sb.Append(']') |> ignore
-//            | Sense.Map m ->
-//                sb.Append('{') |> ignore
-//                for KeyValue (k, v) in m do
-//                    sb.Append(k).Append(' ') |> ignore
-//                    printSense sb v
-//                    sb.Append(' ') |> ignore
-//                sb.Append('}') |> ignore
-//        printSense sb sense
-//        sb.ToString()
+[<RequireQualifiedAccess>]
+module Sense =
+
+    let private isValueSimple (value: string) =
+        value
+        |> Seq.forall ^fun c ->
+            Char.IsLetter(c)
+            || Char.IsDigit(c)
+            || c = '-' || c = '_'
+
+    let format (sense: Sense) : string =
+        let sb = StringBuilder()
+        let rec printSense (sb: StringBuilder) sense =
+            match sense with
+            | Sense.Value v ->
+                if isValueSimple v
+                then sb.Append(v) |> ignore
+                else sb.Append('"').Append(v).Append('"') |> ignore
+            | Sense.List l ->
+                sb.Append('[') |> ignore
+                sb.Append(' ') |> ignore
+                for e in l do
+                    printSense sb e
+                    sb.Append(' ') |> ignore
+                sb.Append(']') |> ignore
+            | Sense.Map m ->
+                sb.Append('{') |> ignore
+                sb.Append(' ') |> ignore
+                for KeyValue (k, v) in m do
+                    sb.Append(k).Append(' ') |> ignore
+                    printSense sb v
+                    sb.Append(' ') |> ignore
+                sb.Append('}') |> ignore
+        printSense sb sense
+        sb.ToString()
+
+    let formatMultiline (sense: Sense) : string =
+        let rec appendSense (sb: StringBuilder) (indent: int) (sense: Sense) =
+            let append (s: string) = sb.Append(s) |> ignore
+            let appendLineIndent (s: string) = sb.AppendLine(s).Append(String(' ', 4 * indent)) |> ignore
+            let appendLineIndentIndented (s: string) = sb.AppendLine(s).Append(String(' ', 4 * (indent + 1))) |> ignore
+            let appendSenseIndented sense = appendSense sb (indent + 1) sense
+            // let appendSenses (separator: string) senses =
+            //     match senses with
+            //     | head :: _ -> appendSenseIndented head | _ -> ()
+            //     match senses with
+            //     | _ :: tail ->
+            //         for sense in tail do
+            //             append separator
+            //             appendSenseIndented sense
+            //     | _ -> ()
+            match sense with
+            | Sense.Value value ->
+                if isValueSimple value
+                then sb.Append(value) |> ignore
+                else sb.Append('"').Append(value).Append('"') |> ignore
+            | Sense.List list ->
+                append "["
+                for value in list do
+                    appendLineIndentIndented ""
+                    appendSenseIndented value
+                appendLineIndent ""
+                append "]"
+            | Sense.Map map ->
+                append "{"
+                for KeyValue (key, value) in map do
+                    appendLineIndentIndented ""
+                    append key
+                    append " "
+                    appendSenseIndented value
+                appendLineIndent ""
+                append "}"
+        let sb = StringBuilder()
+        appendSense sb 0 sense
+        sb.ToString()
+
+// ----
 
 
+type IResourceStorage =
+    abstract Create: formData: FormData -> Async<Result<Uri, string>>
 
-//[<ReactComponent>]
-//let SenseInput () =
-//    let input, setInput = React.useState("")
-//    Mui.textareaAutosize [
-//        prop.value input
-//        prop.onChange setInput
-//    ]
-//
-//let createResourceUrl (ridG: Guid) : string =
-//    $"/storage/{ridG}"
-//
-//let writeResource formData = async {
-//    let ridG = Guid.NewGuid()
-//    let url = createResourceUrl ridG
-//    printfn "Uri: %A" url
-//    let! response =
-//        Http.request url
-//        |> Http.method POST
-//        |> Http.content (BodyContent.Form formData)
-//        |> Http.send
-//    if response.statusCode = 200 then
-//        return Ok url
-//    else
-//        return Error ()
-//}
+type ResourceStorage(baseUrl: string) =
+    interface IResourceStorage with
+        member _.Create(formData) = async {
+            let rid = Guid.NewGuid()
+            let! response =
+                Http.request $"{baseUrl}/{string rid}"
+                |> Http.method POST
+                |> Http.content (BodyContent.Form formData)
+                |> Http.send
+            if response.statusCode = 200 then
+                return Ok (Uri($"{baseUrl}/{string rid}"))
+            else
+                return Error response.responseText
+        }
 
+let resourceStorage: IResourceStorage = ResourceStorage("http://localhost:5020")
 
-type TraitForm = (Result<Sense, string> -> unit) -> ReactElement
+type ImageShapeUrlStatus =
+    | Empty
+    | Set of Uri
+    | Invalid
+    | Loading
 
 [<ReactComponent>]
-let ImageTraitForm (onSenseChanged: Result<Sense, string> -> unit) =
-    let changeUrl (url: string) =
-        // TODO: Validate URL
-        match Uri.TryCreate(url, UriKind.Absolute) with
-        | false, _ ->
-            onSenseChanged (Error "Invalid URL")
-        | true, uri ->
-            let newSense = senseMap {
-                "image", senseMap {
-                    "url", url
+let ImageSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
+    let urlInput, setUrlInput = React.useState("")
+    let state, setState = React.useState(ImageShapeUrlStatus.Empty)
+    let setState s =
+        match s with
+        | ImageShapeUrlStatus.Set uri ->
+            let sense =
+                senseMap {
+                    "image", senseMap {
+                        "uri", string uri
+                    }
                 }
-            }
-            onSenseChanged (Ok newSense)
-
-    Html.div [
+            senseChanged (Ok sense)
+        | ImageShapeUrlStatus.Invalid -> senseChanged (Error "Invalid URI")
+        | ImageShapeUrlStatus.Empty -> senseChanged (Error "No URI")
+        | _ -> ()
+        setState s
+    let onUrlChanged (urlInput: string) =
+        setUrlInput urlInput
+        match Uri.TryCreate(urlInput, UriKind.Absolute) with
+        | true, uri -> setState (ImageShapeUrlStatus.Set uri)
+        | false, _ -> setState ImageShapeUrlStatus.Invalid
+    Mui.paper [
         Mui.textField [
-            textField.required true
-            textField.placeholder "URL"
-            textField.onChange changeUrl
+            textField.label "URL"
+            textField.variant.outlined
+            textField.onChange onUrlChanged
+            textField.value urlInput
+            match state with
+            | ImageShapeUrlStatus.Invalid ->
+                textField.error true
+                textField.helperText "Invalid URI"
+            | ImageShapeUrlStatus.Loading ->
+                textField.disabled true
+            | _ -> ()
+        ]
+        Mui.button [
+            button.variant.contained
+            button.component' "label"
+            button.children [
+                Html.text "File"
+                Html.input [
+                    input.type' "file"
+                    prop.hidden true
+                    prop.onChange (fun (e: Event) ->
+                        let selectedFile: Browser.Types.File = e.target?files?(0)
+                        let formData =
+                            FormData.create ()
+                            |> FormData.appendNamedFile "File" selectedFile.name selectedFile
+                        async {
+                            setState ImageShapeUrlStatus.Loading
+                            let! result = resourceStorage.Create(formData)
+                            match result with
+                            | Ok uri ->
+                                setState (ImageShapeUrlStatus.Set uri)
+                            | Error reason ->
+                                setState ImageShapeUrlStatus.Empty
+                                eprintfn $"{reason}"
+                        }
+                        |> Async.startSafe
+                    )
+                ]
+            ]
         ]
     ]
 
-
+// TODO: Remove quotes
 [<ReactComponent>]
-let EntityCreateForm (onSubmit: Sense -> unit) (forms: TraitForm list) : ReactElement =
-    let forms: (TraitForm * Guid) list =
-        React.useMemo(
-            fun () ->
-                printfn "Gen guids"
-                forms |> Seq.map (fun form -> form, Guid.NewGuid()) |> Seq.toList
-            , [| forms |]
-        )
-
-    let (formResults: Map<Guid, Result<Sense, string> option>), setFormResults =
-        React.useState ^fun () ->
-            forms |> Seq.map (fun (_, g) -> g, None) |> Map.ofSeq
-
-    let onFormSense (formId: Guid) (senseOpt: Result<Sense, string>) : unit =
-        let newFormResults = formResults |> Map.add formId (Some senseOpt)
-        printfn $"newFormResults: %A{newFormResults}"
-        setFormResults newFormResults
-
+let TagSenseShapeForm (senseChanged: Result<Sense, string> -> unit) =
+    let tags, setTags = React.useState([])
+    let onTagInputChange (input: string) =
+        let tags =
+            // TODO: Wait https://github.com/fable-compiler/Fable/issues/2845 fix
+            // // (?<=")(?:\\\\|\\"|.)*(?=")|[A-Za-z0-9_-]+
+            // Regex.Matches(input, @"(?<="")(?:\\\\|\\""|.)*(?="")|[A-Za-z0-9_-]+")
+            // |> Seq.map ^fun m -> m.Value
+            // |> Seq.toList
+            input.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+        setTags tags
+        let sense =
+            senseMap {
+                "tags", senseList {
+                    yield! tags
+                }
+            }
+        senseChanged (Ok sense)
     Mui.paper [
-        Mui.paper [
-//            paper.elevation 1
-            paper.children [
-                for form, formId in forms do
-                    form (onFormSense formId)
+        Mui.grid [
+            grid.container true
+            grid.direction.column
+            grid.children [
+                Mui.textField [
+                    textField.label "Tags"
+                    textField.onChange onTagInputChange
+                ]
+                Mui.stack [
+                    stack.direction.row
+                    stack.children [
+                        for tag in tags do
+                            Mui.chip [
+                                chip.label tag
+                                chip.variant.outlined
+                            ]
+                    ]
+                ]
             ]
         ]
-        Html.button [
-            prop.text "Create"
-            let formResults =
-                formResults |> Map.toSeq |> Seq.map snd |> Seq.toList
-                |> Option.allIsSomeList
-                |> Option.map Result.allIsOk
-            match formResults with
-            | Some (Ok formResults) ->
-                prop.disabled false
-                prop.onClick ^fun _ ->
-                    // TODO: Resolve empty results and unmergable senses
-                    let mergedSense = formResults |> Seq.reduce Sense.merge
-                    onSubmit mergedSense
-            | _ ->
-                prop.disabled true
+    ]
+
+[<ReactComponent>]
+let SenseFormatter (sense: Sense) =
+    Html.pre (Sense.formatMultiline sense)
+
+type SenseShapeFormId = SenseShapeFormId of int
+
+type SenseShapeFormElement = (Result<Sense, string> -> unit) -> ReactElement
+
+type SenseShapeForm =
+    { Id: SenseShapeFormId
+      Element: SenseShapeFormElement
+      Name: string }
+
+[<ReactComponent>]
+let SenseShapeSelector (forms: (SenseShapeFormId * string) list) (formSelected: SenseShapeFormId -> bool -> unit) =
+    Mui.formGroup [
+        for formId, formName in forms do
+            Mui.formControlLabel [
+                let switchElement =
+                    Mui.switch [
+                        switch.onChange (fun (active: bool) -> formSelected formId active)
+                    ]
+                formControlLabel.control switchElement
+                formControlLabel.label formName
+            ]
+    ]
+
+module EntityCreateForm =
+
+    [<RequireQualifiedAccess>]
+    type Msg =
+        | SelectForm of SenseShapeFormId
+        | DeselectForm of SenseShapeFormId
+        | FormSenseChanged of SenseShapeFormId * Result<Sense, string>
+
+    type State =
+        { Forms: SenseShapeForm list
+          ActiveForms: Map<SenseShapeFormId, Result<Sense, string>>
+          Sense: Result<Sense, string> }
+
+    let init forms =
+        { Forms = forms
+          ActiveForms = Map.empty
+          Sense = Error "Empty sense" }
+        , Cmd.none
+
+    let update (msg: Msg) (state: State) : State * Cmd<Msg> =
+        printfn $"update | %A{msg} | %A{state}"
+        match msg with
+        | Msg.SelectForm formId ->
+            { state with ActiveForms = state.ActiveForms |> Map.add formId (Error $"Form {formId} has no sense yet") }
+            , Cmd.none
+        | Msg.DeselectForm formId ->
+            { state with ActiveForms = state.ActiveForms |> Map.remove formId }
+            , Cmd.none
+        | Msg.FormSenseChanged (formId, sense) ->
+            let forms = state.ActiveForms |> Map.add formId sense
+            let resultSense =
+                forms
+                |> Map.values
+                |> Seq.toList
+                |> Result.allIsOk
+                |> Result.map (List.reduce Sense.merge)
+            { state with ActiveForms = forms; Sense = resultSense }, Cmd.none
+
+
+let forms =
+    [
+        "Image", ImageSenseShapeForm
+        "Tags", TagSenseShapeForm
+    ]
+    |> Seq.indexed
+    |> Seq.map ^fun (idx, (name, element)) -> { Id = SenseShapeFormId idx; Name = name; Element = element }
+    |> Seq.toList
+
+[<ReactComponent>]
+let EntityCreateForm () =
+    let state, dispatch = React.useElmish(EntityCreateForm.init, EntityCreateForm.update, forms)
+    let onFormSelected formId active =
+        if active then dispatch (EntityCreateForm.Msg.SelectForm formId) else dispatch (EntityCreateForm.Msg.DeselectForm formId)
+    let onFormSenseChanged (formId: SenseShapeFormId) (sense: Result<_, _>) =
+        dispatch (EntityCreateForm.Msg.FormSenseChanged (formId, sense))
+    Mui.grid [
+        grid.container true
+        grid.children [
+            Mui.grid [
+                grid.item true
+                grid.xs._2
+                grid.children [
+                    let forms = [ for form in forms -> form.Id, form.Name ]
+                    SenseShapeSelector forms onFormSelected
+                ]
+            ]
+            Mui.grid [
+                grid.item true
+                grid.xs._10
+                grid.children [
+                    Html.div [
+                        Mui.stack [
+                            stack.direction.column
+                            stack.spacing 2
+                            stack.children [
+                                let activeForms =
+                                    state.ActiveForms
+                                    |> Map.keys
+                                    |> Seq.map ^fun formId ->
+                                        state.Forms |> List.find (fun f -> f.Id = formId)
+                                for { Id = formId; Element = formElement } in activeForms do
+                                    Html.div [
+                                        prop.key (formId |> fun (SenseShapeFormId x) -> x)
+                                        prop.children [
+                                            formElement (onFormSenseChanged formId)
+                                        ]
+                                    ]
+                                match state.Sense with
+                                | Ok sense -> SenseFormatter sense
+                                | _ -> ()
+
+                                Mui.button [
+                                    button.variant.contained
+                                    match state.Sense with
+                                    | Ok sense ->
+                                        prop.onClick (fun _ ->
+                                            printfn $"%A{sense}"
+                                        )
+                                    | Error reason ->
+                                        button.disabled true
+                                    button.children "Create"
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
         ]
     ]

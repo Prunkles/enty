@@ -2,6 +2,8 @@ module enty.WebApp.EntityRendering
 
 open Feliz
 open Feliz.MaterialUI
+open Feliz.MaterialUI.Mui5
+
 open enty.Utils
 open enty.Core
 
