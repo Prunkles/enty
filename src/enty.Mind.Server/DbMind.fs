@@ -9,15 +9,20 @@ open LinqToDB.Mapping
 open Newtonsoft.Json.Linq
 open enty.Core
 open enty.Mind
+open enty.Mind.Server
 open enty.Mind.Server.SenseJToken
 open enty.Mind.Server.LinqToDbPostgresExtensions
 
 
 
 [<Table(Name="entities")>]
-type EntityDao =
-    { [<Column "id">] Id: Guid
-      [<Column "sense">] Sense: obj }
+[<CLIMutable>]
+type EntityDao = {
+    [<Column "id"; PrimaryKey; Identity>] Id: Guid
+    [<Column "sense"; NotNull>] Sense: obj
+    [<Column "created_dts"; NotNull>] CreatedDts: DateTime
+    [<Column "updated_dts"; NotNull>] UpdatedDts: DateTime
+}
 
 type EntyDataConnection(options: LinqToDbConnectionOptions<EntyDataConnection>) =
     inherit DataConnection(options)
@@ -29,10 +34,19 @@ type DbMind(db: EntyDataConnection) =
     interface IMind with
         member this.Remember(EntityId entityId, sense) = async {
             let senseJson = (Sense.toJToken sense).ToString()
-            do! db.Entities
-                    .Value((fun x -> x.Id), entityId)
-                    .Value((fun x -> x.Sense), ((fun () -> Sql.Json.AsJsonb(senseJson))))
-                    .InsertAsync()
+            let dts = DateTime.Now
+            do! db.ExecuteAsync(
+                    """
+                        INSERT INTO entities (id, sense, created_dts, updated_dts)
+                        VALUES (@id, @sense, @dts, @dts)
+                        ON CONFLICT (id) DO UPDATE
+                            SET updated_dts = excluded.updated_dts,
+                                sense = excluded.sense
+                    """,
+                    DataParameter("id", entityId, DataType.Guid),
+                    DataParameter("sense", senseJson, DataType.BinaryJson),
+                    DataParameter("dts", dts, DataType.Timestamp)
+                )
                 |> Async.AwaitTask
                 |> Async.Ignore
             ()
@@ -58,7 +72,7 @@ type DbMind(db: EntyDataConnection) =
             let entities =
                 entityDaos
                 |> Seq.map (fun (eid, senseString) ->
-                    { Entity.Id = EntityId eid
+                    { Id = EntityId eid
                       Sense = JToken.Parse(senseString) |> Sense.ofJToken }
                 )
                 |> Seq.toArray

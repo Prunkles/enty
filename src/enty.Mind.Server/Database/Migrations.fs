@@ -15,6 +15,8 @@ type Init() =
         this.Create.Table("entities")
             .WithColumn("id").AsGuid().PrimaryKey().NotNullable()
             .WithColumn("sense").AsCustom("jsonb").NotNullable()
+            .WithColumn("created_dts").AsDateTime().NotNullable()
+            .WithColumn("updated_dts").AsDateTime().NotNullable()
         |> ignore
 
     override this.Down() =
