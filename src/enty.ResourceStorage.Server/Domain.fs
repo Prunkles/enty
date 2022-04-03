@@ -8,29 +8,34 @@ type ResourceId = ResourceId of Guid
     with static member Unwrap(ResourceId x) = x
 
 type ResourceMeta =
-    { ContentType: string
-      ETag: string
-      LastModified: DateTimeOffset }
+    { ContentType: string option
+      ETag: string option
+      LastModified: DateTimeOffset option
+      ContentLength: int64 option
+      ContentDisposition: string option }
 
 type Resource =
     { Id: ResourceId
       Meta: ResourceMeta }
 
-
+[<RequireQualifiedAccess>]
 module ResourceMeta =
 
-    let toMap (resMeta: ResourceMeta) : Map<string, string> =
-        [ "Content-Type", resMeta.ContentType
-          "ETag", resMeta.ETag
-          "Last-Modified", resMeta.LastModified.ToString() ]
-        |> Map.ofList
+    let toHeaders (meta: ResourceMeta) : Map<string, string> =
+        [ "Content-Type", meta.ContentType
+          "ETag", meta.ETag
+          "Last-Modified", meta.LastModified |> Option.map (fun x -> x.ToString())
+          "Content-Length", meta.ContentLength |> Option.map string
+          "Content-Disposition", meta.ContentDisposition ]
+        |> Seq.collect ^fun (name, value) ->
+            match value with
+            | Some value -> [name, value]
+            | None -> []
+        |> Map.ofSeq
 
-    let ofMap (mp: Map<string, string>) : ResourceMeta option =
-        option {
-            let! contentType = mp |> Map.tryFind "Content-Type"
-            and! eTag = mp |> Map.tryFind "ETag"
-            and! lastModified = mp |> Map.tryFind "Last-Modified" |> Option.bind (DateTimeOffset.TryParse >> Option.ofTryByref)
-            return { ContentType = contentType
-                     ETag = eTag
-                     LastModified = lastModified }
-        }
+    let ofHeaders (headers: Map<string, string>) : ResourceMeta =
+        { ContentType = headers |> Map.tryFind "Content-Type"
+          ETag = headers |> Map.tryFind "ETag"
+          LastModified = headers |> Map.tryFind "Last-Modified" |> Option.bind (DateTimeOffset.TryParse >> Option.ofTryByref)
+          ContentLength = headers |> Map.tryFind "Content-Length" |> Option.bind (Int64.TryParse >> Option.ofTryByref)
+          ContentDisposition = headers |> Map.tryFind "Content-Disposition" }

@@ -22,7 +22,7 @@ type FileSystemResourceStorage(logger: ILogger<FileSystemResourceStorage>, path:
 
     let writeResourceMeta (path: string) (resMeta: ResourceMeta) = async {
         let lines =
-            ResourceMeta.toMap resMeta
+            ResourceMeta.toHeaders resMeta
             |> Seq.map (fun (KeyValue (k, v)) -> sprintf "%s:%s" k v)
         do! File.WriteAllLinesAsync(path, lines) |> Async.AwaitTask
     }
@@ -33,10 +33,8 @@ type FileSystemResourceStorage(logger: ILogger<FileSystemResourceStorage>, path:
             lines
             |> Seq.map ^fun s -> let x = s.Split(':', 2) in x.[0], x.[1]
             |> Map.ofSeq
-            |> ResourceMeta.ofMap
-        match resMeta with
-        | Some resMeta -> return resMeta
-        | None -> return failwith "ResourceMeta"
+            |> ResourceMeta.ofHeaders
+        return resMeta
     }
 
     let (|AggregateExceptionInner|_|) (ex: exn) =

@@ -19,11 +19,15 @@ let (|Apply|) f x = f x
 let readHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     let storage = getStorage ctx
     match! storage.Read(rid) with
-    | Ok (resReader, resMeta) ->
+    | Ok (resReader, meta) ->
+
         let headers = ctx.Response.GetTypedHeaders()
-        headers.ContentType <- MediaTypeHeaderValue(!> resMeta.ContentType)
-        headers.ETag <- EntityTagHeaderValue(!> resMeta.ETag)
-        headers.LastModified <- resMeta.LastModified
+        match meta.ContentType with Some x -> headers.ContentType <- MediaTypeHeaderValue(x) | _ -> ()
+        match meta.ETag with Some x -> headers.ETag <- EntityTagHeaderValue(x) | _ -> ()
+        match meta.LastModified with Some x -> headers.LastModified <- x | _ -> ()
+        match meta.ContentLength with Some x -> headers.ContentLength <- x | _ -> ()
+        match meta.ContentDisposition with Some x -> headers.ContentDisposition <- ContentDispositionHeaderValue.Parse(x) | _ -> ()
+
         do! resReader.CopyToAsync(ctx.Response.BodyWriter)
         do! resReader.CompleteAsync()
         return! Successful.ok id next ctx
@@ -48,12 +52,12 @@ let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
         sb.ToString()
 
     let resMeta =
-        let contentType = file.ContentType
         let eTag = $"\"%s{hashS}\""
-        let lastModified = DateTimeOffset.Now
-        { ContentType = contentType
-          ETag = eTag
-          LastModified = lastModified }
+        { ContentType = file.ContentType |> Option.ofObj
+          ETag = eTag |> Some
+          LastModified = DateTimeOffset.Now |> Some
+          ContentLength = file.Length |> Some
+          ContentDisposition = file.ContentDisposition |> Option.ofObj }
 
     let! resWriter = storage.Write(rid, resMeta)
     use resWriterStream = resWriter.AsStream()
