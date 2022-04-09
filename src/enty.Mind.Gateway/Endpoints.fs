@@ -21,12 +21,14 @@ let wishHandler : HttpHandler = fun next ctx -> task {
     if limit > 64 then return! RequestErrors.BAD_REQUEST "limit > 64" next ctx else
     let! jsonRequest = ctx.BindJsonAsync<{| wishString: string |}>()
     let wishString = jsonRequest.wishString
-    let wish = Wish.parse wishString |> function Ok wish -> wish | Error err -> failwith err
-
-    let! eids, total = mindService.Wish(wish, offset, limit)
-
-    let eidGs = eids |> Array.map EntityId.Unwrap
-    return! ctx.WriteJsonAsync({| eids = eidGs; total = total |})
+    let wish = Wish.parse wishString
+    match wish with
+    | Ok wish ->
+        let! eids, total = mindService.Wish(wish, offset, limit)
+        let eidGs = eids |> Array.map EntityId.Unwrap
+        return! ctx.WriteJsonAsync({| eids = eidGs; total = total |})
+    | Error reason ->
+        return! RequestErrors.BAD_REQUEST $"Invalid wish: {reason}" next ctx
 }
 
 let rememberHandler eidG : HttpHandler = fun next ctx -> task {
