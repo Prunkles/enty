@@ -12,10 +12,10 @@ const isProduction =
 const isDevelopment = !isProduction && process.env.NODE_ENV !== 'production'
 
 const CONFIG = {
-    fsharpEntry: './build/Program.js',
+    fsharpEntry: './build/Program.fs.js',
     assetsDir: './public',
     outputDir: './dist',
-    indexHtmlTemplate: './src/enty.WebApp/index.html',
+    indexHtmlTemplate: './public/index.html',
     devServer: {
         port: 8080,
         host: '0.0.0.0',
@@ -53,6 +53,7 @@ module.exports = {
     },
     output: {
         path: resolve(CONFIG.outputDir),
+        // publicPath: './public',
         filename: isProduction ? '[name].[fullhash].js' : '[name].js'
     },
     devtool: isProduction ? 'source-map' : 'eval-source-map',
@@ -93,6 +94,7 @@ module.exports = {
         contentBase: resolve(CONFIG.assetsDir),
         host: CONFIG.devServer.host,
         port: CONFIG.devServer.port,
+        historyApiFallback: true,
         hot: true,
         inline: true,
         proxy: CONFIG.devServer.proxy,

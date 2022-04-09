@@ -7,10 +7,11 @@
     "url": "git://github.com/Prunkles/enty.git"
   },
   "scripts": {
-    "build": "dotnet fable ./src/enty.WebApp --outDir ./build",
+    "build": "dotnet fable ./src/enty.Web.App --outDir ./build",
     "webpack": "npx webpack",
     "run": "npx ./build/Program.js",
-    "watch": "dotnet fable watch ./src/enty.WebApp -o ./build --run npx webpack serve"
+    "watch": "dotnet fable watch ./src/enty.Web.App -o ./build --extension .fs.js --sourceMaps --sourceMapsRoot ./src/enty.Web.App --run npx webpack serve",
+    "clean": "dotnet fable clean ./build"
   },
   "author": "p-dev",
   "license": "ISC",
@@ -20,6 +21,7 @@
     "@mui/material": "^5.5.2",
     "ansi-html": "0.0.7",
     "ansi-html-community": "0.0.8",
+    "content-disposition": "^0.5.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },

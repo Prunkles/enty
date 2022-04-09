@@ -19,14 +19,14 @@ module Map =
 [<RequireQualifiedAccess>]
 module Sense =
 
-    let rec tryMerge (sense1: Sense) (sense2: Sense) : Sense option =
-        match sense1, sense2 with
-        | Sense.List ls1, Sense.List ls2 ->
-            Some ^ Sense.List (ls1 @ ls2)
-        | Sense.Map mp1, Sense.Map mp2 ->
-            // TODO: Merge fields
-            Some ^ Sense.Map (Map.toList mp1 @ Map.toList mp2 |> Map.ofList)
-        | _ -> None
+    // let rec tryMerge (sense1: Sense) (sense2: Sense) : Sense option =
+    //     match sense1, sense2 with
+    //     | Sense.List ls1, Sense.List ls2 ->
+    //         Some ^ Sense.List (ls1 @ ls2)
+    //     | Sense.Map mp1, Sense.Map mp2 ->
+    //         // TODO: Merge fields
+    //         Some ^ Sense.Map (Map.toList mp1 @ Map.toList mp2 |> Map.ofList)
+    //     | _ -> None
 
     let rec merge (sense1: Sense) (sense2: Sense) : Sense =
         match sense1, sense2 with
@@ -58,6 +58,16 @@ module Sense =
     let tryGetValue path sense =
         match tryGet path sense with
         | Some (Sense.Value v) -> Some v
+        | _ -> None
+
+    let tryItem (key: string) (sense: Sense) : Sense option =
+        match sense with
+        | Sense.Map map -> map |> Map.tryFind key
+        | _ -> None
+
+    let tryAsList (sense: Sense) : Sense list option =
+        match sense with
+        | Sense.List xs -> Some xs
         | _ -> None
 
     let tryAsValue sense = match sense with Sense.Value v -> Some v | _ -> None

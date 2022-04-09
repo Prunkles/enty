@@ -1,4 +1,4 @@
-module enty.WebApp.SenseFormatting
+module enty.Web.App.SenseFormatting
 
 open System
 open System.Text

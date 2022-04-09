@@ -1,4 +1,4 @@
-module enty.WebApp.EntityRendering
+module enty.Web.App.EntityRendering
 
 open Feliz
 open Feliz.MaterialUI

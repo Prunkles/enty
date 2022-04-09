@@ -10,18 +10,24 @@
         <ProjectReference Include="..\..\..\enty.ImagePreviewService.Client.Fable\enty.ImagePreviewService.Client.Fable.fsproj" />
         <ProjectReference Include="..\..\..\enty.Utils\enty.Utils.fsproj" />
         <ProjectReference Include="..\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj" />
+        <ProjectReference Include="..\enty.Web.Libs\enty.Web.Libs.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="index.html" />
         <Compile Include="Utils.fs" />
         <Compile Include="SenseFormatting.fs" />
-        <Compile Include="Mui5.fs" />
+        <Compile Include="SenseParsing.fs" />
         <Compile Include="MindApi.fs" />
         <Compile Include="ImagePreviewService.fs" />
         <Compile Include="ResourceStorage.fs" />
         <Compile Include="EntityRendering.fs" />
         <Compile Include="EntityCreating.fs" />
+        <Compile Include="EntityThumbnail.fs" />
+        <Compile Include="Pages\Page.fs" />
+        <Compile Include="Pages\CreateEntityPage.fs" />
+        <Compile Include="Pages\WishPage.fs" />
+        <Compile Include="Pages\EntityPage.fs" />
+        <Compile Include="Pages\BatchCreateEntityPage.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
@@ -31,6 +37,7 @@
         <PackageReference Include="Feliz" Version="1.61.0" />
         <PackageReference Include="Feliz.ElmishComponents" Version="1.2.0" />
         <PackageReference Include="Feliz.MaterialUI" Version="1.2.6" />
+        <PackageReference Include="Feliz.Router" Version="3.8.0" />
         <PackageReference Include="Feliz.UseElmish" Version="1.6.0" />
     </ItemGroup>
 

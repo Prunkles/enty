@@ -1,4 +1,4 @@
-namespace enty.WebApp.Utils
+namespace enty.Web.App.Utils
 
 
 [<RequireQualifiedAccess>]
@@ -17,3 +17,12 @@ module Async =
 //            | Choice1Of2 () -> ()
 //            | Choice2Of2 err -> JS.console.error(err)
         } |> Async.StartImmediate
+
+open Elmish
+
+[<RequireQualifiedAccess>]
+module Cmd =
+    let ofAsyncDispatch (work: Dispatch<'msg> -> Async<unit>) : Cmd<'msg> =
+        Cmd.ofSub ^fun dispatch ->
+            work dispatch
+            |> Async.startSafe

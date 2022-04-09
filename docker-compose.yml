@@ -54,3 +54,41 @@ services:
         depends_on:
             - mind
         command: dotnet watch run
+#    webapp:
+#        container_name: webapp
+#        build: ./src/WebApp/
+#        ports:
+#            - 8080:8080
+#        environment:
+#            - NODE_ENV=development
+#        volumes:
+#            - ./src:/enty/src
+#            - ./lib:/enty/lib
+#            - ./.cache/docker/webapp/.dotnet:/root/.dotnet
+#            - ./.cache/docker/webapp/.local/share/NuGet:/root/.local/share/NuGet
+#            - ./.cache/docker/webapp/.nuget:/root/.nuget
+#            - ./.cache/docker/webapp/node_modules:/enty/src/WebApp/node_modules
+#        working_dir: /enty/src/WebApp
+#        depends_on:
+#            - mind-gateway
+#        command: >
+#            bash -c "
+#                npm run watch
+#            "
+    resource-storage:
+        container_name: resource-storage
+        image: mcr.microsoft.com/dotnet/sdk:6.0
+        ports:
+            - 5020:5020
+        environment:
+            - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5020
+            - Storage__Path=./storage/
+        volumes:
+            - ./src:/enty/src
+            - ./lib:/enty/lib
+            - ./.cache/docker/resource-storage/.dotnet:/root/.dotnet
+            - ./.cache/docker/resource-storage/.local/share/NuGet:/root/.local/share/NuGet
+            - ./.cache/docker/resource-storage/.nuget:/root/.nuget
+            - ./.cache/docker/resource-storage/storage:/enty/src/enty.ResourceStorage.Server/storage
+        working_dir: /enty/src/enty.ResourceStorage.Server
+        command: dotnet watch run

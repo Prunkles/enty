@@ -1,4 +1,4 @@
-namespace enty.WebApp
+namespace enty.Web.App
 
 open System
 open Browser.Types

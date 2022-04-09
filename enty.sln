@@ -23,15 +23,15 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Khonsu.Coding", "lib\Khonsu
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Khonsu.ApiSpec.Giraffe", "lib\Khonsu.ApiSpec.Giraffe\Khonsu.ApiSpec.Giraffe.fsproj", "{8526345D-EBEE-4F33-BE57-B29E56FDF6D7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApp", "WebApp", "{1A618EA6-333E-4386-97B5-BD650D0BD920}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{1A618EA6-333E-4386-97B5-BD650D0BD920}"
 ProjectSection(SolutionItems) = preProject
-	src\WebApp\webpack.config.js = src\WebApp\webpack.config.js
-	src\WebApp\package.json = src\WebApp\package.json
+	src\Web\webpack.config.js = src\Web\webpack.config.js
+	src\Web\package.json = src\Web\package.json
 EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.WebApp", "src\WebApp\src\enty.WebApp\enty.WebApp.fsproj", "{BFD9F3C4-EDB6-4907-BD5D-8E82EC579D12}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Web.App", "src\Web\src\enty.Web.App\enty.Web.App.fsproj", "{BFD9F3C4-EDB6-4907-BD5D-8E82EC579D12}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Client.Fable", "src\WebApp\src\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj", "{7750E554-7354-4A19-AFA0-73889AA36EB4}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Client.Fable", "src\Web\src\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj", "{7750E554-7354-4A19-AFA0-73889AA36EB4}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Khonsu.ApiSpec.Fable", "lib\Khonsu.ApiSpec.Fable\Khonsu.ApiSpec.Fable.fsproj", "{0CBA6082-9B19-4477-B6FE-5B091799A4A5}"
 EndProject
@@ -62,6 +62,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.ImagePreviewService.Client.Fable", "src\enty.ImagePreviewService.Client.Fable\enty.ImagePreviewService.Client.Fable.fsproj", "{30E68FB1-4AE0-45F8-8368-053B1D8C4B53}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{50648B47-AA4B-42D4-9EE9-2F4045DD5BE1}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Web.Libs", "src\Web\src\enty.Web.Libs\enty.Web.Libs.fsproj", "{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -328,6 +330,18 @@ Global
 		{30E68FB1-4AE0-45F8-8368-053B1D8C4B53}.Release|x64.Build.0 = Release|Any CPU
 		{30E68FB1-4AE0-45F8-8368-053B1D8C4B53}.Release|x86.ActiveCfg = Release|Any CPU
 		{30E68FB1-4AE0-45F8-8368-053B1D8C4B53}.Release|x86.Build.0 = Release|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Debug|x64.Build.0 = Debug|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Debug|x86.Build.0 = Debug|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x64.ActiveCfg = Release|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x64.Build.0 = Release|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x86.ActiveCfg = Release|Any CPU
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{54C93563-048C-4285-8A50-135E283E2063} = {29D2AFDC-5447-442B-A6D1-C1B988C5DED1}
@@ -351,5 +365,6 @@ Global
 		{0E05AE27-740B-481A-837F-124AA763BF93} = {29D2AFDC-5447-442B-A6D1-C1B988C5DED1}
 		{A73DD112-F339-4B5D-8A46-0252089735F4} = {F8EF0398-00B6-4BEC-8A4B-C271BCD5423D}
 		{30E68FB1-4AE0-45F8-8368-053B1D8C4B53} = {1A618EA6-333E-4386-97B5-BD650D0BD920}
+		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173} = {1A618EA6-333E-4386-97B5-BD650D0BD920}
 	EndGlobalSection
 EndGlobal
