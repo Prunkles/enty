@@ -75,8 +75,8 @@ services:
 #            bash -c "
 #                npm run watch
 #            "
-    resource-storage:
-        container_name: resource-storage
+    storage:
+        container_name: storage
         image: mcr.microsoft.com/dotnet/sdk:6.0
         ports:
             - "5020:5020"
@@ -86,9 +86,9 @@ services:
         volumes:
             - ./src:/enty/src
             - ./lib:/enty/lib
-            - ./.cache/docker/resource-storage/.dotnet:/root/.dotnet
-            - ./.cache/docker/resource-storage/.local/share/NuGet:/root/.local/share/NuGet
-            - ./.cache/docker/resource-storage/.nuget:/root/.nuget
-            - ./.cache/docker/resource-storage/storage:/enty/src/enty.ResourceStorage.Server/storage
+            - ./.cache/docker/storage/.dotnet:/root/.dotnet
+            - ./.cache/docker/storage/.local/share/NuGet:/root/.local/share/NuGet
+            - ./.cache/docker/storage/.nuget:/root/.nuget
+            - ./.cache/docker/storage/storage:/enty/src/enty.ResourceStorage.Server/storage
         working_dir: /enty/src/enty.ResourceStorage.Server
         command: dotnet watch run
