@@ -1,0 +1,12 @@
+{
+  "name": "enty-webapp-server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "p-dew",
+  "dependencies": {
+    "express": "^4.17.3",
+    "http-proxy-middleware": "^2.0.4"
+  }
+}

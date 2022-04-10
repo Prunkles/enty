@@ -23,4 +23,6 @@ type ResourceStorage(baseUrl: string) =
         }
 
 module ResourceStorageHardcodeImpl =
-    let resourceStorage: IResourceStorage = ResourceStorage("http://10.0.3.1:5020")
+    let resourceStorage: IResourceStorage =
+        let baseUrl = $"{Browser.Dom.window.location.protocol}//{Browser.Dom.window.location.host}/storage"
+        ResourceStorage(baseUrl)

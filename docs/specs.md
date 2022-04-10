@@ -3,19 +3,17 @@
 ```
 {
     image {
-        sizes {
-            original {
-                size: { w: W, h: H }
-                resource: URL
-            }
-            master { resource: RID }
-            sample { resource: RID }
+        resource {
+            <uri: Uri>
+            <content-length: Int>
+            <content-type: ContentType>
         }
+        size { <width: Int> <height: Int> }
     }
 }
 ```
 
-## Taggable
+## Tags
 
 ```
 {

@@ -7,7 +7,7 @@
     "url": "git://github.com/Prunkles/enty.git"
   },
   "scripts": {
-    "build": "dotnet fable ./src/enty.Web.App --outDir ./build",
+    "build": "dotnet fable ./src/enty.Web.App --outDir ./build --extension .fs.js",
     "webpack": "npx webpack",
     "run": "npx ./build/Program.js",
     "watch": "dotnet fable watch ./src/enty.Web.App -o ./build --extension .fs.js --sourceMaps --sourceMapsRoot ./src/enty.Web.App --run npx webpack serve",

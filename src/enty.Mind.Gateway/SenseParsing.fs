@@ -19,9 +19,8 @@ module Grammar =
     let expr, exprRef = createParserForwardedToRef ()
 
     let ident =
-        let isAsciiIdStart c = isAsciiLetter c
-        let isAsciiIdContinue c = isAsciiLetter c || isDigit c || c = '_' || c = '-'
-        let options = IdentifierOptions(isAsciiIdStart, isAsciiIdContinue)
+        let isAsciiId c = isAsciiLetter c || isDigit c || c = '_' || c = '-'
+        let options = IdentifierOptions(isAsciiId, isAsciiId)
         identifier options
 
     let value =

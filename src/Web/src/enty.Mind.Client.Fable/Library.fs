@@ -70,15 +70,16 @@ type FetchMindApi(baseAddress: string) =
                 ]
                 jsonEncoding.EncodeToString(encoded jsonEncoding)
             let url = sprintf "%s/remember/%s" baseAddress (eid |> EntityId.Unwrap |> string)
-            let! response = fetch url [
-                RequestProperties.Method HttpMethod.POST
-                requestHeaders [
-                    HttpRequestHeaders.ContentType "application/json"
-                ]
-                RequestProperties.Body !^requestBodyString
-            ]
-            if not response.Ok then return failwithf "%A" response else
-            return Ok ()
+            let! response =
+                Http.request url
+                |> Http.method Fable.SimpleHttp.HttpMethod.POST
+                |> Http.header (Header ("Content-Type", "application/json"))
+                |> Http.content (BodyContent.Text requestBodyString)
+                |> Http.send
+            if response.statusCode <> 200 then
+                return Error $"Failed remember: {response.responseText}"
+            else
+                return Ok ()
         }
         member this.Wish(wishString, offset, limit) = async {
             let requestBodyString =

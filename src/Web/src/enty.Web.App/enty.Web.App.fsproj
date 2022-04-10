@@ -6,9 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\enty.Utils\enty.Utils.fsproj" />
         <ProjectReference Include="..\..\..\enty.Core\enty.Core.fsproj" />
         <ProjectReference Include="..\..\..\enty.ImagePreviewService.Client.Fable\enty.ImagePreviewService.Client.Fable.fsproj" />
-        <ProjectReference Include="..\..\..\enty.Utils\enty.Utils.fsproj" />
         <ProjectReference Include="..\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj" />
         <ProjectReference Include="..\enty.Web.Libs\enty.Web.Libs.fsproj" />
     </ItemGroup>
@@ -25,6 +25,7 @@
         <Compile Include="EntityThumbnail.fs" />
         <Compile Include="Pages\Page.fs" />
         <Compile Include="Pages\CreateEntityPage.fs" />
+        <Compile Include="Pages\CreateEntityImageBatchPage.fs" />
         <Compile Include="Pages\WishPage.fs" />
         <Compile Include="Pages\EntityPage.fs" />
         <Compile Include="Pages\BatchCreateEntityPage.fs" />

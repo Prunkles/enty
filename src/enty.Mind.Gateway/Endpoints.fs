@@ -37,14 +37,19 @@ let rememberHandler eidG : HttpHandler = fun next ctx -> task {
     let! requestBodyString = ctx.ReadBodyFromRequestAsync()
     ctx.GetLogger().LogDebug($"BodyString:\n{requestBodyString}")
     let json = JsonValue.Parse(requestBodyString)
-//    let decode = JsonADecode.field "sense" JsonADecode.raw (ThothJsonDecoding())
-//    let jsonSense = decode json |> function Ok x -> x | Error err -> failwithf "%A" err
-//    let sense = Sense.ofJToken jsonSense
     let decoder = JsonADecode.field "senseString" JsonADecode.string (ThothJsonDecoding())
-    let senseString = decoder json |> Result.getOk
-    let sense = Sense.parse senseString |> Result.getOk
-    do! mindService.Remember(eid, sense)
-    return! Successful.OK "" next ctx
+    let senseString = decoder json
+    match senseString with
+    | Error reason ->
+        return! RequestErrors.BAD_REQUEST $"Invalid request schema: {reason}" next ctx
+    | Ok senseString ->
+        let sense = Sense.parse senseString
+        match sense with
+        | Error reason ->
+            return! RequestErrors.BAD_REQUEST $"Invalid sense: {reason}" next ctx
+        | Ok sense ->
+            do! mindService.Remember(eid, sense)
+            return! Successful.OK "" next ctx
 }
 
 let forgetHandler eidG : HttpHandler = fun next ctx -> task {

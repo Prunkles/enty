@@ -51,7 +51,9 @@ module ImageSenseShapeForm =
 
     let imageSense (uri: Uri) =
         senseMap {
-            "uri", string uri
+            "resource", senseMap {
+                "uri", string uri
+            }
         }
 
     let update (onSenseChanged: Result<Sense, string> -> unit) (msg: Msg) (state: State) : State * Cmd<Msg> =
@@ -102,17 +104,15 @@ module ImageSenseShapeForm =
                 }
             state, uploadCmd
         | Msg.FileUploaded (file, uri) ->
-            let fileSense = senseMap {
-                "mime", file.``type``
-                "name", file.name
-                "size", $"{file.size}B"
-            }
-            let imageSense = senseMap {
-                "uri", string uri
-            }
             let sense = senseMap {
-                "file", fileSense
-                "image", imageSense
+                "image", senseMap {
+                    "resource", senseMap {
+                        "uri", string uri
+                        "content-length", string file.size
+                        "content-type", file.``type``
+                    }
+                    "size", "TODO"
+                }
             }
             { state with Status = Status.Valid uri; UrlInput = string uri }
             , Cmd.ofSub (fun _ -> onSenseChanged (Ok sense))

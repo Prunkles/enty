@@ -40,7 +40,7 @@ type Mui =
     static member inline textField(props) = createElementImportDefault "@mui/material/TextField" props
 
     static member inline button(props) = createElementImportDefault "@mui/material/Button" props
-    static member inline button(children: ReactElement seq) = createElementImportDefault "@mui/material/Button" [ button.children children ]
+    static member inline button(children: #seq<ReactElement>) = createElementImportDefault "@mui/material/Button" [ button.children (children :> _ seq) ]
 
     static member inline paper(props) = createElementImportDefault "@mui/material/Paper" props
     static member inline paper(children: ReactElement seq) = createElementImportDefault "@mui/material/Paper" [ paper.children children ]
@@ -70,7 +70,7 @@ type Mui =
     static member inline typography(children: ReactElement seq) = createElementImportDefault "@mui/material/Typography" [ typography.children children ]
 
     static member inline box(props) = createElementImportDefault "@mui/material/Box" props
-    static member inline box(children: ReactElement seq) = createElementImportDefault "@mui/material/Box" [ box.children children ]
+    static member inline box(children: #seq<ReactElement>) = createElementImportDefault "@mui/material/Box" [ box.children children ]
 
     static member inline cssBaseline(props) = createElementImportDefault "@mui/material/CssBaseline" props
     static member inline cssBaseline(children: #seq<ReactElement>) = createElementImportDefault "@mui/material/CssBaseline" [ cssBaseline.children (children :> _ seq) ]

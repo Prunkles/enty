@@ -3,9 +3,11 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net6.0</TargetFramework>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="Dockerfile" />
         <Content Include="appsettings.json" />
         <Compile Include="LinqToDbPostgresExtensions.fs" />
         <Compile Include="SenseJToken.fs" />

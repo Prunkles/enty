@@ -5,54 +5,26 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
-// If we're running the webpack-dev-server, assume we're in development mode
-const isProduction =
-    // !process.argv.find(v => v.indexOf('webpack-dev-server') !== -1)
-    process.env.NODE_ENV === 'production'
-const isDevelopment = !isProduction && process.env.NODE_ENV !== 'production'
+const isProduction = process.env.NODE_ENV === 'production'
+const isDevelopment = !isProduction
 
-const CONFIG = {
-    fsharpEntry: './build/Program.fs.js',
-    assetsDir: './public',
-    outputDir: './dist',
-    indexHtmlTemplate: './public/index.html',
-    devServer: {
-        port: 8080,
-        host: '0.0.0.0',
-        proxy: {
-            '/mind/**': {
-                target: 'http://localhost:' + '5015',
-                changeOrigin: true,
-                pathRewrite: {
-                    '^/mind': '',
-                },
-            },
-            '/storage/**': {
-                target: 'http://localhost:' + '5020',
-                changeOrigin: true,
-                pathRewrite: { '^/storage': '' },
-            }
-        }
-    }
-}
-
-console.log("Bundling for " + (isProduction ? "production" : "development") + "...")
+console.log("Bundling for " + (isProduction ? "production" : "development"))
 
 const commonPlugins = [
     new NodePolyfillPlugin(),
     new HtmlWebpackPlugin({
         filename: 'index.html',
-        template: CONFIG.indexHtmlTemplate,
+        template: './public/index.html',
     }),
 ]
 
 module.exports = {
     mode: isProduction ? 'production' : 'development',
     entry: {
-        webapp: [ resolve(CONFIG.fsharpEntry) ]
+        webapp: [ resolve('./build/Program.fs.js') ]
     },
     output: {
-        path: resolve(CONFIG.outputDir),
+        path: resolve('./dist'),
         // publicPath: './public',
         filename: isProduction ? '[name].[fullhash].js' : '[name].js'
     },
@@ -70,20 +42,16 @@ module.exports = {
             }
         },
     },
-    plugins: commonPlugins.concat(
-        isProduction ? [
+    plugins:
+        (isProduction ? [
             new CopyWebpackPlugin({
                 patterns: [
-                    {
-                        from: resolve(CONFIG.assetsDir),
-                        noErrorOnMissing: true,
-                    }
+                    './public/enty.svg',
                 ]
             })
         ] : [
             new ReactRefreshWebpackPlugin()
-        ]
-    ),
+        ]).concat(commonPlugins),
     resolve: {
         // See https://github.com/fable-compiler/Fable/issues/1490
         symlinks: false,
@@ -91,13 +59,26 @@ module.exports = {
     },
     devServer: {
         publicPath: '/',
-        contentBase: resolve(CONFIG.assetsDir),
-        host: CONFIG.devServer.host,
-        port: CONFIG.devServer.port,
+        contentBase: resolve('./public'),
+        host: '0.0.0.0',
+        port: 8080,
         historyApiFallback: true,
         hot: true,
         inline: true,
-        proxy: CONFIG.devServer.proxy,
+        proxy: {
+            '/mind/**': {
+                target: 'http://localhost:' + '5015',
+                changeOrigin: true,
+                pathRewrite: {
+                    '^/mind': '',
+                },
+            },
+            '/storage/**': {
+                target: 'http://localhost:' + '5020',
+                changeOrigin: true,
+                pathRewrite: { '^/storage': '' },
+            }
+        },
     },
     // - babel-loader: transforms JS to old syntax (compatible with old browsers)
     // - file-loader: Moves files referenced in the code (fonts, images) into output folder

@@ -88,8 +88,8 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                 let! entities = MindApiImpl.mindApi.GetEntities(eids)
 
                 // Router.navigatePath("wish", ["wish", wishString; "page", string (total / pageSize)])
-                Router.navigatePath(Page.Wish (Some (wishString, pageNumber)) |> Page.formatPath)
-                // setStatus (WishPageStatus.Entities (entities, total))
+                // Router.navigatePath(Page.Wish (Some (wishString, pageNumber)) |> Page.formatPath)
+                setStatus (WishPageStatus.Entities (entities, total))
             | Error reason ->
                 setStatus WishPageStatus.Empty
                 eprintfn $"Failed wish: {reason}"
