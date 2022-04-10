@@ -8,5 +8,8 @@ bin/
 
 /.fake/
 
+/.dotnet/
+
 /.local/
 /.cache/
+/data/
