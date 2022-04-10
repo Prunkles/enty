@@ -14,10 +14,11 @@ module Map =
 
 let (|Apply|) f x = f x
 
-let parsePicture (sense: Sense) =
+let parseImage (sense: Sense) =
     option {
         let! image = sense |> Sense.tryItem "image"
-        let! uri = image |> Sense.tryItem "uri"
+        let! resource = image |> Sense.tryItem "resource"
+        let! uri = resource |> Sense.tryItem "uri"
         return! uri |> Sense.tryAsValue
     }
 
@@ -36,7 +37,7 @@ let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
         |}
         paper.children [
             match entity.Sense with
-            | Apply parsePicture (Some uriString) ->
+            | Apply parseImage (Some uriString) ->
                 Mui.stack [
                     prop.sx {| height = "100%" |}
                     stack.children [
