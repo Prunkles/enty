@@ -2,6 +2,7 @@ module enty.ResourceStorage.Server.HttpHandlers
 
 open System
 open System.IO
+open System.Net.Mime
 open System.Security.Cryptography
 open System.Text
 open Giraffe
@@ -53,11 +54,18 @@ let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
 
     let resMeta =
         let eTag = $"\"%s{hashS}\""
+        let contentDisposition =
+            file.ContentDisposition
+            |> Option.ofObj
+            |> Option.map ^fun contentDispositionString ->
+                let contentDisposition = ContentDisposition(contentDispositionString)
+                contentDisposition.Inline <- true
+                contentDisposition.ToString()
         { ContentType = file.ContentType |> Option.ofObj
           ETag = eTag |> Some
           LastModified = DateTimeOffset.Now |> Some
           ContentLength = file.Length |> Some
-          ContentDisposition = file.ContentDisposition |> Option.ofObj }
+          ContentDisposition = contentDisposition }
 
     let! resWriter = storage.Write(rid, resMeta)
     use resWriterStream = resWriter.AsStream()
