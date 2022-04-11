@@ -1,7 +1,11 @@
 name: Build and push dotnet-node to Docker Hub
 
 on:
-  workflow_call
+  push:
+    branches: [main]
+    paths:
+      - '/misc/dotnet-node/Dockerfile'
+      - '/.github/workflows/dotnet-node.yml'
 
 jobs:
 
