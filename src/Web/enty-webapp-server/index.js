@@ -1,4 +1,5 @@
 const express = require('express')
+const fallback = require('express-history-api-fallback')
 const { createProxyMiddleware } = require('http-proxy-middleware')
 
 const PORT = process.env.PORT
@@ -14,6 +15,7 @@ const storageProxy = createProxyMiddleware('/storage', { target: STORAGE_ADDRESS
 app.use(mindProxy)
 app.use(storageProxy)
 app.use(express.static(WEBAPP_PUBLIC))
+app.use(fallback('/', { root: WEBAPP_PUBLIC }))
 
 app.listen(PORT, () => {
     console.log('Listening')
