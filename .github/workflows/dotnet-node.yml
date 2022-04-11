@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - '/misc/dotnet-node/Dockerfile'
-      - '/.github/workflows/dotnet-node.yml'
+      - 'misc/dotnet-node/Dockerfile'
+      - '.github/workflows/dotnet-node.yml'
 
 jobs:
 
