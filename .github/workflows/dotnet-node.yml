@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Build and push dotnet-node to Docker Hub
 
 on:
   workflow_call
