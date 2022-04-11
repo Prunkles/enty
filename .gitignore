@@ -6,8 +6,6 @@ bin/
 
 *.DotSettings.user
 
-/.fake/
-
 /.dotnet/
 
 /.local/
