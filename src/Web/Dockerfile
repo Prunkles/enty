@@ -1,19 +1,10 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS dotnet_sdk_node
-
-# Install NodeJS
-RUN \
-    apt-get update && apt-get upgrade -y \
-    && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get -y install nodejs
-#
-
 # Server
 FROM node:16 AS final
 WORKDIR "/enty/enty.Web.Server"
 COPY ["src/Web/enty-webapp-server", "."]
 RUN npm install
 
-FROM dotnet_sdk_node AS build
+FROM prunkles/dotnet-node:dotnet-sdk-6.0_node-16 AS build
 
 # Install tools
 WORKDIR "/enty/src/Web"
