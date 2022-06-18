@@ -58,13 +58,10 @@ module.exports = {
         modules: [ resolve('./node_modules') ]
     },
     devServer: {
-        publicPath: '/',
-        contentBase: resolve('./public'),
         host: '0.0.0.0',
         port: 8080,
         historyApiFallback: true,
         hot: true,
-        inline: true,
         proxy: {
             '/mind/**': {
                 target: 'http://localhost:' + '5015',
@@ -73,11 +70,12 @@ module.exports = {
                     '^/mind': '',
                 },
             },
-            '/storage/**': {
-                target: 'http://localhost:' + '5020',
-                changeOrigin: true,
-                pathRewrite: { '^/storage': '' },
-            }
+        },
+        setupMiddlewares: (middlewares, devServer) => {
+            devServer.app.get('/storage-address', (_, response) => {
+                response.send('http://localhost:5020/')
+            })
+            return middlewares
         },
     },
     // - babel-loader: transforms JS to old syntax (compatible with old browsers)
