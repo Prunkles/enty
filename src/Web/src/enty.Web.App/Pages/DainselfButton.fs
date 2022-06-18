@@ -21,6 +21,13 @@ type FilesState =
     | Selected of File array
 
 [<ReactComponent>]
+let PreviewImage (file: File) =
+    let src = React.useMemo((fun () -> emitJsExpr (file) "URL.createObjectURL($0)"), [|file|])
+    Html.img [
+        prop.src src
+    ]
+
+[<ReactComponent>]
 let DainselfButton () =
     let files, setFiles = React.useState(FilesState.Empty)
     let (tagsSense: Sense option), setTags = React.useState(None)
@@ -94,7 +101,7 @@ let DainselfButton () =
                 Mui.box [
                     box.children [
                         for file in files ->
-                            Html.span file.name
+                            PreviewImage file
                     ]
                 ]
                 Mui.button [
