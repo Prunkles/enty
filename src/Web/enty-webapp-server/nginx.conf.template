@@ -2,12 +2,13 @@ server {
     listen 80;
     root /usr/share/nginx/html;
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/ /index.html =404;
     }
-    location /mind {
+    location /mind/ {
         proxy_pass ${ENTY_MIND_ADDRESS};
     }
-    location /storage {
+    location /storage/ {
         proxy_pass ${ENTY_STORAGE_ADDRESS};
+        client_max_body_size 500M;
     }
 }

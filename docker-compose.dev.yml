@@ -71,29 +71,39 @@ services:
             - ./.cache/docker/storage/storage:/enty/src/enty.ResourceStorage.Server/storage
         working_dir: /enty/src/enty.ResourceStorage.Server
         command: dotnet watch run
+#    webapp:
+#        container_name: webapp
+##        image: prunkles/dotnet-node:dotnet-sdk-6.0_node-16
+#        image: mcr.microsoft.com/dotnet/sdk:6.0
+#        ports:
+#            - "8080:8080"
+#        environment:
+#            - NODE_ENV=development
+#        volumes:
+#            - .:/enty
+#            - ./.cache/docker/webapp/.dotnet:/root/.dotnet
+#            - ./.cache/docker/webapp/.local/share/NuGet:/root/.local/share/NuGet
+#            - ./.cache/docker/webapp/.nuget:/root/.nuget
+#            - ./.cache/docker/webapp/node_modules:/enty/src/Web/node_modules
+#        working_dir: /enty/src/Web
+#        depends_on:
+#            - mind-gateway
+#            - storage
+#        entrypoint: >
+#            bash -c "
+#                dotnet tool restore
+#                dotnet fable #npm run watch
+#            "
     webapp:
         container_name: webapp
-#        image: prunkles/dotnet-node:dotnet-sdk-6.0_node-16
-        image: mcr.microsoft.com/dotnet/sdk:6.0
+        build:
+            context: .
+            dockerfile: ./src/Web/Dockerfile
         ports:
-            - "8080:8080"
+            - "8081:80"
         environment:
-            - NODE_ENV=development
-        volumes:
-            - .:/enty
-            - ./.cache/docker/webapp/.dotnet:/root/.dotnet
-            - ./.cache/docker/webapp/.local/share/NuGet:/root/.local/share/NuGet
-            - ./.cache/docker/webapp/.nuget:/root/.nuget
-            - ./.cache/docker/webapp/node_modules:/enty/src/Web/node_modules
-        working_dir: /enty/src/Web
+            - ENTY_MIND_ADDRESS=http://mind-gateway:5015/
+            - ENTY_STORAGE_ADDRESS=http://storage:5020/
         depends_on:
             - mind-gateway
             - storage
-        entrypoint: >
-            bash -c "
-                dotnet tool restore
-                dotnet fable #npm run watch
-            "
-#        stdin_open: true
-#        tty: true
-#        entrypoint: bash

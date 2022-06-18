@@ -1,9 +1,3 @@
-## Server
-#FROM node:16 AS final
-#WORKDIR "/enty/enty.Web.Server"
-#COPY ["src/Web/enty-webapp-server", "."]
-#RUN npm install
-
 FROM prunkles/dotnet-node:dotnet-sdk-6.0_node-16 AS build
 
 # Install tools
@@ -37,9 +31,6 @@ WORKDIR "/enty/src/Web"
 RUN npm run build
 RUN NODE_ENV=production npm run webpack
 
-#FROM final
-#COPY --from=build "/enty/src/Web/dist" "public/"
-#ENTRYPOINT WEBAPP_PUBLIC=public node index.js
 FROM nginx AS final
 COPY --from=build "/enty/src/Web/dist" "/usr/share/nginx/html"
-COPY "src/Web/enty-webapp-server/nginx.conf.template" "/etc/nginx/templates/enty-webapp.conf.template"
+COPY "src/Web/enty-webapp-server/nginx.conf.template" "/etc/nginx/templates/default.conf.template"
