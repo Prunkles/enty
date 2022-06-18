@@ -7,8 +7,8 @@ server {
     location /mind/ {
         proxy_pass ${ENTY_MIND_ADDRESS};
     }
-    location /storage/ {
-        proxy_pass ${ENTY_STORAGE_ADDRESS};
-        client_max_body_size 500M;
+    location /storage-address {
+        add_header Content-Type text/plain;
+        return 200 '${ENTY_STORAGE_ADDRESS}';
     }
 }

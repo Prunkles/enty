@@ -103,7 +103,7 @@ services:
             - "8081:80"
         environment:
             - ENTY_MIND_ADDRESS=http://mind-gateway:5015/
-            - ENTY_STORAGE_ADDRESS=http://storage:5020/
+            - ENTY_STORAGE_ADDRESS=http://localhost:5020/
         depends_on:
             - mind-gateway
             - storage

@@ -11,6 +11,7 @@ open Feliz.MaterialUI.Mui5
 
 open enty.Core
 open enty.Web.App.Pages
+open enty.Web.App.Utils
 
 
 [<ReactComponent>]
@@ -97,4 +98,8 @@ let App () =
         ]
     ]
 
-ReactDOM.render(App, Dom.document.getElementById("app"))
+async {
+    do! ResourceStorageHardcodeImpl.init ()
+    ReactDOM.render(App, Dom.document.getElementById("app"))
+}
+|> Async.startSafe

@@ -16,7 +16,6 @@ const commonPlugins = [
         filename: 'index.html',
         template: resolve('./public/index.html'),
     }),
-    new webpack.EnvironmentPlugin(['ENTY_STORAGE_ADDRESS']),
 ]
 
 module.exports = {
