@@ -2,6 +2,7 @@ namespace enty.Web.App
 
 open System
 open Browser.Types
+open Fable.Core.JsInterop
 open Fable.SimpleHttp
 
 type IResourceStorage =
@@ -24,5 +25,5 @@ type ResourceStorage(baseUrl: string) =
 
 module ResourceStorageHardcodeImpl =
     let resourceStorage: IResourceStorage =
-        let baseUrl = $"{Browser.Dom.window.location.protocol}//{Browser.Dom.window.location.host}/storage"
+        let baseUrl = emitJsExpr () "process.env.ENTY_STORAGE_ADDRESS"
         ResourceStorage(baseUrl)
