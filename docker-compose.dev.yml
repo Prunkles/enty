@@ -5,7 +5,7 @@ services:
         image: postgres
         restart: always
         ports:
-            - "5433:5432"
+            - "55433:5432"
         volumes:
             - ./.cache/docker/db/data:/var/lib/postgresql/data
         environment:
@@ -19,7 +19,7 @@ services:
         ports:
             - "5010:5010"
         environment:
-            - Kestrel__Endpoints__Http__Url=https://0.0.0.0:5010
+            - ASPNETCORE_URLS=https://0.0.0.0:5010
             - ConnectionStrings__Default=Database=enty; User ID=postgres; Password=password; Host=db; Port=5432;
         volumes:
             - ./src:/enty/src
@@ -54,34 +54,13 @@ services:
         depends_on:
             - mind
         command: dotnet watch run
-#    webapp:
-#        container_name: webapp
-#        build: ./src/WebApp/
-#        ports:
-#            - 8080:8080
-#        environment:
-#            - NODE_ENV=development
-#        volumes:
-#            - ./src:/enty/src
-#            - ./lib:/enty/lib
-#            - ./.cache/docker/webapp/.dotnet:/root/.dotnet
-#            - ./.cache/docker/webapp/.local/share/NuGet:/root/.local/share/NuGet
-#            - ./.cache/docker/webapp/.nuget:/root/.nuget
-#            - ./.cache/docker/webapp/node_modules:/enty/src/WebApp/node_modules
-#        working_dir: /enty/src/WebApp
-#        depends_on:
-#            - mind-gateway
-#        command: >
-#            bash -c "
-#                npm run watch
-#            "
     storage:
         container_name: storage
         image: mcr.microsoft.com/dotnet/sdk:6.0
         ports:
             - "5020:5020"
         environment:
-            - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5020
+            - ASPNETCORE_URLS=http://0.0.0.0:5020
             - Storage__Path=./storage/
         volumes:
             - ./src:/enty/src
@@ -92,3 +71,29 @@ services:
             - ./.cache/docker/storage/storage:/enty/src/enty.ResourceStorage.Server/storage
         working_dir: /enty/src/enty.ResourceStorage.Server
         command: dotnet watch run
+    webapp:
+        container_name: webapp
+#        image: prunkles/dotnet-node:dotnet-sdk-6.0_node-16
+        image: mcr.microsoft.com/dotnet/sdk:6.0
+        ports:
+            - "8080:8080"
+        environment:
+            - NODE_ENV=development
+        volumes:
+            - .:/enty
+            - ./.cache/docker/webapp/.dotnet:/root/.dotnet
+            - ./.cache/docker/webapp/.local/share/NuGet:/root/.local/share/NuGet
+            - ./.cache/docker/webapp/.nuget:/root/.nuget
+            - ./.cache/docker/webapp/node_modules:/enty/src/Web/node_modules
+        working_dir: /enty/src/Web
+        depends_on:
+            - mind-gateway
+            - storage
+        entrypoint: >
+            bash -c "
+                dotnet tool restore
+                dotnet fable #npm run watch
+            "
+#        stdin_open: true
+#        tty: true
+#        entrypoint: bash

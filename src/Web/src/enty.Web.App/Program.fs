@@ -50,6 +50,11 @@ let AppBar () =
                                         prop.text "Wish"
                                         prop.onClick (fun _ -> Router.navigatePath(Page.Wish None |> Page.formatPath))
                                     ]
+                                    Mui.button [
+                                        prop.sx {| my=2; color="white"; display="block" |}
+                                        prop.text "Dainself Button"
+                                        prop.onClick (fun _ -> Router.navigatePath(Page.DainselfButton |> Page.formatPath))
+                                    ]
                                 ]
                             ]
                         ]
@@ -61,7 +66,9 @@ let AppBar () =
 
 [<ReactComponent>]
 let App () =
-    let page, setPage = React.useState(Router.currentPath() |> Page.parsePath)
+    let currentPath = Router.currentPath()
+    printfn $"currentPath: {currentPath}"
+    let page, setPage = React.useState(currentPath |> Page.parsePath)
     React.router [
         router.pathMode
         router.onUrlChanged (Page.parsePath >> setPage)
@@ -81,7 +88,8 @@ let App () =
                                 | Some (wishString, pageNumber) -> Some { WishString = wishString; PageNumber = pageNumber }
                                 | None -> None
                             WishPage {| Initials = initial |}
-                        | Page.Entity eid -> Html.h1 $"Entity {eid}"
+                        | Page.Entity eid -> EntityPage eid
+                        | Page.DainselfButton -> DainselfButton.DainselfButton ()
                         | Page.NotFound -> Html.h1 "Not found"
                     ]
                 ]

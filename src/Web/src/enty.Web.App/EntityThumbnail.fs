@@ -6,6 +6,7 @@ open Feliz.MaterialUI.Mui5
 
 open enty.Utils
 open enty.Core
+open enty.Web.App.SenseShapes
 
 [<RequireQualifiedAccess>]
 module Map =
@@ -13,20 +14,6 @@ module Map =
     let (|Item|_|) (key: 'k) (map: Map<'k, 'v>) : 'v option = Map.tryFind key map
 
 let (|Apply|) f x = f x
-
-let parseImage (sense: Sense) =
-    option {
-        let! image = sense |> Sense.tryItem "image"
-        let! resource = image |> Sense.tryItem "resource"
-        let! uri = resource |> Sense.tryItem "uri"
-        return! uri |> Sense.tryAsValue
-    }
-
-let parseTags (sense: Sense) =
-    option {
-        let! tags = sense |> Sense.tryItem "tags"
-        return! tags |> Sense.tryAsList
-    }
 
 [<ReactComponent>]
 let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
@@ -37,7 +24,7 @@ let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
         |}
         paper.children [
             match entity.Sense with
-            | Apply parseImage (Some uriString) ->
+            | Apply ImageSenseShape.parse (Some imageSense) ->
                 Mui.stack [
                     prop.sx {| height = "100%" |}
                     stack.children [
@@ -47,18 +34,24 @@ let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
                         ]
                         Mui.box [
                             box.sx {|
-                                backgroundImage = $"url(\"{uriString}\")"
+                                backgroundImage = $"url(\"%s{imageSense.Uri}\")"
                                 backgroundSize = "contain"
                                 backgroundRepeat = "no-repeat"
                                 backgroundPosition = "center"
                                 height = "100%"
                             |}
-                            prop.src uriString
+                            prop.src imageSense.Uri
                             prop.onClick (fun _ -> onClicked ())
                         ]
                     ]
                 ]
             | _ ->
-                Html.text "Undefined entity type"
+                Html.div [
+                    prop.onClick (fun _ -> onClicked ())
+                    prop.children [
+                        Html.h1 (string entity.Id)
+                        Html.text "Undefined entity type"
+                    ]
+                ]
         ]
     ]

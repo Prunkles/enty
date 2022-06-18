@@ -14,7 +14,7 @@ const commonPlugins = [
     new NodePolyfillPlugin(),
     new HtmlWebpackPlugin({
         filename: 'index.html',
-        template: './public/index.html',
+        template: resolve('./public/index.html'),
     }),
 ]
 
@@ -25,7 +25,7 @@ module.exports = {
     },
     output: {
         path: resolve('./dist'),
-        // publicPath: './public',
+        publicPath: '/',
         filename: isProduction ? '[name].[fullhash].js' : '[name].js'
     },
     devtool: isProduction ? 'source-map' : 'eval-source-map',

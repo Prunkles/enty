@@ -1,5 +1,6 @@
-module enty.Web.App.Pages.CreateEntityImageBatchPage
+module enty.Web.App.Pages.DainselfButton
 
+open System
 open Fable.Core
 open Fable.Core.JsInterop
 open Browser.Types
@@ -10,39 +11,61 @@ open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
 open enty.Core
+open enty.Utils
 open enty.Web.App
+open enty.Web.App.SenseFormatting
 open enty.Web.App.Utils
 
-type State =
+type FilesState =
     | Empty
     | Selected of File array
 
 [<ReactComponent>]
-let CreateEntityImageBatchPage () =
-    let files, setFiles = React.useState(State.Empty)
+let DainselfButton () =
+    let files, setFiles = React.useState(FilesState.Empty)
+    let (tagsSense: Sense option), setTags = React.useState(None)
 
     let handleFilesSelected (files: File array) =
-        setFiles (State.Selected files)
+        setFiles (FilesState.Selected files)
+
+    let tagsSenseChanged (sense: Result<Sense, string>) =
+        match sense with
+        | Ok sense ->
+            setTags (Some sense)
+        | Error _ -> setTags None
 
     let handleBatchCreateClicked (files: File array) =
         async {
             for file in files do
                 let form =
                     FormData.create ()
-                    |> FormData.appendNamedFile "" file.name file
+                    |> FormData.appendNamedFile "File" file.name file
                 let! result = ResourceStorageHardcodeImpl.resourceStorage.Create(form)
                 match result with
                 | Ok uri ->
-                    let sense = senseMap {
-                        "image", senseMap {
-                            "resource", senseMap {
-                                "uri", string uri
+                    let sense =
+                        senseMap {
+                            "image", senseMap {
+                                "resource", senseMap {
+                                    "uri", string uri
+                                    "content-length", string file.size
+                                    "content-type", file.``type``
+                                }
                             }
                         }
-                    }
-                    ()
+                        |> Sense.merge ^
+                            match tagsSense with
+                            | Some tagsSense -> tagsSense
+                            | None -> Sense.Map Map.empty
+                    let entityId = EntityId (Guid.NewGuid())
+                    let! rememberResult = MindApiImpl.mindApi.Remember(entityId, sense |> Sense.format)
+                    match rememberResult with
+                    | Ok () -> ()
+                    | Error error ->
+                        Browser.Dom.window.alert($"Failed remember entity: {error}")
                 | Error reason ->
                     Browser.Dom.window.alert($"Failed upload file: {reason}")
+            Browser.Dom.window.alert("Finished")
         }
         |> Async.startSafe
 
@@ -55,6 +78,7 @@ let CreateEntityImageBatchPage () =
                     Html.text "Select images"
                     Html.input [
                         input.type' "file"
+                        prop.multiple true
                         prop.hidden true
                         prop.onChange (fun (e: Event) ->
                             let files: File array = e.target?files
@@ -63,9 +87,10 @@ let CreateEntityImageBatchPage () =
                     ]
                 ]
             ]
+            EntityCreating.TagSenseShapeForm tagsSenseChanged
             match files with
-            | State.Empty -> ()
-            | State.Selected files ->
+            | FilesState.Empty -> ()
+            | FilesState.Selected files ->
                 Mui.box [
                     box.children [
                         for file in files ->

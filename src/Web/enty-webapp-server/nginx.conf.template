@@ -1,0 +1,13 @@
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    location /mind {
+        proxy_pass ${ENTY_MIND_ADDRESS};
+    }
+    location /storage {
+        proxy_pass ${ENTY_STORAGE_ADDRESS};
+    }
+}

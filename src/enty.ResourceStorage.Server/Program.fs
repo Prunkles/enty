@@ -2,11 +2,13 @@
 
 open System
 
+open System.Net.Http.Headers
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
+open Microsoft.Net.Http.Headers
 
 module Startup =
 
@@ -16,6 +18,9 @@ module Startup =
     open enty.ResourceStorage.FileSystem
 
     let configureServices (ctx: WebHostBuilderContext) (services: IServiceCollection) : unit =
+        services.AddHttpLogging(fun logging ->
+            logging.RequestHeaders.Add(HeaderNames.ContentDisposition) |> ignore
+        ) |> ignore
         services.AddTransient<IResourceStorage>(fun sp ->
             let logger = sp.GetRequiredService<ILogger<FileSystemResourceStorage>>()
             let path = ctx.Configuration.["Storage:Path"]
@@ -34,6 +39,7 @@ module Startup =
         services.AddGiraffe() |> ignore
 
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
+        app.UseHttpLogging() |> ignore
         app.UseRouting() |> ignore
         app.UseCors("_AllowAll") |> ignore
         app.UseEndpoints(fun endpoint ->

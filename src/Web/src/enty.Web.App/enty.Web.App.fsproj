@@ -20,15 +20,15 @@
         <Compile Include="MindApi.fs" />
         <Compile Include="ImagePreviewService.fs" />
         <Compile Include="ResourceStorage.fs" />
+        <Compile Include="SenseShapes\SenseShapes.fs" />
         <Compile Include="EntityRendering.fs" />
         <Compile Include="EntityCreating.fs" />
         <Compile Include="EntityThumbnail.fs" />
         <Compile Include="Pages\Page.fs" />
         <Compile Include="Pages\CreateEntityPage.fs" />
-        <Compile Include="Pages\CreateEntityImageBatchPage.fs" />
         <Compile Include="Pages\WishPage.fs" />
         <Compile Include="Pages\EntityPage.fs" />
-        <Compile Include="Pages\BatchCreateEntityPage.fs" />
+        <Compile Include="Pages\DainselfButton.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

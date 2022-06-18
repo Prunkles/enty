@@ -73,7 +73,7 @@ let inline box' x = FSharp.Core.Operators.box x
 
 [<ReactComponent>]
 let WishPage (props: {| Initials: WishPageInitials option |}) =
-    let pageSize = 1
+    let pageSize = 12
     let pageNumber, setPageNumber = React.useState(props.Initials |> Option.map (fun i -> i.PageNumber) |> Option.defaultValue 0)
     let status, setStatus = React.useState(WishPageStatus.Empty)
     let wishInput, setWishInput = React.useState(props.Initials |> Option.map (fun i -> i.WishString))
@@ -111,6 +111,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
     // , [| box' props.Initials |])
 
     let handleThumbnailClicked (entity: Entity) =
+        Router.navigatePath(Page.formatPath (Page.Entity entity.Id))
         printfn $"Entity clicked: {entity}"
 
     Mui.stack [

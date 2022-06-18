@@ -8,6 +8,7 @@ open System.Text
 open Giraffe
 open FSharp.Control.Tasks
 open Microsoft.AspNetCore.Http
+open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Primitives
 open Microsoft.Net.Http.Headers
 open enty.ResourceStorage
@@ -58,6 +59,7 @@ let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
             file.ContentDisposition
             |> Option.ofObj
             |> Option.map ^fun contentDispositionString ->
+                printfn $">>>Content-Disposition: {contentDispositionString}"
                 let contentDisposition = ContentDisposition(contentDispositionString)
                 contentDisposition.Inline <- true
                 contentDisposition.ToString()
