@@ -54,31 +54,14 @@ type WishPageInitials =
 
 let inline box' x = FSharp.Core.Operators.box x
 
-// [<RequireQualifiedAccess>]
-// module WishPage =
-//
-//     type Msg =
-//         | A
-//
-//     type State =
-//         { PageSize: int }
-//
-//     let init () =
-//         ()
-//
-//     let update (msg: Msg) (state: State) : State * Cmd<Msg> =
-//         match msg with
-//         | Msg.A -> state, Cmd.none
-
-
 [<ReactComponent>]
 let WishPage (props: {| Initials: WishPageInitials option |}) =
     let pageSize = 12
-    let pageNumber, setPageNumber = React.useState(props.Initials |> Option.map (fun i -> i.PageNumber) |> Option.defaultValue 0)
+    let pageNumber, setPageNumber = React.useState(props.Initials |> Option.map (fun i -> i.PageNumber) |> Option.defaultValue 1)
     let status, setStatus = React.useState(WishPageStatus.Empty)
     let wishInput, setWishInput = React.useState(props.Initials |> Option.map (fun i -> i.WishString))
 
-    let handleWishStringEntered (wishString: string) =
+    let handleWishStringEntered (pageNumber: int) (wishString: string) =
         async {
             setWishInput (Some wishString)
             setStatus WishPageStatus.Loading
@@ -86,9 +69,8 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
             match wishResult with
             | Ok (eids, total) ->
                 let! entities = MindApiImpl.mindApi.GetEntities(eids)
-
-                // Router.navigatePath("wish", ["wish", wishString; "page", string (total / pageSize)])
-                // Router.navigatePath(Page.Wish (Some (wishString, pageNumber)) |> Page.formatPath)
+                let url = Page.Wish (Some (wishString, pageNumber)) |> Page.formatPath
+                Dom.window.history.pushState(null, "", url)
                 setStatus (WishPageStatus.Entities (entities, total))
             | Error reason ->
                 setStatus WishPageStatus.Empty
@@ -97,18 +79,18 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
 
     let handlePageNumberChanged (pageNumber: int) =
         setPageNumber pageNumber
-        // match wishInput with
-        // | Some wishInput -> handleWishStringEntered wishInput
-        // | _ -> ()
+        match wishInput with
+        | Some wishInput -> handleWishStringEntered pageNumber wishInput
+        | _ -> ()
 
-    // React.useEffect(fun () ->
-    //     match props.Initials with
-    //     | None -> ()
-    //     | Some initials ->
-    //         handleWishStringEntered initials.WishString
-    //         setPageNumber initials.PageNumber
-    //     ()
-    // , [| box' props.Initials |])
+    React.useEffect(fun () ->
+        match props.Initials with
+        | None -> ()
+        | Some initials ->
+            handleWishStringEntered pageNumber initials.WishString
+            setPageNumber initials.PageNumber
+        ()
+    , [| box' props.Initials |])
 
     let handleThumbnailClicked (entity: Entity) =
         Router.navigatePath(Page.formatPath (Page.Entity entity.Id))
@@ -117,7 +99,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
     Mui.stack [
         stack.spacing 3
         stack.children [
-            WishInput wishInput handleWishStringEntered false
+            WishInput wishInput (handleWishStringEntered pageNumber) false
             match status with
             | WishPageStatus.Empty -> Html.text "There's nothing there yet"
             | WishPageStatus.Loading ->
@@ -146,10 +128,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                 Mui.pagination [
                     pagination.count (total / pageSize)
                     pagination.page pageNumber
-                    pagination.onChange handlePageNumberChanged
-                    pagination.renderItem (fun item ->
-                        Html.none
-                    )
+                    pagination.onChange (fun _ p -> handlePageNumberChanged p)
                 ]
         ]
     ]
