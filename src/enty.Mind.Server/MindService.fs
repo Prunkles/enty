@@ -3,52 +3,15 @@ namespace enty.Mind.Server
 open System
 open System.Threading.Tasks
 open FSharp.Control
-open Google.Protobuf.Collections
 open Grpc.Core
 open Google.Protobuf.WellKnownTypes
+
 open enty.Utils
 open enty.Core
 open enty.Mind
-open System.Linq
-//open enty.Mind.Server.Api
 
-//open WishParsing
-//open SenseParsing
 open SenseJToken
 
-//type JsonValue = Newtonsoft.Json.Linq.JToken
-//
-//type MindApi(mind: IMind) =
-//    interface IMindApi<JsonValue> with
-//        member this.Remember(request) = async {
-//            let eid = EntityId request.EntityId
-//            let senseString = request.SenseString
-//            let sense = Sense.parse senseString |> Result.getOk
-//            do! mind.Remember(eid, sense)
-//        }
-//        member this.Forget(request) = async {
-//            do! mind.Forget(EntityId request.EntityId)
-//        }
-//        member this.GetEntities(request) = async {
-//            let eids = request.EntityIds |> Array.map EntityId
-//            let! entities = mind.GetEntities(eids)
-//            let entityDtos =
-//                entities
-//                |> Array.map (fun entity ->
-//                    let (EntityId eidG) = entity.Id
-//                    let senseDto = SenseDto (Sense.toJToken entity.Sense)
-//                    { Id = eidG; Sense = senseDto }
-//                )
-//            return { Entities= entityDtos }
-//        }
-//        member this.Wish(request) = async {
-//            let wish = Wish.parse request.WishString |> Result.getOk
-//            let! eids, total = mind.Wish(wish, request.Offset, request.Limit)
-//            let eidGs = eids |> Array.map (fun (EntityId x) -> x)
-//            let response =
-//                { EntityIds = eidGs; Total = total }
-//            return response
-//        }
 
 module Sense =
 
@@ -113,6 +76,10 @@ module Wish =
             let pMapFieldIs = protoWish.MapFieldIs
             let path = protoPathToPath pMapFieldIs.Path
             Wish.MapFieldIs (path, pMapFieldIs.Key, pMapFieldIs.Value)
+        | Proto.Wish.WishOneofCase.Any ->
+            let pAny = protoWish.Any
+            let path = protoPathToPath pAny.Path
+            Wish.Any path
         | Proto.Wish.WishOneofCase.Operator ->
             let pOperator = protoWish.Operator
             let wishOperator =

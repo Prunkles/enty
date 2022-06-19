@@ -29,12 +29,16 @@ module Sql =
         /// {0} ? {1}
         [<Sql.Expression("{0} ? {1}", ServerSideOnly=true, InlineParameters=true)>]
         static member Contains(json: _, element: string) = invalidOp ""
-        
+
         /// {0} @@ {1}
         [<Sql.Expression("{0} @@ {1}", ServerSideOnly=true, InlineParameters=true)>]
         static member op_AtAt(target: 'jsonb, path: string): bool = invalidOp ""
-        
-    
+
+        /// {0} @? {1}
+        [<Sql.Expression("{0} @? {1}", ServerSideOnly=true, InlineParameters=true)>]
+        static member op_AtQmark(target: 'jsonb, path: string): bool = invalidOp ""
+
+
     type Jsonb =
 
         [<Sql.Expression("jsonb_set({0}, {1}, {2})", ServerSideOnly=true, InlineParameters=true)>]

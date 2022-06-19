@@ -47,11 +47,6 @@ message WishOperator {
   }
 }
 
-//message WishListItemIs {
-//  int32 item = 1;
-//  Wish wish = 2;
-//}
-
 message WishPathEntry {
   oneof entry {
     string map_key = 1;
@@ -76,6 +71,9 @@ message WishListContains {
   WishPath path = 1;
   string value = 2;
 }
+message WishAny {
+    WishPath path = 1;
+}
 
 message Wish {
   oneof wish {
@@ -83,6 +81,7 @@ message Wish {
     WishValueIs value_is = 2;
     WishListContains list_contains = 3;
     WishMapFieldIs map_field_is = 4;
+    WishAny any = 5;
   }
 }
 

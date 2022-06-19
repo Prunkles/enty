@@ -14,7 +14,6 @@ open enty.Mind.Server.SenseJToken
 open enty.Mind.Server.LinqToDbPostgresExtensions
 
 
-
 [<Table(Name="entities")>]
 [<CLIMutable>]
 type EntityDao = {
@@ -88,14 +87,18 @@ type DbMind(db: EntyDataConnection) =
             }
             let stringPath path =
                 path
-                |> Seq.map (function
+                |> Seq.map ^function
                     | WishPathEntry.ListEntry -> "[*]"
                     | WishPathEntry.MapEntry key -> $".{key}"
-                )
                 |> String.concat ""
             let selectEntitiesByJsonpath jsonpath = query {
                 for entity in db.Entities do
                 where (Sql.Json.op_AtAt(entity.Sense, jsonpath))
+                select entity
+            }
+            let selectEntitiesByJsonpathQ jsonpath = query {
+                for entity in db.Entities do
+                where (Sql.Json.op_AtQmark(entity.Sense, jsonpath))
                 select entity
             }
 
@@ -113,6 +116,10 @@ type DbMind(db: EntyDataConnection) =
                     let path = stringPath path
                     let jsonpath = $"${path}[*] == \"{value}\""
                     selectEntitiesByJsonpath jsonpath
+                | Wish.Any path ->
+                    let path = stringPath path
+                    let jsonpath = $"${path}"
+                    selectEntitiesByJsonpathQ jsonpath
                 | Wish.Operator wishOperator -> queryWishOperator wishOperator
 
             and queryWishOperator wishOperator =
@@ -141,7 +148,6 @@ type DbMind(db: EntyDataConnection) =
                             .Union(e2s.Select(fun e2 -> e2.Id))
                             .Distinct()
                     selectEntitiesByIds ids
-
 
             let q = query {
                 for e in queryWish wish do

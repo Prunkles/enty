@@ -1,4 +1,3 @@
-//[<System.Obsolete>]
 namespace enty.Mind
 
 
@@ -12,6 +11,7 @@ type [<RequireQualifiedAccess>]
     | MapFieldIs of path: WishPathEntry list * key: string * value: string
     | ListContains of path: WishPathEntry list * value: string
     | ValueIs of path: WishPathEntry list * value: string
+    | Any of path: WishPathEntry list
     | Operator of WishOperator
 
 and [<RequireQualifiedAccess>]

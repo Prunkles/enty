@@ -62,6 +62,7 @@ module Grammar =
         | Value of ValueExpr
         | Map of MapExpr
         | List of ListExpr
+        | Any
 
     and [<RequireQualifiedAccess>]
         MapExpr =
@@ -82,8 +83,8 @@ module Grammar =
     let wishExpr, wishExprRef = createParserForwardedToRef<WishExpr, _> ()
 
     let ident =
-        let isAsciiIdStart c = isAsciiLetter c
         let isAsciiIdContinue c = isAsciiLetter c || isDigit c || c = '_' || c = '-'
+        let isAsciiIdStart c = isAsciiIdContinue c // isAsciiLetter c
         let options = IdentifierOptions(isAsciiIdStart=isAsciiIdStart, isAsciiIdContinue=isAsciiIdContinue)
         identifier options
 
@@ -124,6 +125,11 @@ module Grammar =
 
         opp.ExpressionParser .>> ws
 
+    let anyExpr =
+        pchar '*'
+        |>> ignore
+        <?> "any"
+
     let valueExpr =
         let value =
             between (pchar '"') (pchar '"' <?> "closing \"")
@@ -159,6 +165,7 @@ module Grammar =
 
     do wishExprRef.Value <-
         choice [
+            anyExpr |>> fun () -> WishExpr.Any
             listExpr |>> WishExpr.List
             mapExpr |>> WishExpr.Map
             valueExpr |>> WishExpr.Value
@@ -184,6 +191,7 @@ module Wish =
             | Wish.ValueIs (path', value) -> Wish.ValueIs (path @ path', value)
             | Wish.ListContains (path', element) -> Wish.ListContains (path @ path', element)
             | Wish.MapFieldIs (path', fieldKey, fieldValue) -> Wish.MapFieldIs (path @ path', fieldKey, fieldValue)
+            | Wish.Any path' -> Wish.Any (path @ path')
             | Wish.Operator op ->
                 match op with
                 | WishOperator.And (lhs, rhs) -> WishOperator.And (appendPath path lhs, appendPath path rhs)
@@ -221,6 +229,8 @@ module Wish =
                     listExprToWish listExpr |> appendPath [ WishPathEntry.ListEntry ]
                 | WishExpr.Map mapExpr ->
                     mapExprToWish mapExpr |> appendPath [ WishPathEntry.ListEntry ]
+                | WishExpr.Any ->
+                    Wish.Any [ WishPathEntry.ListEntry ]
             | ListExpr.Operator op -> operatorExprToWish listExprToWish op |> Wish.Operator
 
         and mapExprToWish (mapExpr: MapExpr) : Wish =
@@ -241,6 +251,9 @@ module Wish =
                 | WishExpr.Map mapExpr ->
                     let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
                     mapExprToWish mapExpr |> appendPath path
+                | WishExpr.Any ->
+                    let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
+                    Wish.Any path
             | MapExpr.Operator op -> operatorExprToWish mapExprToWish op |> Wish.Operator
 
         and wishExprToWish (expr: WishExpr) : Wish =
@@ -248,6 +261,7 @@ module Wish =
             | WishExpr.Value valueExpr -> valueExprToWish valueExpr
             | WishExpr.List listExpr -> listExprToWish listExpr
             | WishExpr.Map mapExpr -> mapExprToWish mapExpr
+            | WishExpr.Any -> Wish.Any []
 
         wishExprToWish expr
 
