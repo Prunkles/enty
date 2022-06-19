@@ -55,7 +55,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "enty.Mind.Grpc.Server", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "enty.Mind.Grpc.Client", "src\enty.Mind.Grpc.Client\enty.Mind.Grpc.Client.csproj", "{9F7FCC58-C24D-4072-8BEA-2FD247948CBE}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Gateway", "src\enty.Mind.Gateway\enty.Mind.Gateway.fsproj", "{0E05AE27-740B-481A-837F-124AA763BF93}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Gateway.Server", "src\enty.Mind.Gateway.Server\enty.Mind.Gateway.Server.fsproj", "{0E05AE27-740B-481A-837F-124AA763BF93}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.ImagePreviewService.Server", "src\enty.ImagePreviewService.Server\enty.ImagePreviewService.Server.fsproj", "{A73DD112-F339-4B5D-8A46-0252089735F4}"
 EndProject
@@ -64,6 +64,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{50648B47-AA4B-42D4-9EE9-2F4045DD5BE1}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Web.Libs", "src\Web\src\enty.Web.Libs\enty.Web.Libs.fsproj", "{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Tests", "tests\enty.Mind.Tests\enty.Mind.Tests.fsproj", "{3CB142DB-8EA6-4457-B070-F90F326B71B1}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Gateway", "src\enty.Mind.Gateway\enty.Mind.Gateway.fsproj", "{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -342,6 +346,30 @@ Global
 		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x64.Build.0 = Release|Any CPU
 		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x86.ActiveCfg = Release|Any CPU
 		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}.Release|x86.Build.0 = Release|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Debug|x64.Build.0 = Debug|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Debug|x86.Build.0 = Debug|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Release|x64.ActiveCfg = Release|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Release|x64.Build.0 = Release|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Release|x86.ActiveCfg = Release|Any CPU
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1}.Release|x86.Build.0 = Release|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Debug|x64.Build.0 = Debug|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Debug|x86.Build.0 = Debug|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Release|x64.ActiveCfg = Release|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Release|x64.Build.0 = Release|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Release|x86.ActiveCfg = Release|Any CPU
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{54C93563-048C-4285-8A50-135E283E2063} = {29D2AFDC-5447-442B-A6D1-C1B988C5DED1}
@@ -366,5 +394,7 @@ Global
 		{A73DD112-F339-4B5D-8A46-0252089735F4} = {F8EF0398-00B6-4BEC-8A4B-C271BCD5423D}
 		{30E68FB1-4AE0-45F8-8368-053B1D8C4B53} = {1A618EA6-333E-4386-97B5-BD650D0BD920}
 		{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173} = {1A618EA6-333E-4386-97B5-BD650D0BD920}
+		{3CB142DB-8EA6-4457-B070-F90F326B71B1} = {50648B47-AA4B-42D4-9EE9-2F4045DD5BE1}
+		{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1} = {29D2AFDC-5447-442B-A6D1-C1B988C5DED1}
 	EndGlobalSection
 EndGlobal

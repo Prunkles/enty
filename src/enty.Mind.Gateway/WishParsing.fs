@@ -1,6 +1,7 @@
-module enty.Mind.WishParsing
+namespace enty.Mind.Gateway.WishParsing
 
 open FParsec
+open enty.Mind
 
 module Grammar =
 
@@ -156,7 +157,7 @@ module Grammar =
             (operator .>> ws)
         <?> "map"
 
-    do wishExprRef :=
+    do wishExprRef.Value <-
         choice [
             listExpr |>> WishExpr.List
             mapExpr |>> WishExpr.Map
@@ -167,7 +168,6 @@ module Grammar =
 
 module Wish =
 
-    open FParsec
     open Grammar
 
     let parseExpr input =
@@ -188,7 +188,7 @@ module Wish =
                 match op with
                 | WishOperator.And (lhs, rhs) -> WishOperator.And (appendPath path lhs, appendPath path rhs)
                 | WishOperator.Or (lhs, rhs) -> WishOperator.Or (appendPath path lhs, appendPath path rhs)
-                | WishOperator.Not (wish) -> WishOperator.Not (appendPath path wish)
+                | WishOperator.Not wish -> WishOperator.Not (appendPath path wish)
                 |> Wish.Operator
 
         let operatorExprToWish mapping operatorExpr =
@@ -197,7 +197,7 @@ module Wish =
                 WishOperator.And (mapping lhs, mapping rhs)
             | OperatorExpr.Or (lhs, rhs) ->
                 WishOperator.Or (mapping lhs, mapping rhs)
-            | OperatorExpr.Not (valueExpr) ->
+            | OperatorExpr.Not valueExpr ->
                 WishOperator.Not (mapping valueExpr)
 
         let rec valueExprToWish (valueExpr: ValueExpr) : Wish =

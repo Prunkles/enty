@@ -1,4 +1,4 @@
-module enty.Mind.SenseParsing
+namespace enty.Mind.Gateway.SenseParsing
 
 
 module Grammar =
@@ -30,7 +30,7 @@ module Grammar =
 
     let list =
         between (pchar '[') (pchar ']' <?> "closing ]")
-            (ws >>. sepEndBy (expr) (ws))
+            (ws >>. sepEndBy expr ws)
         <?> "list"
 
     let map =
@@ -40,7 +40,7 @@ module Grammar =
             (ws >>. sepEndBy mapElement ws)
         <?> "map"
 
-    do exprRef :=
+    do exprRef.Value <-
         choice [
             value |>> Expr.Value
             map |>> Expr.Map
@@ -56,7 +56,7 @@ module Sense =
 
     let rec private exprToSense (expr: Expr) : Sense =
         match expr with
-        | Expr.Value (value) -> Sense.Value value
+        | Expr.Value value -> Sense.Value value
         | Expr.List elements -> Sense.List (elements |> List.map exprToSense)
         | Expr.Map els -> els |> Seq.map (fun (k, v) -> k, exprToSense v) |> Map.ofSeq |> Sense.Map
 

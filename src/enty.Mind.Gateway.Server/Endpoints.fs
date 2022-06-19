@@ -1,17 +1,17 @@
-module enty.Mind.Gateway.Endpoints
+module enty.Mind.Gateway.Server.Endpoints
 
 open Microsoft.Extensions.Logging
 open Giraffe
 open Giraffe.EndpointRouting
 open Khonsu.Coding.Json
 open Khonsu.Coding.Json.Net
+
 open enty.Utils
 open enty.Core
-open enty.Mind
 open enty.Mind.Client
-open WishParsing
-open SenseParsing
-open SenseJToken
+open enty.Mind.Gateway.SenseParsing
+open enty.Mind.Gateway.WishParsing
+open enty.Mind.Gateway.Server.SenseJToken
 
 
 let wishHandler : HttpHandler = fun next ctx -> task {

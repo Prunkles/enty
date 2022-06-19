@@ -1,13 +1,12 @@
-module enty.Mind.SenseJToken
+module enty.Mind.Gateway.Server.SenseJToken
 
-open System
 open enty.Core
 
 [<RequireQualifiedAccess>]
 module Sense =
 
     open Newtonsoft.Json.Linq
-    
+
     let rec ofJToken (token: JToken) : Sense =
         match token.Type with
         | JTokenType.Array ->
@@ -23,7 +22,7 @@ module Sense =
             let mp = jObj.Properties() |> Seq.map (fun jp -> jp.Name, ofJToken jp.Value) |> Map.ofSeq
             Sense.Map mp
         | _ -> invalidOp ""
-    
+
     let rec toJToken (sense: Sense) : JToken =
         match sense with
         | Sense.Value value ->
