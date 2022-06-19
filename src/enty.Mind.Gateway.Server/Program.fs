@@ -1,4 +1,4 @@
-﻿module enty.Mind.Gateway.Program
+﻿module enty.Mind.Gateway.Server.Program
 
 open enty.Mind
 open System
