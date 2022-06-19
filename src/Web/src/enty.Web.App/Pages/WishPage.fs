@@ -65,7 +65,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
         async {
             setWishInput (Some wishString)
             setStatus WishPageStatus.Loading
-            let! wishResult = MindApiImpl.mindApi.Wish(wishString, pageNumber * pageSize, pageSize)
+            let! wishResult = MindApiImpl.mindApi.Wish(wishString, (pageNumber - 1) * pageSize, pageSize)
             match wishResult with
             | Ok (eids, total) ->
                 let! entities = MindApiImpl.mindApi.GetEntities(eids)
@@ -126,7 +126,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                     ]
                 ]
                 Mui.pagination [
-                    pagination.count (total / pageSize)
+                    pagination.count (total / pageSize + 1)
                     pagination.page pageNumber
                     pagination.onChange (fun _ p -> handlePageNumberChanged p)
                 ]
