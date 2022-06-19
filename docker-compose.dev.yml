@@ -50,7 +50,7 @@ services:
             - ./.cache/docker/mind-gateway/.dotnet:/root/.dotnet
             - ./.cache/docker/mind-gateway/.local/share/NuGet:/root/.local/share/NuGet
             - ./.cache/docker/mind-gateway/.nuget:/root/.nuget
-        working_dir: /enty/src/enty.Mind.Gateway
+        working_dir: /enty/src/enty.Mind.Gateway.Server
         depends_on:
             - mind
         command: dotnet watch run
