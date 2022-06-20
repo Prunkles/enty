@@ -3,6 +3,7 @@ module enty.Utils.String
 
 open System
 
+#if !FABLE_COMPILER
 /// <note>
 /// Inspired by C# 11 Raw String Literal feature: https://github.com/dotnet/csharplang/blob/main/proposals/raw-string-literal.md
 /// </note>
@@ -24,3 +25,4 @@ let rawMultiline (str: string) : string =
                     invalidArg (nameof str) $" The line #{idx} contains symbols out of the last line bound."
         }
     String.Join(Environment.NewLine, unindentedLines)
+#endif
