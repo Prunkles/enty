@@ -1,6 +1,7 @@
 ﻿module enty.Mind.Server.Program
 
 open System
+open System.IO
 open System.Threading.Tasks
 open FSharp.Control
 open Microsoft.AspNetCore
@@ -17,9 +18,11 @@ open LinqToDB.AspNet.Logging
 
 open Giraffe
 
+open Serilog
 open enty.Core
 open enty.Mind
 open enty.Mind.Server
+open pdewebq.Extensions.Serilog
 
 
 module Startup =
@@ -74,10 +77,31 @@ module Startup =
 //        builder.AddFluentMigratorConsole() |> ignore
         ()
 
-
 [<CompiledName "CreateHostBuilder">]
 let createHostBuilder args =
     Host.CreateDefaultBuilder(args)
+        .UseSerilog(fun context services configuration ->
+            let basePath = context.Configuration.["PLogging:BasePath"]
+            let templates =
+                context.Configuration.GetSection("PLogging:SourceContextTemplates").GetChildren()
+                |> Seq.map ^fun c -> c.["SourceContext"], c.["Template"]
+                |> Map.ofSeq
+            configuration
+                .MinimumLevel.Information()
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .WriteTo.MapSourceContextAndDate(
+                    templates
+                    , fun sourceContext date ->
+                        let dateS = date.ToString("yyyy'-'MM'-'dd")
+                        Path.Combine(basePath, $"%s{dateS}_%s{sourceContext}.log")
+                    , fun formatter path wt ->
+                        match formatter with
+                        | Some formatter -> wt.File(formatter, path) |> ignore
+                        | None -> wt.File(path) |> ignore
+                )
+            |> ignore
+        )
         .ConfigureWebHostDefaults(fun webBuilder ->
             webBuilder
                 .Configure(Startup.configureApp)

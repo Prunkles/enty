@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Serilog.Expressions" Version="3.4.0" />
+      <PackageReference Include="Serilog.Sinks.Map" Version="1.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="LogSinkConfigurationExtensions.fs" />
+    </ItemGroup>
+
+</Project>

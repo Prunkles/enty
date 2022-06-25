@@ -14,28 +14,28 @@
         <Compile Include="Mind.fs" />
         <Compile Include="DbMind.fs" />
         <Compile Include="Database\Migrations.fs" />
-        <Compile Include="MindService.fs" />
+        <Compile Include="GrpcServerMindService.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\lib\Khonsu.Coding.Json.Net\Khonsu.Coding.Json.Net.fsproj" />
-      <ProjectReference Include="..\enty.Mind.Grpc.Server\enty.Mind.Grpc.Server.csproj" />
-<!--      <ProjectReference Include="..\enty.Mind.Server.Api\enty.Mind.Server.Api.fsproj" />-->
-      <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
+        <ProjectReference Include="..\..\lib\Khonsu.Coding.Json.Net\Khonsu.Coding.Json.Net.fsproj" />
+        <ProjectReference Include="..\enty.Mind.Grpc.Server\enty.Mind.Grpc.Server.csproj" />
+        <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
+        <ProjectReference Include="..\pdewebq.Extensions.Serilog\pdewebq.Extensions.Serilog.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FluentMigrator" Version="3.3.1" />
-      <PackageReference Include="FluentMigrator.Extensions.Postgres" Version="3.3.1" />
-      <PackageReference Include="FluentMigrator.Runner" Version="3.3.1" />
-      <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.1" />
-      <PackageReference Include="FParsec" Version="1.1.1" />
-      <PackageReference Include="Giraffe" Version="5.0.0" />
-      <PackageReference Include="linq2db" Version="3.6.0" />
-      <PackageReference Include="linq2db.AspNet" Version="3.6.0" />
-<!--      <PackageReference Include="linq2db.PostgreSQL" Version="3.3.0" />-->
-      <PackageReference Include="Npgsql" Version="6.0.2" />
+        <PackageReference Include="FluentMigrator" Version="3.3.1" />
+        <PackageReference Include="FluentMigrator.Extensions.Postgres" Version="3.3.1" />
+        <PackageReference Include="FluentMigrator.Runner" Version="3.3.1" />
+        <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.1" />
+        <PackageReference Include="FParsec" Version="1.1.1" />
+        <PackageReference Include="Giraffe" Version="5.0.0" />
+        <PackageReference Include="linq2db" Version="3.6.0" />
+        <PackageReference Include="linq2db.AspNet" Version="3.6.0" />
+        <PackageReference Include="Npgsql" Version="6.0.2" />
+        <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
     </ItemGroup>
 
 </Project>

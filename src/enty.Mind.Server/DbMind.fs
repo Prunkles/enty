@@ -6,6 +6,7 @@ open LinqToDB
 open LinqToDB.Configuration
 open LinqToDB.Data
 open LinqToDB.Mapping
+open Microsoft.Extensions.Logging
 open Newtonsoft.Json.Linq
 open enty.Core
 open enty.Mind
@@ -28,19 +29,20 @@ type EntyDataConnection(options: LinqToDbConnectionOptions<EntyDataConnection>) 
     member this.Entities = this.GetTable<EntityDao>()
 
 
-type DbMind(db: EntyDataConnection) =
+type DbMind(logger: ILogger<DbMind>, db: EntyDataConnection) =
 
     interface IMind with
         member this.Remember(EntityId entityId, sense) = async {
+            logger.LogInformation("Remembering entity {EntityId}", entityId)
+            logger.LogTrace("Remembering entity {EntityId} with sense {@Sense}", entityId, sense)
             let senseJson = (Sense.toJToken sense).ToString()
             let dts = DateTime.Now
-            do! db.ExecuteAsync(
-                    """
-                        INSERT INTO entities (id, sense, created_dts, updated_dts)
-                        VALUES (@id, @sense, @dts, @dts)
-                        ON CONFLICT (id) DO UPDATE
-                            SET updated_dts = excluded.updated_dts,
-                                sense = excluded.sense
+            do! db.ExecuteAsync("""
+                    INSERT INTO entities (id, sense, created_dts, updated_dts)
+                    VALUES (@id, @sense, @dts, @dts)
+                    ON CONFLICT (id) DO UPDATE
+                        SET updated_dts = excluded.updated_dts,
+                            sense = excluded.sense
                     """,
                     DataParameter("id", entityId, DataType.Guid),
                     DataParameter("sense", senseJson, DataType.BinaryJson),
@@ -48,10 +50,10 @@ type DbMind(db: EntyDataConnection) =
                 )
                 |> Async.AwaitTask
                 |> Async.Ignore
-            ()
         }
 
         member this.Forget(EntityId entityId) = async {
+            logger.LogInformation("Forgetting entity {EntityId}", entityId)
             let q = query {
                 for entity in db.Entities do
                 where (entity.Id = entityId)
@@ -61,6 +63,7 @@ type DbMind(db: EntyDataConnection) =
         }
 
         member this.GetEntities(eids) = async {
+            logger.LogInformation("Getting entities {@EntityIds}", eids)
             let eids = eids |> Seq.map (fun (EntityId x) -> x)
             let q = query {
                 for entity in db.Entities do
@@ -80,6 +83,8 @@ type DbMind(db: EntyDataConnection) =
         }
 
         member this.Wish(wish, offset, limit) = async {
+            logger.LogInformation("Wishing +{Offset}-{Limit} entities", offset, limit)
+            logger.LogTrace("Wishing +{Offset}-{Limit} entities by {@Wish}", offset, limit, wish)
             let selectEntitiesByIds ids = query {
                 for e in db.Entities do
                 join id in ids on (e.Id = id)

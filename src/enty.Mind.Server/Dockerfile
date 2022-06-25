@@ -1,13 +1,14 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /enty
-COPY ["src/enty.Mind.Server/enty.Mind.Server.fsproj", "src/enty.Mind.Server/"]
 COPY ["lib/Khonsu.Coding/Khonsu.Coding.fsproj", "lib/Khonsu.Coding/"]
 COPY ["lib/Khonsu.Coding.Json/Khonsu.Coding.Json.fsproj", "lib/Khonsu.Coding.Json/"]
 COPY ["lib/Khonsu.Coding.Json.Net/Khonsu.Coding.Json.Net.fsproj", "lib/Khonsu.Coding.Json.Net/"]
+COPY ["src/pdewebq.Extensions.Serilog/pdewebq.Extensions.Serilog.fsproj", "src/pdewebq.Extensions.Serilog/"]
+COPY ["src/enty.Utils/enty.Utils.fsproj", "src/enty.Utils/"]
+COPY ["src/enty.Core/enty.Core.fsproj", "src/enty.Core/"]
 COPY ["src/enty.Mind.Grpc.Server/enty.Mind.Grpc.Server.csproj", "src/enty.Mind.Grpc.Server/"]
 COPY ["src/enty.Mind/enty.Mind.fsproj", "src/enty.Mind/"]
-COPY ["src/enty.Core/enty.Core.fsproj", "src/enty.Core/"]
-COPY ["src/enty.Utils/enty.Utils.fsproj", "src/enty.Utils/"]
+COPY ["src/enty.Mind.Server/enty.Mind.Server.fsproj", "src/enty.Mind.Server/"]
 RUN dotnet restore "src/enty.Mind.Server/enty.Mind.Server.fsproj"
 COPY . .
 WORKDIR "/enty/src/enty.Mind.Server"

@@ -1,9 +1,20 @@
 ﻿module enty.Mind.Gateway.Server.Program
 
-open enty.Mind
 open System
+open System.Collections.Generic
+open System.IO
+open System.Text.RegularExpressions
 open Microsoft.Extensions.Hosting
 open Microsoft.AspNetCore.Hosting
+open Microsoft.Extensions.Logging
+open Serilog
+open Serilog.Configuration
+open Serilog.Core
+open Serilog.Events
+open pdewebq.Extensions.Serilog
+
+open Serilog.Templates
+open enty.Mind
 
 module Startup =
 
@@ -30,6 +41,14 @@ module Startup =
         services.AddGiraffe() |> ignore
 
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
+        let loggerA = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("TestLoggerA")
+        let loggerB = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("TestLoggerB")
+        loggerA.LogInformation("A1 I")
+        loggerA.LogDebug("A2 D")
+        loggerB.LogInformation("B1 I")
+        loggerB.LogDebug("B2 D")
+        loggerB.LogError("B3 E")
+
         if ctx.HostingEnvironment.IsDevelopment() then
             app.UseDeveloperExceptionPage() |> ignore
         app.UseRouting() |> ignore
@@ -38,9 +57,31 @@ module Startup =
         ) |> ignore
         app.UseGiraffe(Endpoints.notFoundHandler) |> ignore
 
-
 let createWebHostBuilder args =
     Host.CreateDefaultBuilder(args)
+        .UseSerilog(fun context services configuration ->
+            let basePath = context.Configuration.["PLogging:BasePath"]
+            let templates =
+                context.Configuration.GetSection("PLogging:SourceContextTemplates").GetChildren()
+                |> Seq.map ^fun c -> c.["SourceContext"], c.["Template"]
+                |> Map.ofSeq
+            configuration
+                .MinimumLevel.Information()
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.WithMessageTemplate()
+                .WriteTo.MapSourceContextAndDate(
+                    templates
+                    , fun sourceContext date ->
+                        let dateS = date.ToString("yyyy'-'MM'-'dd")
+                        Path.Combine(basePath, $"%s{dateS}_%s{sourceContext}.log")
+                    , fun formatter path wt ->
+                        match formatter with
+                        | Some formatter -> wt.File(formatter, path) |> ignore
+                        | None -> wt.File(path) |> ignore
+                )
+            |> ignore
+        )
         .ConfigureWebHostDefaults(fun webBuilder ->
             webBuilder
                 .ConfigureServices(Startup.configureServices)
