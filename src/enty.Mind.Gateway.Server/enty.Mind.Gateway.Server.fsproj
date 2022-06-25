@@ -12,7 +12,9 @@
         <None Include="..\enty.Mind.Api\openapi.yaml">
             <Link>openapi.yaml</Link>
         </None>
-        <Content Include="appsettings.json" />
+        <Content Include="appsettings.json">
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>

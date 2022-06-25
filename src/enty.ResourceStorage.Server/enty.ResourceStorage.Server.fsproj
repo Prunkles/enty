@@ -8,7 +8,12 @@
 
     <ItemGroup>
         <Content Include="Dockerfile" />
-        <Content Include="appsettings.json" />
+        <Content Include="appsettings.json">
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="Domain.fs" />
         <Compile Include="Abstractions.fs" />
         <Compile Include="FileSystemResourceStorage.fs" />
@@ -18,12 +23,10 @@
 
     <ItemGroup>
       <PackageReference Include="Giraffe" Version="5.0.0" />
-<!--      <PackageReference Include="MediaTypeMap" Version="2.1.0" />-->
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
-<!--      <ProjectReference Include="..\enty.Storage.FileSystem\enty.Storage.FileSystem.fsproj" />-->
     </ItemGroup>
 
 </Project>

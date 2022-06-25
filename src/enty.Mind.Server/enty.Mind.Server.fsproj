@@ -8,7 +8,12 @@
 
     <ItemGroup>
         <Content Include="Dockerfile" />
-        <Content Include="appsettings.json" />
+        <Content Include="appsettings.json">
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="LinqToDbPostgresExtensions.fs" />
         <Compile Include="SenseJToken.fs" />
         <Compile Include="Mind.fs" />
