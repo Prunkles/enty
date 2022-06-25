@@ -57,7 +57,7 @@ module Startup =
         ) |> ignore
         app.UseGiraffe(Endpoints.notFoundHandler) |> ignore
 
-let createWebHostBuilder args =
+let createHostBuilder args =
     Host.CreateDefaultBuilder(args)
         .UseSerilog(fun context services configuration ->
             let basePath = context.Configuration.["PLogging:BasePath"]
@@ -91,5 +91,16 @@ let createWebHostBuilder args =
 
 [<EntryPoint>]
 let main argv =
-    (createWebHostBuilder argv).Build().Run()
-    0
+    Log.Logger <-
+        LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateBootstrapLogger()
+    try
+        try
+            (createHostBuilder argv).Build().Run()
+            0
+        with ex ->
+            Log.Fatal(ex, "An unhandled exception occured during bootstrapping")
+            1
+    finally
+        Log.CloseAndFlush()

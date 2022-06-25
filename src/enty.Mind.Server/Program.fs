@@ -112,5 +112,16 @@ let createHostBuilder args =
 
 [<EntryPoint>]
 let main argv =
-    (createHostBuilder argv).Build().Run()
-    0
+    Log.Logger <-
+        LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateBootstrapLogger()
+    try
+        try
+            (createHostBuilder argv).Build().Run()
+            0
+        with ex ->
+            Log.Fatal(ex, "An unhandled exception occured during bootstrapping")
+            1
+    finally
+        Log.CloseAndFlush()

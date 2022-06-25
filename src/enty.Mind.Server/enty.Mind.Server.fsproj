@@ -9,6 +9,7 @@
     <ItemGroup>
         <Content Include="Dockerfile" />
         <Content Include="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         </Content>
     </ItemGroup>
