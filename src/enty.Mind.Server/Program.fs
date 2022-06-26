@@ -112,10 +112,7 @@ let createHostBuilder args =
 
 [<EntryPoint>]
 let main argv =
-    Log.Logger <-
-        LoggerConfiguration()
-            .WriteTo.Console()
-            .CreateBootstrapLogger()
+    Log.Logger <- LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger()
     try
         try
             (createHostBuilder argv).Build().Run()

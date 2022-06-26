@@ -1,8 +1,9 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /enty
-COPY ["src/enty.ResourceStorage.Server/enty.ResourceStorage.Server.fsproj", "src/enty.ResourceStorage.Server/"]
-COPY ["src/enty.Core/enty.Core.fsproj", "src/enty.Core/"]
+COPY ["src/pdewebq.Extensions.Serilog/pdewebq.Extensions.Serilog.fsproj", "src/pdewebq.Extensions.Serilog/"]
 COPY ["src/enty.Utils/enty.Utils.fsproj", "src/enty.Utils/"]
+COPY ["src/enty.Core/enty.Core.fsproj", "src/enty.Core/"]
+COPY ["src/enty.ResourceStorage.Server/enty.ResourceStorage.Server.fsproj", "src/enty.ResourceStorage.Server/"]
 RUN dotnet restore "src/enty.ResourceStorage.Server/enty.ResourceStorage.Server.fsproj"
 
 COPY . .

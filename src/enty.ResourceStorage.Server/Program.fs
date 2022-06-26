@@ -1,14 +1,14 @@
 ﻿module enty.ResourceStorage.Server.Program
 
-open System
-
-open System.Net.Http.Headers
+open System.IO
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Net.Http.Headers
+open Serilog
+open pdewebq.Extensions.Serilog
 
 module Startup =
 
@@ -47,21 +47,47 @@ module Startup =
             )
         |> ignore
 
-    let configureLogging (ctx: WebHostBuilderContext) (logging: ILoggingBuilder) : unit =
-        ()
-
 
 let createHostBuilder args =
-    Host.CreateDefaultBuilder()
+    Host.CreateDefaultBuilder(args)
+        .UseSerilog(fun context services configuration ->
+            let basePath = context.Configuration.["PLogging:BasePath"]
+            let templates =
+                context.Configuration.GetSection("PLogging:SourceContextTemplates").GetChildren()
+                |> Seq.map ^fun c -> c.["SourceContext"], c.["Template"]
+                |> Map.ofSeq
+            configuration
+                .MinimumLevel.Information()
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .WriteTo.MapSourceContextAndDate(
+                    templates
+                    , fun sourceContext date ->
+                        let dateS = date.ToString("yyyy'-'MM'-'dd")
+                        Path.Combine(basePath, $"%s{dateS}_%s{sourceContext}.log")
+                    , fun formatter path wt ->
+                        match formatter with
+                        | Some formatter -> wt.File(formatter, path) |> ignore
+                        | None -> wt.File(path) |> ignore
+                )
+            |> ignore
+        )
         .ConfigureWebHostDefaults(fun webBuilder ->
             webBuilder
                 .ConfigureServices(Startup.configureServices)
                 .Configure(Startup.configureApp)
-                .ConfigureLogging(Startup.configureLogging)
             |> ignore
         )
 
 [<EntryPoint>]
 let main argv =
-    (createHostBuilder argv).Build().Run()
-    0
+    Log.Logger <- LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger()
+    try
+        try
+            (createHostBuilder argv).Build().Run()
+            0
+        with ex ->
+            Log.Fatal(ex, "An unhandled exception occured during bootstrapping")
+            1
+    finally
+        Log.CloseAndFlush()
