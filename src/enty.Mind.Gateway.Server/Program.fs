@@ -41,14 +41,6 @@ module Startup =
         services.AddGiraffe() |> ignore
 
     let configureApp (ctx: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
-        let loggerA = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("TestLoggerA")
-        let loggerB = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("TestLoggerB")
-        loggerA.LogInformation("A1 I")
-        loggerA.LogDebug("A2 D")
-        loggerB.LogInformation("B1 I")
-        loggerB.LogDebug("B2 D")
-        loggerB.LogError("B3 E")
-
         if ctx.HostingEnvironment.IsDevelopment() then
             app.UseDeveloperExceptionPage() |> ignore
         app.UseRouting() |> ignore
