@@ -21,7 +21,6 @@
         <Compile Include="ImagePreviewService.fs" />
         <Compile Include="ResourceStorage.fs" />
         <Compile Include="SenseShapes\SenseShapes.fs" />
-        <Compile Include="EntityRendering.fs" />
         <Compile Include="SenseCreating\ImageShapeForm.fs" />
         <Compile Include="SenseCreating\TagsShapeForm.fs" />
         <Compile Include="SenseCreating\SenseCreateForm.fs" />
