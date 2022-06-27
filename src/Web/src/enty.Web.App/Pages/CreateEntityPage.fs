@@ -10,9 +10,9 @@ open enty.Core
 
 open enty.Web.App
 open enty.Web.App.Utils
-open enty.Web.App.EntityCreating
 open enty.Web.App.SenseFormatting
 open enty.Web.App.SenseParsing
+open enty.Web.App.SenseCreating.SenseCreateForm
 
 
 [<ReactComponent>]
@@ -31,7 +31,7 @@ let CreateEntityPage () =
     let handleCreatedSnackbarClosed () =
         setIsCreatedSnackbarOpened false
     React.fragment [
-        EntityCreateForm handleSenseCreated (Sense.empty ()) "Create"
+        SenseCreateForm handleSenseCreated (Sense.empty ()) "Create"
         Mui.snackbar [
             snackbar.open' isCreatedSnackbarOpened
             snackbar.onClose (fun _ -> handleCreatedSnackbarClosed ())

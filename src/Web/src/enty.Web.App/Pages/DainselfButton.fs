@@ -13,8 +13,10 @@ open Feliz.MaterialUI.Mui5
 open enty.Core
 open enty.Utils
 open enty.Web.App
-open enty.Web.App.SenseFormatting
 open enty.Web.App.Utils
+open enty.Web.App.SenseFormatting
+open enty.Web.App.SenseCreating.TagsShapeForm
+
 
 type FilesState =
     | Empty
@@ -94,7 +96,7 @@ let DainselfButton () =
                     ]
                 ]
             ]
-            EntityCreating.TagSenseShapeForm (Sense.empty ()) tagsSenseChanged
+            TagsSenseShapeForm (Sense.empty ()) tagsSenseChanged
             match files with
             | FilesState.Empty -> ()
             | FilesState.Selected files ->

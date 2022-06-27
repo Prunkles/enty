@@ -9,9 +9,9 @@ open enty.Core
 
 open enty.Web.App
 open enty.Web.App.Utils
-open enty.Web.App.EntityCreating
 open enty.Web.App.SenseFormatting
 open enty.Web.App.SenseParsing
+open enty.Web.App.SenseCreating.SenseCreateForm
 
 
 [<ReactComponent>]
@@ -38,7 +38,7 @@ let EditEntityPage (entityId: EntityId) =
     match entity with
     | Some entity ->
         React.fragment [
-            EntityCreateForm handleSenseCreated entity.Sense "Edit"
+            SenseCreateForm handleSenseCreated entity.Sense "Edit"
             Mui.snackbar [
                 snackbar.open' isCreatedSnackbarOpened
                 snackbar.onClose (fun _ -> handleCreatedSnackbarClosed ())
