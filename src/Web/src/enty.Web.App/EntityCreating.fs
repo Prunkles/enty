@@ -30,11 +30,17 @@ open enty.Web.App.SenseFormatting
 [<RequireQualifiedAccess>]
 module ImageSenseShapeForm =
 
+    type ImageMetadata =
+        { ContentType: string option
+          ContentLength: int option
+          Filename: string option }
+
     [<RequireQualifiedAccess>]
     type Msg =
         | UrlInputChanged of string
         | FileSelected of File
         | FileUploaded of File * Uri
+        | ImageMetadataReceived of ImageMetadata * Uri
 
     type Status =
         | Loading
@@ -61,6 +67,49 @@ module ImageSenseShapeForm =
             }
         }
 
+    open global.Fetch
+
+    let getImageMetadata (uri: string) = async {
+        let fetchData method = async {
+            let! response =
+                tryFetch uri [
+                    RequestProperties.Method method
+                ]
+                |> Async.AwaitPromise
+            match response with
+            | Ok response ->
+                let contentType = response.Headers.ContentType
+                let contentLength = response.Headers.ContentLength |> Option.map int
+                let contentDisposition = response.Headers.ContentDisposition
+                let filename: string option =
+                    contentDisposition
+                    |> Option.bind ^fun contentDisposition ->
+                        Some (ContentDisposition.parse contentDisposition).parameter?filename
+                return Ok { ContentType = contentType; ContentLength = contentLength; Filename = filename }
+            | Error ex -> return Error ex
+        }
+        let fetchDataHeadMerging metadata = async {
+            let! resultGet = fetchData HttpMethod.GET
+            match resultGet with
+            | Error ex -> return Error ex
+            | Ok metadata' ->
+                let metadata = {
+                    ContentType = Option.orElse metadata'.ContentType metadata.ContentType
+                    ContentLength = Option.orElse metadata'.ContentLength metadata.ContentLength
+                    Filename = Option.orElse metadata'.Filename metadata.Filename
+                }
+                return Ok metadata
+        }
+        let! resultHead = fetchData HttpMethod.HEAD
+        match resultHead with
+        | Error _ ->
+            return! fetchDataHeadMerging { ContentType = None; ContentLength = None; Filename = None }
+        | Ok ({ ContentType = None } | { ContentLength = None } | { Filename = None } as metadata) ->
+            return! fetchDataHeadMerging metadata
+        | Ok metadata ->
+            return Ok metadata
+    }
+
     let update (onSenseChanged: Result<Sense, string> -> unit) (msg: Msg) (state: State) : State * Cmd<Msg> =
         match msg with
         | Msg.UrlInputChanged input ->
@@ -68,24 +117,14 @@ module ImageSenseShapeForm =
             let uriHeadCmd = Cmd.ofAsyncDispatch ^fun dispatch -> async {
                 match uri with
                 | Some uri ->
-                    onSenseChanged ^ Ok ^ senseMap {
-                        "image", imageSense uri
-                    }
-                    let! response =
-                        Http.request (string uri)
-                        |> Http.method HttpMethod.HEAD
-                        |> Http.send
-                    if response.statusCode = 200 then
-                        // Header names to lowercase
-                        let headers = response.responseHeaders |> Map.toSeq |> Seq.map (fun (k, v) -> (k.ToLower(), v)) |> Map.ofSeq
-                        let contentType = headers |> Map.tryFind "content-type"
-                        let contentLength = headers |> Map.tryFind "content-length" |> Option.map int
-                        let filename =
-                            headers |> Map.tryFind "content-disposition"
-                            |> Option.bind ^fun contentDisposition ->
-                                Some (ContentDisposition.parse contentDisposition).parameter?filename
-                        printfn $"contentType: {contentType}; contentLength: {contentLength}; filename: {filename}"
-                        ()
+                    match! getImageMetadata (string uri) with
+                    | Ok metadata ->
+                        if metadata.ContentType.IsNone then printfn "WRN: Couldn't fetch image metadata ContentType"
+                        if metadata.ContentLength.IsNone then printfn "WRN: Couldn't fetch image metadata ContentLength"
+                        if metadata.Filename.IsNone then printfn "WRN: Couldn't fetch image metadata Filename"
+                        dispatch (Msg.ImageMetadataReceived (metadata, uri))
+                    | Error ex ->
+                        printfn $"WRN: Failed fetch image metadata: {ex}"
                 | None -> ()
             }
             let status =
@@ -108,13 +147,28 @@ module ImageSenseShapeForm =
                         eprintfn $"{reason}"
                 }
             state, uploadCmd
+        | Msg.ImageMetadataReceived (imageMetadata, uri) ->
+            let sense = senseMap {
+                "image", senseMap {
+                    "resource", senseMap {
+                        "uri", string uri
+                        match imageMetadata.ContentType with Some contentType -> "content-type", contentType | _ -> ()
+                        match imageMetadata.ContentLength with Some contentLength -> "content-length", string contentLength | _ -> ()
+                        match imageMetadata.Filename with Some filename -> "filename", filename | _ -> ()
+                    }
+                    "size", "TODO"
+                }
+            }
+            { state with Status = Status.Valid uri; UrlInput = string uri }
+            , Cmd.ofSub (fun _ -> onSenseChanged (Ok sense))
         | Msg.FileUploaded (file, uri) ->
             let sense = senseMap {
                 "image", senseMap {
                     "resource", senseMap {
                         "uri", string uri
-                        "content-length", string file.size
                         "content-type", file.``type``
+                        "content-length", string file.size
+                        "filename", file.name
                     }
                     "size", "TODO"
                 }
