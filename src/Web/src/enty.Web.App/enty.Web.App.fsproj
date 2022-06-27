@@ -26,6 +26,7 @@
         <Compile Include="EntityThumbnail.fs" />
         <Compile Include="Pages\Page.fs" />
         <Compile Include="Pages\CreateEntityPage.fs" />
+        <Compile Include="Pages\EditEntityPage.fs" />
         <Compile Include="Pages\WishPage.fs" />
         <Compile Include="Pages\EntityPage.fs" />
         <Compile Include="Pages\DainselfButton.fs" />

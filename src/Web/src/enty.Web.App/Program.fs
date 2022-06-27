@@ -83,6 +83,7 @@ let App () =
                         match page with
                         | Page.Index -> Html.h1 "Index"
                         | Page.CreateEntity -> CreateEntityPage ()
+                        | Page.EditEntity eid -> EditEntityPage.EditEntityPage eid
                         | Page.Wish props ->
                             let initial =
                                 match props with

@@ -26,3 +26,19 @@ module Cmd =
         Cmd.ofSub ^fun dispatch ->
             work dispatch
             |> Async.startSafe
+
+[<AutoOpen>]
+module FelizExtensions =
+    open Feliz
+    type React =
+        static member useAsync(work: Async<'a>, ?deps: obj array): 'a option =
+            let deps = defaultArg deps [| |]
+            let value, setValue = React.useState(None)
+            React.useEffect(fun () ->
+                async {
+                    let! x' = work
+                    setValue (Some x')
+                }
+                |> Async.startSafe
+            , deps)
+            value

@@ -6,10 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="SenseObs.fs" />
         <Compile Include="Sense.fs" />
         <Compile Include="Library.fs" />
-        <Compile Include="Traits.fs" />
     </ItemGroup>
 
     <ItemGroup>

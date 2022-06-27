@@ -21,6 +21,7 @@ open enty.Utils
 
 open enty.Web.App
 open enty.Web.App.SenseParsing
+open enty.Web.App.SenseShapes
 open enty.Web.App.Utils
 open enty.Web.App.SenseFormatting
 
@@ -44,10 +45,14 @@ module ImageSenseShapeForm =
         { Status: Status
           UrlInput: string }
 
-    let init () =
+    let init (sense: Sense) =
+        let cmd =
+            match ImageSenseShape.parse sense with
+            | Some imageShape -> Cmd.ofMsg (Msg.UrlInputChanged imageShape.Uri)
+            | None -> Cmd.none
         { Status = Status.Invalid
           UrlInput = String.Empty }
-        , Cmd.none
+        , cmd
 
     let imageSense (uri: Uri) =
         senseMap {
@@ -119,8 +124,14 @@ module ImageSenseShapeForm =
 
 
 [<ReactComponent>]
-let ImageSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
-    let state, dispatch = React.useElmish(ImageSenseShapeForm.init, ImageSenseShapeForm.update onSenseChanged, ())
+let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, string> -> unit) =
+    let state, dispatch = React.useElmish(ImageSenseShapeForm.init, ImageSenseShapeForm.update onSenseChanged, initialSense)
+    let selectFiles (ev: Event) =
+        let selectedFile: Browser.Types.File = ev.target?files?(0)
+        dispatch (ImageSenseShapeForm.Msg.FileSelected selectedFile)
+    let changeUrlInput (input: string) =
+        dispatch (ImageSenseShapeForm.Msg.UrlInputChanged input)
+
     Mui.box [
         Mui.stack [
             stack.direction.row
@@ -130,9 +141,7 @@ let ImageSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
                         textField.label "URI"
                         textField.variant.outlined
                         textField.value state.UrlInput
-                        textField.onChange (fun input ->
-                            dispatch (ImageSenseShapeForm.Msg.UrlInputChanged input)
-                        )
+                        textField.onChange changeUrlInput
                         match state.Status with
                         | ImageSenseShapeForm.Status.Invalid ->
                             textField.error true
@@ -159,10 +168,7 @@ let ImageSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
                                     Html.input [
                                         input.type' "file"
                                         prop.hidden true
-                                        prop.onChange (fun (e: Event) ->
-                                            let selectedFile: Browser.Types.File = e.target?files?(0)
-                                            dispatch (ImageSenseShapeForm.Msg.FileSelected selectedFile)
-                                        )
+                                        prop.onChange selectFiles
                                     ]
                                 ]
                             ]
@@ -186,8 +192,14 @@ let ImageSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
 
 
 [<ReactComponent>]
-let TagSenseShapeForm (onSenseChanged: Result<Sense, string> -> unit) =
-    let tags, setTags = React.useState([])
+let TagSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, string> -> unit) =
+    let tags, setTags =
+        React.useState(fun () ->
+            match TagsSenseShape.parse initialSense with
+            | Some tagsShape ->
+                tagsShape.Tags
+            | None -> []
+        )
     let handleTagInputChange (input: string) =
         let res = Sense.parse $"[ %s{input} ]"
         match res with
@@ -228,7 +240,7 @@ let SenseFormatter (sense: Sense) =
 
 type SenseShapeFormId = SenseShapeFormId of int
 
-type SenseShapeFormElement = (Result<Sense, string> -> unit) -> ReactElement
+type SenseShapeFormElement = Sense -> (Result<Sense, string> -> unit) -> ReactElement
 
 type SenseShapeForm =
     { Id: SenseShapeFormId
@@ -294,16 +306,17 @@ module EntityCreateForm =
 
 
 let forms =
-    [
+    let data: (string * SenseShapeFormElement) list = [
         "Image", ImageSenseShapeForm
         "Tags", TagSenseShapeForm
     ]
+    data
     |> Seq.indexed
     |> Seq.map ^fun (idx, (name, element)) -> { Id = SenseShapeFormId idx; Name = name; Element = element }
     |> Seq.toList
 
 [<ReactComponent>]
-let EntityCreateForm (onCreated: Sense -> unit) =
+let EntityCreateForm (onCreated: Sense -> unit) (initialSense: Sense) (finalButtonText: string) =
     let state, dispatch = React.useElmish(EntityCreateForm.init, EntityCreateForm.update, forms)
     let handleFormSelected formId active =
         if active then dispatch (EntityCreateForm.Msg.SelectForm formId) else dispatch (EntityCreateForm.Msg.DeselectForm formId)
@@ -344,7 +357,7 @@ let EntityCreateForm (onCreated: Sense -> unit) =
                                                 cardHeader.title formName
                                             ]
                                             Mui.cardContent [
-                                                formElement (handleFormSenseChanged formId)
+                                                formElement initialSense (handleFormSenseChanged formId)
                                             ]
                                         ]
                                     ]
@@ -359,7 +372,7 @@ let EntityCreateForm (onCreated: Sense -> unit) =
                                         prop.onClick (fun _ -> handleCreateButtonClicked sense)
                                     | Error reason ->
                                         button.disabled true
-                                    button.children "Create"
+                                    button.children finalButtonText
                                 ]
                             ]
                         ]

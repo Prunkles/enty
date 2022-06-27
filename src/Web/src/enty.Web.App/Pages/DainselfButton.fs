@@ -94,7 +94,7 @@ let DainselfButton () =
                     ]
                 ]
             ]
-            EntityCreating.TagSenseShapeForm tagsSenseChanged
+            EntityCreating.TagSenseShapeForm (Sense.empty ()) tagsSenseChanged
             match files with
             | FilesState.Empty -> ()
             | FilesState.Selected files ->

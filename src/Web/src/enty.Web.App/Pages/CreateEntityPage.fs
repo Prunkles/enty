@@ -31,7 +31,7 @@ let CreateEntityPage () =
     let handleCreatedSnackbarClosed () =
         setIsCreatedSnackbarOpened false
     React.fragment [
-        EntityCreateForm handleSenseCreated
+        EntityCreateForm handleSenseCreated (Sense.empty ()) "Create"
         Mui.snackbar [
             snackbar.open' isCreatedSnackbarOpened
             snackbar.onClose (fun _ -> handleCreatedSnackbarClosed ())
