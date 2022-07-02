@@ -78,37 +78,32 @@ let DainselfButton () =
         }
         |> Async.startSafe
 
-    Mui.box [
-        box.children [
-            Mui.button [
-                button.variant.outlined
-                button.component' "label"
-                button.children [
-                    Html.text "Select images"
-                    Html.input [
-                        input.type' "file"
-                        prop.multiple true
-                        prop.hidden true
-                        prop.onChange (fun (e: Event) ->
-                            let files: File array = e.target?files
-                            handleFilesSelected files
-                        )
-                    ]
-                ]
+    Mui.box @+ [ ] <| [
+        Mui.button @+ [
+            button.variant.outlined
+            button.component' "label"
+        ] <| [
+            Html.text "Select images"
+            Html.input [
+                input.type' "file"
+                prop.multiple true
+                prop.hidden true
+                prop.onChange (fun (e: Event) ->
+                    let files: File array = e.target?files
+                    handleFilesSelected files
+                )
             ]
-            TagsSenseShapeForm (Sense.empty ()) tagsSenseChanged
-            match files with
-            | FilesState.Empty -> ()
-            | FilesState.Selected files ->
-                Mui.box [
-                    box.children [
-                        for file in files ->
-                            PreviewImage file
-                    ]
-                ]
-                Mui.button [
-                    prop.text "Batch create"
-                    prop.onClick (fun _ -> handleBatchCreateClicked files)
-                ]
         ]
+        TagsSenseShapeForm (Sense.empty ()) tagsSenseChanged
+        match files with
+        | FilesState.Empty -> ()
+        | FilesState.Selected files ->
+            Mui.box @+ [ ] <| [
+                for file in files ->
+                    PreviewImage file
+            ]
+            Mui.button [
+                prop.text "Batch create"
+                prop.onClick (fun _ -> handleBatchCreateClicked files)
+            ]
     ]

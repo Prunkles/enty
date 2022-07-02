@@ -106,58 +106,51 @@ let SenseCreateForm (onCreated: Sense -> unit) (initialSense: Sense) (finalButto
         dispatch (SenseCreateForm.Msg.FormSenseChanged (formId, sense))
     let handleCreateButtonClicked (sense: Sense) =
         onCreated sense
-    Mui.grid [
-        grid.container true
-        grid.children [
-            Mui.grid [
-                grid.item true
-                grid.xs._2
-                grid.children [
-                    let forms = [ for form in forms -> form.Id, form.Name ]
-                    SenseShapeSelector forms handleFormSelected
-                ]
-            ]
-            Mui.grid [
-                grid.item true
-                grid.xs._10
-                grid.children [
-                    Html.div [
-                        Mui.stack [
-                            stack.direction.column
-                            stack.spacing 2
-                            stack.children [
-                                let activeForms =
-                                    state.ActiveForms
-                                    |> Map.keys
-                                    |> Seq.map ^fun formId ->
-                                        state.Forms |> List.find (fun f -> f.Id = formId)
-                                for { Id = formId; Name = formName; Element = formElement } in activeForms do
-                                    Mui.card [
-                                        prop.key (formId |> fun (SenseShapeFormId x) -> x)
-                                        card.children [
-                                            Mui.cardHeader [
-                                                cardHeader.title formName
-                                            ]
-                                            Mui.cardContent [
-                                                formElement initialSense (handleFormSenseChanged formId)
-                                            ]
-                                        ]
-                                    ]
-                                match state.Sense with
-                                | Ok sense -> SenseFormatter sense
-                                | _ -> ()
-
-                                Mui.button [
-                                    button.variant.contained
-                                    match state.Sense with
-                                    | Ok sense ->
-                                        prop.onClick (fun _ -> handleCreateButtonClicked sense)
-                                    | Error reason ->
-                                        button.disabled true
-                                    button.children finalButtonText
-                                ]
+    Mui.grid @+ [ grid.container true ] <| [
+        Mui.grid @+ [
+            grid.item true
+            grid.xs._2
+        ] <| [
+            let forms = [ for form in forms -> form.Id, form.Name ]
+            SenseShapeSelector forms handleFormSelected
+        ]
+        Mui.grid @+ [
+            grid.item true
+            grid.xs._10
+        ] <| [
+            Html.div [
+                Mui.stack @+ [
+                    stack.direction.column
+                    stack.spacing 2
+                ] <| [
+                    let activeForms =
+                        state.ActiveForms
+                        |> Map.keys
+                        |> Seq.map ^fun formId ->
+                            state.Forms |> List.find (fun f -> f.Id = formId)
+                    for { Id = formId; Name = formName; Element = formElement } in activeForms do
+                        Mui.card @+ [
+                            prop.key (formId |> fun (SenseShapeFormId x) -> x)
+                        ] <| [
+                            Mui.cardHeader [
+                                cardHeader.title formName
+                            ]
+                            Mui.cardContent [
+                                formElement initialSense (handleFormSenseChanged formId)
                             ]
                         ]
+                    match state.Sense with
+                    | Ok sense -> SenseFormatter sense
+                    | _ -> ()
+
+                    Mui.button [
+                        button.variant.contained
+                        match state.Sense with
+                        | Ok sense ->
+                            prop.onClick (fun _ -> handleCreateButtonClicked sense)
+                        | Error reason ->
+                            button.disabled true
+                        button.children finalButtonText
                     ]
                 ]
             ]

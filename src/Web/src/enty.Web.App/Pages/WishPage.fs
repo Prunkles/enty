@@ -96,39 +96,37 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
         Router.navigatePath(Page.formatPath (Page.Entity entity.Id))
         printfn $"Entity clicked: {entity}"
 
-    Mui.stack [
+    Mui.stack @+ [
         stack.spacing 3
-        stack.children [
-            WishInput wishInput (handleWishStringEntered pageNumber) false
-            match status with
-            | WishPageStatus.Empty -> Html.text "There's nothing there yet"
-            | WishPageStatus.Loading ->
-                Mui.circularProgress []
-            | WishPageStatus.Entities (entities, total) ->
-                Mui.box [
-                    prop.sx {|
-                        display = "flex"
-                        justifyContent = "center"
-                        gap = 2
-                        flexWrap = "wrap"
-                    |}
-                    box.children [
-                        for entity in entities ->
-                            Mui.box [
-                                box.sx {|
-                                    height = 300
-                                    width = 250
-                                |}
-                                box.children [
-                                    EntityThumbnail.EntityThumbnail entity (fun () -> handleThumbnailClicked entity)
-                                ]
-                            ]
+    ] <| [
+        WishInput wishInput (handleWishStringEntered pageNumber) false
+        match status with
+        | WishPageStatus.Empty -> Html.text "There's nothing there yet"
+        | WishPageStatus.Loading ->
+            Mui.circularProgress []
+        | WishPageStatus.Entities (entities, total) ->
+            Mui.box @+ [
+                prop.sx {|
+                    display = "flex"
+                    justifyContent = "center"
+                    gap = 2
+                    flexWrap = "wrap"
+                |}
+            ] <| [
+                for entity in entities ->
+                    Mui.box [
+                        box.sx {|
+                            height = 300
+                            width = 250
+                        |}
+                        box.children [
+                            EntityThumbnail.EntityThumbnail entity (fun () -> handleThumbnailClicked entity)
+                        ]
                     ]
-                ]
-                Mui.pagination [
-                    pagination.count (total / pageSize + 1)
-                    pagination.page pageNumber
-                    pagination.onChange (fun _ p -> handlePageNumberChanged p)
-                ]
-        ]
+            ]
+            Mui.pagination [
+                pagination.count (total / pageSize + 1)
+                pagination.page pageNumber
+                pagination.onChange (fun _ p -> handlePageNumberChanged p)
+            ]
     ]

@@ -5,6 +5,7 @@ open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
 open enty.Core
+open enty.Web.App.Utils
 open enty.Web.App.SenseShapes
 open enty.Web.App.SenseParsing
 open enty.Web.App.SenseFormatting
@@ -38,24 +39,22 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, stri
             onSenseChanged (Ok sense)
         | Error reason | Const "Result is not a list, pretty unreachable" reason ->
             onSenseChanged (Error reason)
-    Mui.stack [
+    Mui.stack @+ [
         stack.direction.column
         stack.spacing 1
-        stack.children [
-            Mui.textField [
-                textField.label "Tags"
-                textField.onChange handleTagInputChange
-            ]
-            Mui.stack [
-                stack.direction.row
-                stack.spacing 0.5
-                stack.children [
-                    for tag in tags do
-                        Mui.chip [
-                            chip.label (Sense.format tag)
-                            chip.variant.outlined
-                        ]
+    ] <| [
+        Mui.textField [
+            textField.label "Tags"
+            textField.onChange handleTagInputChange
+        ]
+        Mui.stack @+ [
+            stack.direction.row
+            stack.spacing 0.5
+        ] <| [
+            for tag in tags do
+                Mui.chip [
+                    chip.label (Sense.format tag)
+                    chip.variant.outlined
                 ]
-            ]
         ]
     ]

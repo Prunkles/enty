@@ -182,64 +182,52 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, str
         dispatch (ImageSenseShapeForm.Msg.UrlInputChanged input)
 
     Mui.box [
-        Mui.stack [
-            stack.direction.column
-            stack.children [
-                Mui.stack [
+        Mui.stack @+ [ stack.direction.column ] <| [
+            Mui.stack @+ [
+                stack.direction.row
+                prop.sx {| display = "flex" |}
+            ] <| [
+                Mui.textField [
+                    prop.sx {| flexGrow = 1 |}
+                    textField.label "URI"
+                    textField.variant.outlined
+                    textField.value state.UrlInput
+                    textField.onChange changeUrlInput
+                    match state.Status with
+                    | ImageSenseShapeForm.Status.Invalid ->
+                        textField.error true
+                        textField.helperText "Invalid URI"
+                    | ImageSenseShapeForm.Status.Loading ->
+                        textField.disabled true
+                    | ImageSenseShapeForm.Status.Valid _ ->
+                        textField.helperText "Valid URI"
+                ]
+                Mui.stack @+ [
+                    prop.sx {| p = 1 |}
                     stack.direction.row
-                    prop.sx {| display = "flex" |}
-                    stack.children [
-                        Mui.textField [
-                            prop.sx {| flexGrow = 1 |}
-                            textField.label "URI"
-                            textField.variant.outlined
-                            textField.value state.UrlInput
-                            textField.onChange changeUrlInput
-                            match state.Status with
-                            | ImageSenseShapeForm.Status.Invalid ->
-                                textField.error true
-                                textField.helperText "Invalid URI"
-                            | ImageSenseShapeForm.Status.Loading ->
-                                textField.disabled true
-                            | ImageSenseShapeForm.Status.Valid _ ->
-                                textField.helperText "Valid URI"
-                        ]
-                        Mui.stack [
-                            prop.sx {| p = 1 |}
-                            stack.direction.row
-                            stack.spacing 1
-                            stack.alignItems.center
-                            stack.children [
-                                Mui.typography [
-                                    prop.style [ style.userSelect.none ]
-                                    prop.text "Load from file"
-                                ]
-                                Mui.button [
-                                    button.variant.outlined
-                                    button.component' "label"
-                                    button.children [
-                                        Html.text "Choose"
-                                        Html.input [
-                                            input.type' "file"
-                                            prop.hidden true
-                                            prop.onChange selectFiles
-                                        ]
-                                    ]
-                                ]
-                            ]
+                    stack.spacing 1
+                    stack.alignItems.center
+                ] <| [
+                    Mui.typography [
+                        prop.style [ style.userSelect.none ]
+                        prop.text "Load from file"
+                    ]
+                    Mui.button @+ [ button.variant.outlined; button.component' "label" ] <| [
+                        Html.text "Choose"
+                        Html.input [
+                            input.type' "file"
+                            prop.hidden true
+                            prop.onChange selectFiles
                         ]
                     ]
                 ]
-                Mui.box [
-                    box.sx ""
-                    box.children [
-                        Html.img [
-                            match state.Status with
-                            | ImageSenseShapeForm.Status.Valid uri ->
-                                prop.src (string uri)
-                            | _ -> ()
-                        ]
-                    ]
+            ]
+            Mui.box @+ [] <| [
+                Html.img [
+                    match state.Status with
+                    | ImageSenseShapeForm.Status.Valid uri ->
+                        prop.src (string uri)
+                    | _ -> ()
                 ]
             ]
         ]

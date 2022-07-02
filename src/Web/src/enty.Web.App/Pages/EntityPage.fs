@@ -20,16 +20,15 @@ let EntityPage (entityId: EntityId) =
             yield Html.text (string entity.Id)
             match entity.Sense |> TagsSenseShape.parse with
             | Some tagsSense ->
-                yield Mui.stack [
+                yield Mui.stack @+ [
                     stack.direction.row
                     stack.spacing 0.5
-                    stack.children [
-                        for tag in tagsSense.Tags do
-                            Mui.chip [
-                                chip.label (Sense.format tag)
-                                chip.variant.outlined
-                            ]
-                    ]
+                ] <| [
+                    for tag in tagsSense.Tags do
+                        Mui.chip [
+                            chip.label (Sense.format tag)
+                            chip.variant.outlined
+                        ]
                 ]
             | _ -> ()
             match entity.Sense |> ImageSenseShape.parse with

@@ -27,9 +27,18 @@ module Cmd =
             work dispatch
             |> Async.startSafe
 
+
 [<AutoOpen>]
 module FelizExtensions =
+
     open Feliz
+
+    let withProps elementFunction props (children: #seq<ReactElement>) =
+        prop.children (children :> ReactElement seq) :: props |> elementFunction
+
+    let inline ( @+ ) elementFunction props =
+        fun children -> withProps elementFunction props children
+
     type React =
         static member useAsync(work: Async<'a>, ?deps: obj array): 'a option =
             let deps = defaultArg deps [| |]
