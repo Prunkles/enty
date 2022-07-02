@@ -4,7 +4,7 @@ open enty.Core
 open enty.Mind
 
 
-type IMind =
+type IMindService =
     abstract Remember: eid: EntityId * sense: Sense -> Async<unit>
     abstract Forget: eid: EntityId -> Async<unit>
     abstract Wish: wish: Wish * offset: int * limit: int -> Async<EntityId[] * int>

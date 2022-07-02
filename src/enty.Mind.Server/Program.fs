@@ -1,35 +1,32 @@
 ﻿module enty.Mind.Server.Program
 
-open System
 open System.IO
-open System.Threading.Tasks
 open FSharp.Control
-open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Hosting
+open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Configuration
 
-open LinqToDB
 open LinqToDB.Configuration
 open LinqToDB.AspNet
 open LinqToDB.AspNet.Logging
 
 open Giraffe
+open Giraffe.EndpointRouting
 
 open Serilog
-open enty.Core
-open enty.Mind
-open enty.Mind.Server
+open Serilog.Configuration
 open pdewebq.Extensions.Serilog
+
+open enty.Core
+open enty.Mind.Server
 
 
 module Startup =
 
     open Khonsu.Coding.Json
     open Khonsu.Coding.Json.Net
-    open Microsoft.AspNetCore.Builder
     open enty.Mind.Server.Database.Migrations
 
     let configureServices (host: WebHostBuilderContext) (services: IServiceCollection) : unit =
@@ -38,7 +35,7 @@ module Startup =
         services.AddTransient<IJsonDecoding<JsonValue>, ThothJsonDecoding>() |> ignore
         services.AddTransient<IJsonEncoding<JsonValue>, ThothJsonEncoding>() |> ignore
 
-        services.AddTransient<IMind, DbMind>() |> ignore
+        services.AddTransient<IMindService, DbMindService>() |> ignore
 
         // Migrations
         configureMigrations services connectionString |> ignore
@@ -60,22 +57,19 @@ module Startup =
             )
         ) |> ignore
 
-        services.AddGrpc() |> ignore
+        services.AddGiraffe() |> ignore
 
-//        services.AddGiraffe() |> ignore
-
-    let configureApp (host: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
+    let configureApp (context: WebHostBuilderContext) (app: IApplicationBuilder) : unit =
+        if context.HostingEnvironment.IsDevelopment() then
+            app.UseDeveloperExceptionPage() |> ignore
         app.UseRouting() |> ignore
-        app.UseEndpoints(fun endpoints ->
-            endpoints.MapGrpcService<GrpcServerMindService>() |> ignore
+        app.UseEndpoints(fun endpoint ->
+            endpoint.MapGiraffeEndpoints(Endpoints.endpoints)
         ) |> ignore
+        app.UseGiraffe(Endpoints.notFoundHandler) |> ignore
 
         migrate app
 
-    let configureLogging (builder: ILoggingBuilder) : unit =
-        builder.AddConsole() |> ignore
-//        builder.AddFluentMigratorConsole() |> ignore
-        ()
 
 [<CompiledName "CreateHostBuilder">]
 let createHostBuilder args =
@@ -90,6 +84,7 @@ let createHostBuilder args =
                 .MinimumLevel.Information()
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
+                .Enrich.WithMessageTemplate()
                 .WriteTo.MapSourceContextAndDate(
                     templates
                     , fun sourceContext date ->
@@ -106,7 +101,6 @@ let createHostBuilder args =
             webBuilder
                 .Configure(Startup.configureApp)
                 .ConfigureServices(Startup.configureServices)
-                .ConfigureLogging(Startup.configureLogging)
             |> ignore
         )
 
