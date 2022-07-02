@@ -6,6 +6,7 @@ open Giraffe.EndpointRouting
 open Khonsu.Coding.Json
 open Khonsu.Coding.Json.Net
 
+open Thoth.Json.Net
 open enty.Utils
 open enty.Core
 open enty.Mind.Parsing.SenseParsing
@@ -15,19 +16,44 @@ open enty.Mind.Server.SenseJToken
 
 let wishHandler : HttpHandler = fun next ctx -> task {
     let mindService = ctx.GetService<IMindService>()
+
     let offset = ctx.TryGetQueryStringValue("offset") |> Option.defaultValue "0" |> int
     let limit = ctx.TryGetQueryStringValue("limit") |> Option.defaultValue "16" |> int
     if limit > 64 then return! RequestErrors.BAD_REQUEST "limit > 64" next ctx else
-    let! jsonRequest = ctx.BindJsonAsync<{| wishString: string |}>()
-    let wishString = jsonRequest.wishString
-    let wish = Wish.parse wishString
-    match wish with
-    | Ok wish ->
-        let! eids, total = mindService.Wish(wish, offset, limit)
-        let eidGs = eids |> Array.map EntityId.Unwrap
-        return! ctx.WriteJsonAsync({| eids = eidGs; total = total |})
-    | Error reason ->
-        return! RequestErrors.BAD_REQUEST $"Invalid wish: {reason}" next ctx
+
+    let decode =
+        Decode.object ^fun get ->
+            let wishString = get.Required.Field "wishString" Decode.string
+            let ordering =
+                get.Optional.Field "ordering" ^ Decode.object ^fun get ->
+                    let key =
+                        get.Required.Field "key" (
+                            Decode.string
+                            |> Decode.andThen ^function
+                                | "ById" -> Decode.succeed WishOrderingKey.ById
+                                | "ByCreation" -> Decode.succeed WishOrderingKey.ByCreation
+                                | "ByUpdated" -> Decode.succeed WishOrderingKey.ByUpdated
+                                | invalid -> Decode.fail $"Invalid key: {invalid}"
+                        )
+                    let descending = get.Required.Field "descending" Decode.bool
+                    { Key = key; Descending = descending }
+            wishString, ordering
+
+    let! body = ctx.ReadBodyFromRequestAsync()
+    match Decode.fromString decode body with
+    | Ok (wishString, ordering) ->
+        let ordering = ordering |> Option.defaultValue { Key = WishOrderingKey.ByUpdated; Descending = false }
+        let wish = Wish.parse wishString
+        match wish with
+        | Ok wish ->
+            let! eids, total = mindService.Wish(wish, ordering, offset, limit)
+            let eidGs = eids |> Array.map EntityId.Unwrap
+            return! ctx.WriteJsonAsync({| eids = eidGs; total = total |})
+
+        | Error reason ->
+            return! RequestErrors.BAD_REQUEST $"Invalid wish: {reason}" next ctx
+    | Error error ->
+        return! RequestErrors.BAD_REQUEST $"{error}" next ctx
 }
 
 let rememberHandler eidG : HttpHandler = fun next ctx -> task {
