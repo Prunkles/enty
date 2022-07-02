@@ -19,7 +19,7 @@ services:
         ports:
             - "5010:5010"
         environment:
-            - ASPNETCORE_URLS=https://0.0.0.0:5010
+            - ASPNETCORE_URLS=http://0.0.0.0:5010
             - ConnectionStrings__Default=Database=enty; User ID=postgres; Password=password; Host=db; Port=5432;
         volumes:
             - ./src:/enty/src
@@ -36,24 +36,6 @@ services:
                 dotnet dev-certs https --trust
                 dotnet watch run
             "
-    mind-gateway:
-        container_name: mind-gateway
-        image: mcr.microsoft.com/dotnet/sdk:6.0
-        ports:
-            - "5015:5015"
-        environment:
-            - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5015
-            - Mind__Address=https://mind:5010
-        volumes:
-            - ./src:/enty/src
-            - ./lib:/enty/lib
-            - ./.cache/docker/mind-gateway/.dotnet:/root/.dotnet
-            - ./.cache/docker/mind-gateway/.local/share/NuGet:/root/.local/share/NuGet
-            - ./.cache/docker/mind-gateway/.nuget:/root/.nuget
-        working_dir: /enty/src/enty.Mind.Gateway.Server
-        depends_on:
-            - mind
-        command: dotnet watch run
     storage:
         container_name: storage
         image: mcr.microsoft.com/dotnet/sdk:6.0
@@ -100,10 +82,10 @@ services:
             context: .
             dockerfile: ./src/Web/Dockerfile
         ports:
-            - "8081:80"
+            - "8080:80"
         environment:
-            - ENTY_MIND_ADDRESS=http://mind-gateway:5015/
+            - ENTY_MIND_ADDRESS=http://mind:5010/
             - ENTY_STORAGE_ADDRESS=http://localhost:5020/
         depends_on:
-            - mind-gateway
+            - mind
             - storage

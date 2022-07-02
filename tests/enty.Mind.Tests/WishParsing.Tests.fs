@@ -5,7 +5,7 @@ open Swensen.Unquote
 
 open enty.Utils
 open enty.Mind
-open enty.Mind.Gateway.WishParsing
+open enty.Mind.Parsing.WishParsing
 
 
 [<Fact>]

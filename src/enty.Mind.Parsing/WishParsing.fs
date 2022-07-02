@@ -1,4 +1,4 @@
-namespace enty.Mind.Gateway.WishParsing
+namespace enty.Mind.Parsing.WishParsing
 
 open FParsec
 open enty.Mind

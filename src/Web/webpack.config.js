@@ -64,7 +64,7 @@ module.exports = {
         hot: true,
         proxy: {
             '/mind/**': {
-                target: 'http://localhost:' + '5015',
+                target: 'http://localhost:' + '5010',
                 changeOrigin: true,
                 pathRewrite: {
                     '^/mind': '',
