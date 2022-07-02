@@ -1,5 +1,6 @@
 module enty.Web.App.SenseCreating.TagsShapeForm
 
+open System
 open Feliz
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
@@ -13,48 +14,57 @@ open enty.Web.App.SenseFormatting
 
 [<ReactComponent>]
 let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, string> -> unit) =
-    // let tagsInput, setTagsInput =
-    //     React.useState(fun () ->
-    //         match TagsSenseShape.parse initialSense with
-    //         | Some tagsShape ->
-    //             tagsShape.Tags |> Seq.map Sense.format |> fun ts -> String.Join(" ", ts)
-    //         | _ -> ""
-    //     )
-    let tags, setTags =
+    let tagsInput, setTagsInput =
         React.useState(fun () ->
             match TagsSenseShape.parse initialSense with
             | Some tagsShape ->
-                tagsShape.Tags
-            | None -> []
+                tagsShape.Tags |> Seq.map Sense.format |> fun ts -> String.Join(" ", ts)
+            | _ -> ""
         )
-    let handleTagInputChange (input: string) =
-        let res = Sense.parse $"[ %s{input} ]"
-        match res with
-        | Ok (Sense.List tags) ->
-            setTags tags
+
+    let tags =
+        React.useMemo(fun () ->
+            let res = Sense.parse $"[ %s{tagsInput} ]"
+            match res with
+            | Ok (Sense.List tags) ->
+                Ok tags
+            | Error reason | Const "Result is not a list, pretty unreachable" reason ->
+                Error reason
+        , [| Operators.box tagsInput |])
+
+    React.useEffect(fun () ->
+        match tags with
+        | Ok tags ->
             let sense =
                 senseMap {
                     "tags", Sense.List tags
                 }
             onSenseChanged (Ok sense)
-        | Error reason | Const "Result is not a list, pretty unreachable" reason ->
-            onSenseChanged (Error reason)
+        | Error error ->
+            onSenseChanged (Error error)
+    , [| Operators.box tags |])
+
     Mui.stack @+ [
         stack.direction.column
         stack.spacing 1
     ] <| [
         Mui.textField [
             textField.label "Tags"
-            textField.onChange handleTagInputChange
+            textField.value tagsInput
+            textField.onChange setTagsInput
         ]
-        Mui.stack @+ [
-            stack.direction.row
-            stack.spacing 0.5
-        ] <| [
-            for tag in tags do
-                Mui.chip [
-                    chip.label (Sense.format tag)
-                    chip.variant.outlined
-                ]
-        ]
+        match tags with
+        | Ok tags ->
+            Mui.stack @+ [
+                stack.direction.row
+                stack.spacing 0.5
+            ] <| [
+                for tag in tags do
+                    Mui.chip [
+                        chip.label (Sense.format tag)
+                        chip.variant.outlined
+                    ]
+            ]
+        | Error error ->
+            Html.h1 $"Invalid input: {error}"
     ]
