@@ -1,18 +1,15 @@
 [<AutoOpen>]
 module enty.Web.App.Pages.WishPage
 
-open System
 open Browser
-open Browser.Types
-open Elmish
-open Fable.Core
 open Feliz
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
-
 open Feliz.Router
-open enty.Core
 
+open enty.Utils
+open enty.Core
+open enty.Mind.Client.Fable
 open enty.Web.App
 open enty.Web.App.Utils
 
@@ -33,6 +30,7 @@ let WishInput (initialInput: string option) onConfirm clearOnConfirm =
         ]
     Mui.textField [
         textField.value input
+        textField.fullWidth true
         textField.variant.outlined
         textField.label "Wish"
         textField.InputProps [
@@ -56,19 +54,45 @@ let inline box' x = FSharp.Core.Operators.box x
 
 [<ReactComponent>]
 let WishPage (props: {| Initials: WishPageInitials option |}) =
+    let wishInput, setWishInput = React.useState(props.Initials |> Option.map (fun i -> i.WishString))
+
+    let orderingKeyInput, setOrderingKeyInput = React.useState("updated")
+    let orderingDescendingInput, setOrderingDescendingInput = React.useState(false)
+    let ordering = React.useMemo(fun () ->
+        let key =
+            match orderingKeyInput with
+            | "updated" -> WishOrderingKey.ByUpdated
+            | "created" -> WishOrderingKey.ByCreation
+            | "id" -> WishOrderingKey.ById
+            | _ -> unreachable
+        let descending = orderingDescendingInput
+        { Key = key; Descending = descending }
+    , [| orderingKeyInput; orderingDescendingInput |])
+    let handleOrderingKeyChanged (event: string) =
+        setOrderingKeyInput event
+    let handleOrderingDescendingChanged (descending: bool) =
+        setOrderingDescendingInput descending
+
     let pageSize = 12
     let pageNumber, setPageNumber = React.useState(props.Initials |> Option.map (fun i -> i.PageNumber) |> Option.defaultValue 1)
     let status, setStatus = React.useState(WishPageStatus.Empty)
-    let wishInput, setWishInput = React.useState(props.Initials |> Option.map (fun i -> i.WishString))
 
     let handleWishStringEntered (pageNumber: int) (wishString: string) =
         async {
             setWishInput (Some wishString)
             setStatus WishPageStatus.Loading
-            let! wishResult = MindApiImpl.mindApi.Wish(wishString, (pageNumber - 1) * pageSize, pageSize)
+            let! wishResult = MindApiImpl.mindApi.Wish(wishString, ordering, (pageNumber - 1) * pageSize, pageSize)
             match wishResult with
             | Ok (eids, total) ->
                 let! entities = MindApiImpl.mindApi.GetEntities(eids)
+                let entities =
+                    let entitiesMap =
+                        entities
+                        |> Seq.map (fun e -> e.Id, e)
+                        |> Map.ofSeq
+                    eids
+                    |> Seq.map (fun eid -> entitiesMap.[eid])
+                    |> Seq.toArray
                 let url = Page.Wish (Some (wishString, pageNumber)) |> Page.formatPath
                 Dom.window.history.pushState(null, "", url)
                 setStatus (WishPageStatus.Entities (entities, total))
@@ -99,7 +123,37 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
     Mui.stack @+ [
         stack.spacing 3
     ] <| [
-        WishInput wishInput (handleWishStringEntered pageNumber) false
+        Mui.box @+ [ prop.sx {| display = "flex"; flexDirection = "row"; gap = 1 |} ] <| [
+            Mui.box @+ [ prop.sx {| flexGrow = 1 |} ] <| [
+                WishInput wishInput (handleWishStringEntered pageNumber) false
+            ]
+            Mui.select @+ [
+                select.label "Order by"
+                select.value orderingKeyInput
+                select.onChange (fun (e: string) -> handleOrderingKeyChanged e)
+            ] <| [
+                Mui.menuItem [
+                    prop.value "updated"
+                    prop.text "Updated"
+                ]
+                Mui.menuItem [
+                    prop.value "created"
+                    prop.text "Created"
+                ]
+                Mui.menuItem [
+                    prop.value "id"
+                    prop.text "Id"
+                ]
+            ]
+            Mui.formControlLabel [
+                formControlLabel.label "Descending"
+                formControlLabel.control (
+                    Mui.checkbox [
+                        checkbox.onChange handleOrderingDescendingChanged
+                    ]
+                )
+            ]
+        ]
         match status with
         | WishPageStatus.Empty -> Html.text "There's nothing there yet"
         | WishPageStatus.Loading ->

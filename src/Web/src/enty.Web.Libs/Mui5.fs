@@ -92,3 +92,9 @@ type Mui =
     static member inline pagination(props) = createElementImportDefault "@mui/material/Pagination" props
 
     static member inline circularProgress(props) = createElementImportDefault "@mui/material/CircularProgress" props
+
+    static member inline select(props) = createElementImportDefault "@mui/material/Select" props
+
+    static member inline menuItem(props) = createElementImportDefault "@mui/material/MenuItem" props
+
+    static member inline checkbox(props) = createElementImportDefault "@mui/material/Checkbox" props
