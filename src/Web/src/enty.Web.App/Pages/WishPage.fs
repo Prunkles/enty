@@ -118,6 +118,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                         box.sx {|
                             height = 300
                             width = 250
+                            cursor = "pointer"
                         |}
                         box.children [
                             EntityThumbnail.EntityThumbnail entity (fun () -> handleThumbnailClicked entity)

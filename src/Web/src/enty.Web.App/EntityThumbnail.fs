@@ -23,6 +23,7 @@ let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
             p = 3
             height = "100%"
         |}
+        prop.onClick (fun _ -> onClicked ())
     ] <| [
         match entity.Sense with
         | Apply ImageSenseShape.parse (Some imageSense) ->
@@ -42,11 +43,10 @@ let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
                         height = "100%"
                     |}
                     prop.src imageSense.Uri
-                    prop.onClick (fun _ -> onClicked ())
                 ]
             ]
         | _ ->
-            Html.div @+ [ prop.onClick (fun _ -> onClicked ()) ] <| [
+            Html.div @+ [] <| [
                 Html.h1 (string entity.Id)
                 Html.text "Undefined entity type"
             ]
