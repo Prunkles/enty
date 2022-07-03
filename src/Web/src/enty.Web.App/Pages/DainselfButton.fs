@@ -10,6 +10,7 @@ open Feliz
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
+open FsToolkit.ErrorHandling
 open enty.Core
 open enty.Utils
 open enty.Web.App
@@ -37,7 +38,7 @@ let DainselfButton () =
     let handleFilesSelected (files: File array) =
         setFiles (FilesState.Selected files)
 
-    let tagsSenseChanged (sense: Result<Sense, string>) =
+    let tagsSenseChanged (sense: Validation<Sense, string>) =
         match sense with
         | Ok sense ->
             setTags (Some sense)
