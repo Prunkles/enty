@@ -20,34 +20,42 @@ let (|Apply|) f x = f x
 let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
     Mui.paper @+ [
         prop.sx {|
-            p = 3
+            // p = 3
             height = "100%"
         |}
         prop.onClick (fun _ -> onClicked ())
     ] <| [
-        match entity.Sense with
-        | Apply ImageSenseShape.parse (Some imageSense) ->
-            Mui.stack @+ [
-                prop.sx {| height = "100%" |}
-            ] <| [
+        Mui.stack @+ [ prop.sx {| height = "100%" |}  ] <| [
+            MuiE.boxSx {| p = 1; flexGrow = 1 |} @+ [] <| [
+                match entity.Sense with
+                | Apply ImageSenseShape.parse (Some imageSense) ->
+                    Mui.stack @+ [
+                        prop.sx {| height = "100%" |}
+                    ] <| [
+                        MuiE.boxSx {|
+                            backgroundImage = $"url(\"%s{imageSense.Uri}\")"
+                            backgroundSize = "contain"
+                            backgroundRepeat = "no-repeat"
+                            backgroundPosition = "center"
+                            height = "100%"
+                        |} [
+                            prop.src imageSense.Uri
+                        ]
+                    ]
+                | _ ->
+                    MuiE.boxSx {| display = "flex"; alignItems = "center"; justifyContent = "center"; height = "100%" |} @+ [] <| [
+                        Mui.typography [
+                            typography.children "Undefined entity shape"
+                        ]
+                    ]
+            ]
+            MuiE.boxSx {| display = "flex" |} @+ [] <| [
                 Mui.typography [
-                    prop.sx {| overflowWrap = "anywhere" |}
-                    typography.children $"{entity.Id}"
-                ]
-                Mui.box [
-                    box.sx {|
-                        backgroundImage = $"url(\"%s{imageSense.Uri}\")"
-                        backgroundSize = "contain"
-                        backgroundRepeat = "no-repeat"
-                        backgroundPosition = "center"
-                        height = "100%"
-                    |}
-                    prop.src imageSense.Uri
+                    let (EntityId eidS) = entity.Id
+                    typography.variant.caption
+                    typography.component' "pre"
+                    typography.children $"{eidS}"
                 ]
             ]
-        | _ ->
-            Html.div @+ [] <| [
-                Html.h1 (string entity.Id)
-                Html.text "Undefined entity type"
-            ]
+        ]
     ]

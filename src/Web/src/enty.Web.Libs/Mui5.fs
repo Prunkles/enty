@@ -98,3 +98,15 @@ type Mui =
     static member inline menuItem(props) = createElementImportDefault "@mui/material/MenuItem" props
 
     static member inline checkbox(props) = createElementImportDefault "@mui/material/Checkbox" props
+
+[<RequireQualifiedAccess>]
+module MuiE =
+
+    let inline boxSx (sx: obj) props =
+        Mui.box (box.sx sx :: props)
+
+    let inline stackCol props =
+        Mui.stack (stack.direction.column :: props)
+
+    let inline stackRow props =
+        Mui.stack (stack.direction.row :: props)
