@@ -148,6 +148,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                 formControlLabel.label "Descending"
                 formControlLabel.control (
                     Mui.checkbox [
+                        checkbox.checked' orderingDescendingInput
                         checkbox.onChange handleOrderingDescendingChanged
                     ]
                 )
