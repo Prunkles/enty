@@ -19,7 +19,8 @@ services:
         ports:
             - "5010:5010"
         environment:
-            - ASPNETCORE_URLS=http://0.0.0.0:5010
+            - ASPNETCORE_ENVIRONMENT=Development
+            - ASPNETCORE_URLS=http://+:5010
             - ConnectionStrings__Default=Database=enty; User ID=postgres; Password=password; Host=db; Port=5432;
         volumes:
             - ./src:/enty/src
@@ -42,7 +43,8 @@ services:
         ports:
             - "5020:5020"
         environment:
-            - ASPNETCORE_URLS=http://0.0.0.0:5020
+            - ASPNETCORE_ENVIRONMENT=Development
+            - ASPNETCORE_URLS=http://+:5020
             - Storage__Path=./storage/
         volumes:
             - ./src:/enty/src

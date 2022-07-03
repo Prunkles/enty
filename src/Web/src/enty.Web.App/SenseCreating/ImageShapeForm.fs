@@ -78,7 +78,8 @@ module ImageSenseShapeForm =
                 let filename: string option =
                     contentDisposition
                     |> Option.bind ^fun contentDisposition ->
-                        Some (ContentDisposition.parse contentDisposition).parameter?filename
+                        try Some (ContentDisposition.parse contentDisposition).parameter?filename
+                        with _ -> None
                 return Ok { ContentType = contentType; ContentLength = contentLength; Filename = filename }
             | Error ex -> return Error ex
         }
