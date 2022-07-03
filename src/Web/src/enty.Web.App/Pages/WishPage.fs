@@ -57,7 +57,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
     let wishInput, setWishInput = React.useState(props.Initials |> Option.map (fun i -> i.WishString))
 
     let orderingKeyInput, setOrderingKeyInput = React.useState("updated")
-    let orderingDescendingInput, setOrderingDescendingInput = React.useState(false)
+    let orderingDescendingInput, setOrderingDescendingInput = React.useState(true)
     let ordering = React.useMemo(fun () ->
         let key =
             match orderingKeyInput with
