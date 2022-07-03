@@ -43,7 +43,7 @@ let EntityThumbnail (entity: Entity) =
                 | _ ->
                     MuiE.boxSx {| display = "flex"; alignItems = "center"; justifyContent = "center"; height = "100%" |} @+ [] <| [
                         Mui.typography [
-                            typography.children "Undefined entity shape"
+                            typography.children "Undefined sense shape"
                         ]
                     ]
             ]
