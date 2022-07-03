@@ -49,7 +49,7 @@ let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
                         ]
                     ]
             ]
-            MuiE.boxSx {| display = "flex" |} @+ [] <| [
+            MuiE.boxSx {| display = "flex"; justifyContent = "center" |} @+ [] <| [
                 Mui.typography [
                     let (EntityId eidS) = entity.Id
                     typography.variant.caption
