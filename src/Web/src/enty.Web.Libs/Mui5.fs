@@ -99,6 +99,8 @@ type Mui =
 
     static member inline checkbox(props) = createElementImportDefault "@mui/material/Checkbox" props
 
+    static member inline link(props) = createElementImportDefault "@mui/material/Link" props
+
 [<RequireQualifiedAccess>]
 module MuiE =
 

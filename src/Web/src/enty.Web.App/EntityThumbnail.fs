@@ -17,13 +17,11 @@ module Map =
 let (|Apply|) f x = f x
 
 [<ReactComponent>]
-let EntityThumbnail (entity: Entity) (onClicked: unit -> unit) =
+let EntityThumbnail (entity: Entity) =
     Mui.paper @+ [
         prop.sx {|
-            // p = 3
             height = "100%"
         |}
-        prop.onClick (fun _ -> onClicked ())
     ] <| [
         Mui.stack @+ [ prop.sx {| height = "100%" |}  ] <| [
             MuiE.boxSx {| p = 1; flexGrow = 1 |} @+ [] <| [

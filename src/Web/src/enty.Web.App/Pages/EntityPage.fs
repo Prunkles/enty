@@ -16,8 +16,12 @@ let EntityPage (entityId: EntityId) =
     let entity = React.useAsync(MindApiImpl.mindApi.GetEntities([|entityId|]))
     match entity with
     | Some [| entity |] ->
-        Html.div [
-            yield Html.text (string entity.Id)
+        Mui.stack @+ [ stack.spacing 4 ] <| [
+
+            yield Mui.typography [
+                typography.children (string entity.Id)
+            ]
+
             match entity.Sense |> TagsSenseShape.parse with
             | Some tagsSense ->
                 yield Mui.stack @+ [
@@ -31,15 +35,34 @@ let EntityPage (entityId: EntityId) =
                         ]
                 ]
             | _ -> ()
+
             match entity.Sense |> ImageSenseShape.parse with
             | Some imageSense ->
-                yield Html.div [
+                yield Html.a @+ [
+                    prop.href imageSense.Uri
+                    prop.style [ style.width.minContent ]
+                ] <| [
                     Html.img [
+                        prop.style [
+                            style.maxHeight (length.vh 100)
+                        ]
                         prop.src imageSense.Uri
                     ]
                 ]
             | _ -> ()
-            yield Html.pre (entity.Sense |> Sense.formatMultiline)
+
+            yield Mui.paper @+ [
+            ] <| [
+                Html.pre [
+                    // prop.sx {| m = 0 |}
+                    prop.style [
+                        style.overflowX.scroll
+                        style.margin (length.px 0)
+                    ]
+                    prop.text (entity.Sense |> Sense.formatMultiline)
+                ]
+            ]
+
             yield Mui.button [
                 prop.text "Edit"
                 prop.onClick (fun _ -> Page.EditEntity entityId |> Page.formatPath |> Router.navigatePath)

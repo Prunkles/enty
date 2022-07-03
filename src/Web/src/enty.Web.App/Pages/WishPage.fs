@@ -118,7 +118,6 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
 
     let handleThumbnailClicked (entity: Entity) =
         Router.navigatePath(Page.formatPath (Page.Entity entity.Id))
-        printfn $"Entity clicked: {entity}"
 
     Mui.stack @+ [
         stack.spacing 3
@@ -168,14 +167,26 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                 |}
             ] <| [
                 for entity in entities ->
-                    Mui.box [
-                        box.sx {|
-                            height = 300
-                            width = 250
-                            cursor = "pointer"
-                        |}
-                        box.children [
-                            EntityThumbnail.EntityThumbnail entity (fun () -> handleThumbnailClicked entity)
+                    Html.a @+ [
+                        prop.style [
+                            style.textDecoration.none
+                            style.cursor.pointer
+                        ]
+                        let href = Page.Entity entity.Id |> Page.formatPath
+                        prop.href href
+                        prop.onClick (fun event ->
+                            event.preventDefault()
+                            handleThumbnailClicked entity
+                        )
+                    ] <| [
+                        Mui.box [
+                            box.sx {|
+                                height = 300
+                                width = 250
+                            |}
+                            box.children [
+                                EntityThumbnail.EntityThumbnail entity
+                            ]
                         ]
                     ]
             ]
