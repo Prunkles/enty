@@ -18,13 +18,13 @@ let EntityPage (entityId: EntityId) =
     | Some [| entity |] ->
         Mui.stack @+ [ stack.spacing 4 ] <| [
 
-            yield Mui.typography [
-                typography.children (string entity.Id)
+            MuiE.boxSx {| alignSelf = "flex-start" |} @+ [] <| [
+                EntityThumbnail.EntityIdHint entity.Id
             ]
 
             match entity.Sense |> TagsSenseShape.parse with
             | Some tagsSense ->
-                yield Mui.stack @+ [
+                Mui.stack @+ [
                     stack.direction.row
                     stack.spacing 0.5
                 ] <| [
@@ -38,7 +38,7 @@ let EntityPage (entityId: EntityId) =
 
             match entity.Sense |> ImageSenseShape.parse with
             | Some imageSense ->
-                yield Html.a @+ [
+                Html.a @+ [
                     prop.href imageSense.Uri
                     prop.style [ style.width.minContent ]
                 ] <| [
@@ -51,7 +51,7 @@ let EntityPage (entityId: EntityId) =
                 ]
             | _ -> ()
 
-            yield Mui.paper @+ [
+            Mui.paper @+ [
             ] <| [
                 Html.pre [
                     // prop.sx {| m = 0 |}
@@ -63,7 +63,7 @@ let EntityPage (entityId: EntityId) =
                 ]
             ]
 
-            yield Mui.button [
+            Mui.button [
                 prop.text "Edit"
                 prop.onClick (fun _ -> Page.EditEntity entityId |> Page.formatPath |> Router.navigatePath)
             ]

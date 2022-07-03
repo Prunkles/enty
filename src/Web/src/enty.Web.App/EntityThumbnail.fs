@@ -17,6 +17,17 @@ module Map =
 let (|Apply|) f x = f x
 
 [<ReactComponent>]
+let EntityIdHint (entityId: EntityId) =
+    MuiE.boxSx {| display = "flex"; justifyContent = "center" |} @+ [] <| [
+        Mui.typography [
+            let (EntityId eidS) = entityId
+            typography.variant.caption
+            typography.component' "pre"
+            typography.children $"{eidS}"
+        ]
+    ]
+
+[<ReactComponent>]
 let EntityThumbnail (entity: Entity) =
     Mui.paper @+ [
         prop.sx {|
@@ -47,13 +58,6 @@ let EntityThumbnail (entity: Entity) =
                         ]
                     ]
             ]
-            MuiE.boxSx {| display = "flex"; justifyContent = "center" |} @+ [] <| [
-                Mui.typography [
-                    let (EntityId eidS) = entity.Id
-                    typography.variant.caption
-                    typography.component' "pre"
-                    typography.children $"{eidS}"
-                ]
-            ]
+            EntityIdHint entity.Id
         ]
     ]

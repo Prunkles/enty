@@ -1,14 +1,15 @@
 module enty.Web.App.SenseCreating.SenseCreateForm
 
+open FsToolkit.ErrorHandling
+
 open Elmish
 open Feliz
 open Feliz.UseElmish
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
-open enty.Core
 open enty.Utils
-
+open enty.Core
 open enty.Web.App.Utils
 open enty.Web.App.SenseParsing
 open enty.Web.App.SenseFormatting
@@ -22,7 +23,7 @@ let SenseFormatter (sense: Sense) =
 
 type SenseShapeFormId = SenseShapeFormId of int
 
-type SenseShapeFormElement = Sense -> (Result<Sense, string> -> unit) -> ReactElement
+type SenseShapeFormElement = Sense -> (Validation<Sense, string> -> unit) -> ReactElement
 
 type SenseShapeForm =
     { Id: SenseShapeFormId
@@ -49,23 +50,23 @@ module SenseCreateForm =
     type Msg =
         | SelectForm of SenseShapeFormId
         | DeselectForm of SenseShapeFormId
-        | FormSenseChanged of SenseShapeFormId * Result<Sense, string>
+        | FormSenseChanged of SenseShapeFormId * Validation<Sense, string>
 
     type State =
         { Forms: SenseShapeForm list
-          ActiveForms: Map<SenseShapeFormId, Result<Sense, string>>
-          Sense: Result<Sense, string> }
+          ActiveForms: Map<SenseShapeFormId, Validation<Sense, string>>
+          Sense: Validation<Sense, string> }
 
     let init forms =
         { Forms = forms
           ActiveForms = Map.empty
-          Sense = Error "Empty sense" }
+          Sense = Validation.error "Empty sense" }
         , Cmd.none
 
     let update (msg: Msg) (state: State) : State * Cmd<Msg> =
         match msg with
         | Msg.SelectForm formId ->
-            { state with ActiveForms = state.ActiveForms |> Map.add formId (Error $"Form {formId} has no sense yet") }
+            { state with ActiveForms = state.ActiveForms |> Map.add formId (Validation.error $"Form {formId} has no sense yet") }
             , Cmd.none
         | Msg.DeselectForm formId ->
             let activeForms = state.ActiveForms |> Map.remove formId
@@ -82,7 +83,7 @@ module SenseCreateForm =
                 forms
                 |> Map.values
                 |> Seq.toList
-                |> Result.allIsOk
+                |> List.sequenceValidationA
                 |> Result.map (List.reduce Sense.merge)
             { state with ActiveForms = forms; Sense = resultSense }, Cmd.none
 
@@ -102,7 +103,7 @@ let SenseCreateForm (onCreated: Sense -> unit) (initialSense: Sense) (finalButto
     let state, dispatch = React.useElmish(SenseCreateForm.init, SenseCreateForm.update, forms)
     let handleFormSelected formId active =
         if active then dispatch (SenseCreateForm.Msg.SelectForm formId) else dispatch (SenseCreateForm.Msg.DeselectForm formId)
-    let handleFormSenseChanged (formId: SenseShapeFormId) (sense: Result<_, _>) =
+    let handleFormSenseChanged (formId: SenseShapeFormId) (sense: Validation<_, _>) =
         dispatch (SenseCreateForm.Msg.FormSenseChanged (formId, sense))
     let handleCreateButtonClicked (sense: Sense) =
         onCreated sense

@@ -1,6 +1,7 @@
 namespace enty.Core
 
 open System
+open FsToolkit.ErrorHandling
 open enty.Utils
 
 [<RequireQualifiedAccess>]
@@ -39,7 +40,7 @@ module Sense =
         | (Sense.Value _ as vl1), (Sense.Value _ as vl2) -> Sense.List [ vl1; vl2 ]
         | _ -> invalidOp $"Cannot merge {sense1} and {sense2}"
 
-    let rec tryGet (path: string list) sense =
+    let rec tryGet (path: string list) sense : Sense option =
         match path with
         | key :: tailPath ->
             match sense with

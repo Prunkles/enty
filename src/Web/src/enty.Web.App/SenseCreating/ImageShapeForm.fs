@@ -1,22 +1,21 @@
 module enty.Web.App.SenseCreating.ImageShapeForm
 
 open System
+open FsToolkit.ErrorHandling
 
 open Fable.ContentDisposition
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.SimpleHttp
 open Browser.Types
-
 open Elmish
 open Feliz
 open Feliz.UseElmish
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
-open enty.Core
 open enty.Utils
-
+open enty.Core
 open enty.Web.App
 open enty.Web.App.Utils
 open enty.Web.App.SenseShapes
@@ -105,7 +104,7 @@ module ImageSenseShapeForm =
             return Ok metadata
     }
 
-    let update (onSenseChanged: Result<Sense, string> -> unit) (msg: Msg) (state: State) : State * Cmd<Msg> =
+    let update (onSenseChanged: Validation<Sense, string> -> unit) (msg: Msg) (state: State) : State * Cmd<Msg> =
         match msg with
         | Msg.UrlInputChanged input ->
             let uri = Uri.TryCreate(input, UriKind.Absolute) |> Option.ofTryByref
@@ -173,7 +172,7 @@ module ImageSenseShapeForm =
 
 
 [<ReactComponent>]
-let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, string> -> unit) =
+let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, string> -> unit) =
     let state, dispatch = React.useElmish(ImageSenseShapeForm.init, ImageSenseShapeForm.update onSenseChanged, initialSense)
     let selectFiles (ev: Event) =
         let selectedFile: Browser.Types.File = ev.target?files?(0)

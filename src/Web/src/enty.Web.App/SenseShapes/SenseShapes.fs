@@ -1,8 +1,7 @@
 namespace enty.Web.App.SenseShapes
 
-open System
+open FsToolkit.ErrorHandling
 open enty.Core
-open enty.Utils
 
 type ImageSenseShape =
     { Uri: string }

@@ -1,6 +1,8 @@
 module enty.Web.App.SenseCreating.TagsShapeForm
 
 open System
+open FsToolkit.ErrorHandling
+
 open Feliz
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
@@ -13,7 +15,7 @@ open enty.Web.App.SenseFormatting
 
 
 [<ReactComponent>]
-let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, string> -> unit) =
+let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, string> -> unit) =
     let tagsInput, setTagsInput =
         React.useState(fun () ->
             match TagsSenseShape.parse initialSense with
@@ -27,9 +29,9 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Result<Sense, stri
             let res = Sense.parse $"[ %s{tagsInput} ]"
             match res with
             | Ok (Sense.List tags) ->
-                Ok tags
-            | Error reason | Const "Result is not a list, pretty unreachable" reason ->
-                Error reason
+                Validation.ok tags
+            | Error error | Const "Result is not a list, pretty unreachable" error ->
+                Validation.error error
         , [| Operators.box tagsInput |])
 
     React.useEffect(fun () ->
