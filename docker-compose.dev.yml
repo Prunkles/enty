@@ -17,10 +17,10 @@ services:
         container_name: mind
         image: mcr.microsoft.com/dotnet/sdk:6.0
         ports:
-            - "5010:5010"
+            - "5010:80"
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-            - ASPNETCORE_URLS=http://+:5010
+            - ASPNETCORE_URLS=http://+:80
             - ConnectionStrings__Default=Database=enty; User ID=postgres; Password=password; Host=db; Port=5432;
         volumes:
             - ./src:/enty/src
@@ -41,10 +41,10 @@ services:
         container_name: storage
         image: mcr.microsoft.com/dotnet/sdk:6.0
         ports:
-            - "5020:5020"
+            - "5020:80"
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-            - ASPNETCORE_URLS=http://+:5020
+            - ASPNETCORE_URLS=http://+:80
             - Storage__Path=./storage/
         volumes:
             - ./src:/enty/src
