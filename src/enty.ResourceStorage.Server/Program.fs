@@ -2,8 +2,7 @@
 
 open System
 open System.IO
-open System.Threading.Tasks
-open Microsoft.AspNetCore.Http
+open Microsoft.Net.Http.Headers
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
@@ -36,7 +35,7 @@ module Startup =
         // app.UseHttpLogging() |> ignore
         app.UseRouting() |> ignore
         app.UseCors(fun policy ->
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod() |> ignore
+            policy.WithExposedHeaders(HeaderNames.ContentDisposition).AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod() |> ignore
         ) |> ignore
         app.UseEndpoints(fun endpoint ->
             endpoint.MapGiraffeEndpoints(HttpHandlers.endpoints)
