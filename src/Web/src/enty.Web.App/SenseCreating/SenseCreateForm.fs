@@ -74,8 +74,10 @@ module SenseCreateForm =
                 activeForms
                 |> Map.values
                 |> Seq.toList
-                |> Result.allIsOk
-                |> Result.map (List.reduce Sense.merge)
+                |> List.sequenceValidationA
+                |> function
+                    | Ok [] -> Validation.error "No sense"
+                    | senses -> senses |> Result.map (List.reduce Sense.merge)
             { state with ActiveForms = activeForms; Sense = resultSense }, Cmd.none
         | Msg.FormSenseChanged (formId, sense) ->
             let forms = state.ActiveForms |> Map.add formId sense
