@@ -6,6 +6,7 @@ open Feliz
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
+open FsToolkit.ErrorHandling
 open enty.Core
 
 open enty.Web.App
@@ -30,8 +31,18 @@ let CreateEntityPage () =
         |> Async.startSafe
     let handleCreatedSnackbarClosed () =
         setIsCreatedSnackbarOpened false
+    let createButton (sense: Validation<Sense, string>) =
+        Mui.button [
+            button.variant.contained
+            match sense with
+            | Ok sense ->
+                prop.onClick (fun _ -> handleSenseCreated sense)
+            | Error _errors ->
+                button.disabled true
+            button.children "Create"
+        ]
     React.fragment [
-        SenseCreateForm handleSenseCreated (Sense.empty ()) "Create"
+        SenseCreateForm (Sense.empty ()) createButton
         Mui.snackbar [
             snackbar.open' isCreatedSnackbarOpened
             snackbar.onClose (fun _ -> handleCreatedSnackbarClosed ())

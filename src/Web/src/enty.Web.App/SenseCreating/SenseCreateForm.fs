@@ -101,14 +101,12 @@ let forms =
     |> Seq.toList
 
 [<ReactComponent>]
-let SenseCreateForm (onCreated: Sense -> unit) (initialSense: Sense) (finalButtonText: string) =
+let SenseCreateForm (initialSense: Sense) (confirmButton: Validation<Sense, string> -> ReactElement) =
     let state, dispatch = React.useElmish(SenseCreateForm.init, SenseCreateForm.update, forms)
     let handleFormSelected formId active =
         if active then dispatch (SenseCreateForm.Msg.SelectForm formId) else dispatch (SenseCreateForm.Msg.DeselectForm formId)
     let handleFormSenseChanged (formId: SenseShapeFormId) (sense: Validation<_, _>) =
         dispatch (SenseCreateForm.Msg.FormSenseChanged (formId, sense))
-    let handleCreateButtonClicked (sense: Sense) =
-        onCreated sense
     Mui.grid @+ [ grid.container true ] <| [
         Mui.grid @+ [
             grid.item true
@@ -146,15 +144,7 @@ let SenseCreateForm (onCreated: Sense -> unit) (initialSense: Sense) (finalButto
                     | Ok sense -> SenseFormatter sense
                     | _ -> ()
 
-                    Mui.button [
-                        button.variant.contained
-                        match state.Sense with
-                        | Ok sense ->
-                            prop.onClick (fun _ -> handleCreateButtonClicked sense)
-                        | Error reason ->
-                            button.disabled true
-                        button.children finalButtonText
-                    ]
+                    confirmButton state.Sense
                 ]
             ]
         ]
