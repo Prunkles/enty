@@ -26,8 +26,26 @@ type FilesState =
 [<ReactComponent>]
 let PreviewImage (file: File) =
     let src = React.useMemo((fun () -> emitJsExpr (file) "URL.createObjectURL($0)"), [|file|])
-    Html.img [
-        prop.src src
+    Mui.paper @+ [
+        prop.sx {|
+            height = 300
+            width = 250
+            display = "flex"
+            justifyContent = "center"
+            alignContent = "center"
+        |}
+    ] <| [
+        Mui.box @+ [
+            prop.sx {|
+                backgroundImage = $"url({src})"
+                backgroundSize = "contain"
+                backgroundRepeat = "no-repeat"
+                backgroundPosition = "center"
+                height = "100%"
+                width = "100%"
+            |}
+            prop.src src
+        ] <| [ ]
     ]
 
 [<ReactComponent>]
@@ -60,6 +78,7 @@ let DainselfButton () =
                                     "uri", string uri
                                     "content-length", string file.size
                                     "content-type", file.``type``
+                                    "filename", file.name
                                 }
                             }
                         }
@@ -79,7 +98,9 @@ let DainselfButton () =
         }
         |> Async.startSafe
 
-    Mui.box @+ [ ] <| [
+    Mui.stack @+ [
+        stack.spacing 1
+    ] <| [
         Mui.button @+ [
             button.variant.outlined
             button.component' "label"
@@ -99,7 +120,15 @@ let DainselfButton () =
         match files with
         | FilesState.Empty -> ()
         | FilesState.Selected files ->
-            Mui.box @+ [ ] <| [
+            Mui.box @+ [
+                prop.sx {|
+                    display = "flex"
+                    flexWrap = "wrap"
+                    flexDirection = "row"
+                    justifyContent = "center"
+                    gap = 1
+                |}
+            ] <| [
                 for file in files ->
                     PreviewImage file
             ]
