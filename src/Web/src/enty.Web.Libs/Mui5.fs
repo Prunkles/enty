@@ -101,6 +101,8 @@ type Mui =
 
     static member inline link(props) = createElementImportDefault "@mui/material/Link" props
 
+    static member inline modal(props) = createElementImportDefault "@mui/material/Modal" props
+
 [<RequireQualifiedAccess>]
 module MuiE =
 

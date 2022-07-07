@@ -183,10 +183,7 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
 
     Mui.box [
         Mui.stack @+ [ stack.direction.column ] <| [
-            Mui.stack @+ [
-                stack.direction.row
-                prop.sx {| display = "flex" |}
-            ] <| [
+            MuiE.stackRow @+ [ ] <| [
                 Mui.textField [
                     prop.sx {| flexGrow = 1 |}
                     textField.label "URI"
