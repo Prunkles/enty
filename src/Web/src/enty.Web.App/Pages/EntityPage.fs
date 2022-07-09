@@ -89,11 +89,14 @@ let EntityPage (entityId: EntityId) =
             | Some imageSense ->
                 Html.a @+ [
                     prop.href imageSense.Uri
-                    prop.style [ style.width.minContent ]
+                    prop.style [
+                        style.width (length.perc 100)
+                    ]
                 ] <| [
                     Html.img [
                         prop.style [
                             style.maxHeight (length.vh 100)
+                            style.maxWidth (length.perc 100)
                         ]
                         prop.src imageSense.Uri
                     ]
