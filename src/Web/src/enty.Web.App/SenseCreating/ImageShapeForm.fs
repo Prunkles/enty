@@ -182,7 +182,7 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
         dispatch (ImageSenseShapeForm.Msg.UrlInputChanged input)
 
     Mui.box [
-        Mui.stack @+ [ stack.direction.column ] <| [
+        Mui.stack @+ [ stack.direction.column; stack.spacing 1 ] <| [
             MuiE.stackRow @+ [ ] <| [
                 Mui.textField [
                     prop.sx {| flexGrow = 1 |}
@@ -219,13 +219,17 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
                     ]
                 ]
             ]
-            Mui.box @+ [] <| [
-                Html.img [
-                    match state.Status with
-                    | ImageSenseShapeForm.Status.Valid uri ->
+            match state.Status with
+            | ImageSenseShapeForm.Status.Valid uri ->
+                Mui.box @+ [] <| [
+                    Html.img [
                         prop.src (string uri)
-                    | _ -> ()
+                        prop.style [
+                            style.maxHeight (length.px 600)
+                            style.maxWidth (length.perc 100)
+                        ]
+                    ]
                 ]
-            ]
+            | _ -> ()
         ]
     ]
