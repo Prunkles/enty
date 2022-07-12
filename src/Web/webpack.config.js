@@ -70,6 +70,13 @@ module.exports = {
                     '^/mind': '',
                 },
             },
+            '/image-thumbnail/**': {
+                target: 'http://localhost:' + '9000',
+                changeOrigin: true,
+                pathRewrite: {
+                    '^/image-thumbnail': '',
+                },
+            }
         },
         setupMiddlewares: (middlewares, devServer) => {
             devServer.app.get('/storage-address', (_, response) => {

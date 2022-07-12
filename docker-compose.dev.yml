@@ -55,6 +55,13 @@ services:
             - ./.cache/docker/storage/storage:/enty/src/enty.ResourceStorage.Server/storage
         working_dir: /enty/src/enty.ResourceStorage.Server
         command: dotnet watch run
+    imaginary:
+        container_name: imaginary
+        image: h2non/imaginary
+        network_mode: host
+        environment:
+            - PORT=9000
+        command: -enable-url-source
 #    webapp:
 #        container_name: webapp
 ##        image: prunkles/dotnet-node:dotnet-sdk-6.0_node-16

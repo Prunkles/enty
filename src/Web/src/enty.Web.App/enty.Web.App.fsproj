@@ -18,7 +18,7 @@
         <Compile Include="SenseFormatting.fs" />
         <Compile Include="SenseParsing.fs" />
         <Compile Include="MindApi.fs" />
-        <Compile Include="ImagePreviewService.fs" />
+        <Compile Include="ImageThumbnailService.fs" />
         <Compile Include="ResourceStorage.fs" />
         <Compile Include="SenseShapes\SenseShapes.fs" />
         <Compile Include="SenseCreating\ImageShapeForm.fs" />
