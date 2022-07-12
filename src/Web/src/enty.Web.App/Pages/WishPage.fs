@@ -192,7 +192,8 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                     ]
             ]
             Mui.pagination [
-                pagination.count (total / pageSize + 1)
+                let pageCount = ceil (float total / float pageSize) |> int
+                pagination.count pageCount
                 pagination.page pageNumber
                 pagination.onChange (fun _ p -> handlePageNumberChanged p)
             ]
