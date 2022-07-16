@@ -54,6 +54,18 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
             textField.label "Tags"
             textField.value tagsInput
             textField.onChange setTagsInput
+            match tags with
+            | Error errors ->
+                textField.error true
+                textField.helperText (
+                    Html.pre [
+                        prop.style [
+                            style.margin 0
+                        ]
+                        prop.text $"{errors}"
+                    ]
+                )
+            | _ -> ()
         ]
         match tags with
         | Ok tags ->
@@ -67,6 +79,5 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
                         chip.variant.outlined
                     ]
             ]
-        | Error error ->
-            Html.h1 $"Invalid input: {error}"
+        | _ -> ()
     ]
