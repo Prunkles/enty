@@ -8,7 +8,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\enty.Utils\enty.Utils.fsproj" />
         <ProjectReference Include="..\..\..\enty.Core\enty.Core.fsproj" />
-        <ProjectReference Include="..\..\..\enty.ImagePreviewService.Client.Fable\enty.ImagePreviewService.Client.Fable.fsproj" />
         <ProjectReference Include="..\enty.Mind.Client.Fable\enty.Mind.Client.Fable.fsproj" />
         <ProjectReference Include="..\enty.Web.Libs\enty.Web.Libs.fsproj" />
     </ItemGroup>

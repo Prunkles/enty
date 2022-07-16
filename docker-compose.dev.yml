@@ -28,6 +28,8 @@ services:
             - ./.cache/docker/mind/.dotnet:/root/.dotnet
             - ./.cache/docker/mind/.local/share/NuGet:/root/.local/share/NuGet
             - ./.cache/docker/mind/.nuget:/root/.nuget
+            - ./.cache/docker/mind/bin:/enty/src/enty.Mind.Server/bin
+            - ./.cache/docker/mind/obj:/enty/src/enty.Mind.Server/obj
         working_dir: /enty/src/enty.Mind.Server
         depends_on:
             - db
@@ -53,6 +55,8 @@ services:
             - ./.cache/docker/storage/.local/share/NuGet:/root/.local/share/NuGet
             - ./.cache/docker/storage/.nuget:/root/.nuget
             - ./.cache/docker/storage/storage:/enty/src/enty.ResourceStorage.Server/storage
+            - ./.cache/docker/storage/bin:/enty/src/enty.ResourceStorage.Server/bin
+            - ./.cache/docker/storage/obj:/enty/src/enty.ResourceStorage.Server/obj
         working_dir: /enty/src/enty.ResourceStorage.Server
         command: dotnet watch run
     imaginary:
