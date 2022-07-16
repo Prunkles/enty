@@ -7,7 +7,7 @@ open enty.Core
 // TODO: Use abstract parse lib
 
 [<RequireQualifiedAccess>]
-module rec Sense =
+module Sense =
 
     [<RequireQualifiedAccess>]
     type ParseErrorKind =
@@ -42,12 +42,13 @@ module rec Sense =
         | Single
         | Double
 
+    [<RequireQualifiedAccess>]
     module private ParseState =
         let inline goto (newLocation: int) (state: ParseState) : ParseState =
             if newLocation <= state.Input.Length then
                 { state with Location = newLocation }
             else
-                failwith "Move outside source"
+                invalidOp "Move outside source"
 
         let inline next (state: ParseState) : ParseState =
             goto (state.Location + 1) state
@@ -56,8 +57,9 @@ module rec Sense =
             state.Location >= state.Input.Length
 
         let inline peek (state: ParseState) : Option<char> =
-            if state.Location + 1 >= state.Input.Length then None
-            else Some state.Input[state.Location + 1]
+            if state.Location + 1 >= state.Input.Length
+            then None
+            else Some state.Input.[state.Location + 1]
 
         let inline error (kind: ParseErrorKind) (state: ParseState) : ParseError =
             { Input = state.Input
@@ -66,7 +68,7 @@ module rec Sense =
               Alt = None }
 
         let inline current (state: ParseState) : char =
-            state.Input[state.Location]
+            state.Input.[state.Location]
 
     let private parseIdentStateful (ps: ParseState) : Result<string * ParseState, ParseError> =
         if ParseState.isEmpty ps then
@@ -80,8 +82,7 @@ module rec Sense =
                 else Ok (acc.ToString(), ps)
             else
 
-            let ch = ParseState.current ps
-            match ch with
+            match ParseState.current ps with
             | '"' when quote = QuoteMode.Double -> Ok (acc.ToString(), ParseState.next ps)
             | '"' when quote = QuoteMode.None -> Error (ParseState.error ParseErrorKind.UnexpectedQuoteOpening ps)
             | '\'' when quote = QuoteMode.Single -> Ok (acc.ToString(), ParseState.next ps)
@@ -124,7 +125,7 @@ module rec Sense =
             | _ -> ps
         loop ps
 
-    let private parseExprStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
+    let rec private parseExprStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
         let maxErr (errs: ParseError list) : ParseError =
            List.maxBy (fun x -> x.Location) errs
         match parseIdentStateful ps with
@@ -139,7 +140,7 @@ module rec Sense =
                     Error <| maxErr [identErr; arrayErr; mapErr]
                     //Error { identErr with Alt = Some { arrayErr with Alt = Some mapErr } }
 
-    let private parseListStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
+    and private parseListStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
         let rec loop (ps: ParseState) (acc: Sense list) : Result<Sense * ParseState, ParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
@@ -158,7 +159,7 @@ module rec Sense =
         | '[' -> loop (ParseState.next ps) []
         | _ -> Error (ParseState.error ParseErrorKind.ExpectedList ps)
 
-    let private parseMapStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
+    and private parseMapStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
         let rec loop (ps: ParseState) (key: string option) (map: Map<string, Sense>) : Result<Sense * ParseState, ParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
@@ -197,6 +198,6 @@ module rec Sense =
                 Ok sense
             else
                 let e = ParseState.error ParseErrorKind.UnexpectedChar ps
-                Error (sprintf $"%A{e}")
+                Error $"%A{e}"
         | Error e ->
-            Error (sprintf $"%A{e}")
+            Error $"%A{e}"
