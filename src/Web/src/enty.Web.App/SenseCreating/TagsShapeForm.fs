@@ -57,7 +57,14 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
             match tags with
             | Error errors ->
                 textField.error true
-                textField.helperText (Html.pre $"{errors}")
+                textField.helperText (
+                    Html.pre [
+                        prop.style [
+                            style.margin 0
+                        ]
+                        prop.text $"{errors}"
+                    ]
+                )
             | _ -> ()
         ]
         match tags with
