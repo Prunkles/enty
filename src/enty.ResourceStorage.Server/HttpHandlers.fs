@@ -5,12 +5,12 @@ open System.IO
 open System.Net.Mime
 open System.Security.Cryptography
 open System.Text
-open Giraffe
-open FSharp.Control.Tasks
 open Microsoft.AspNetCore.Http
-open Microsoft.Extensions.Logging
-open Microsoft.Extensions.Primitives
 open Microsoft.Net.Http.Headers
+open FSharp.Control.Tasks
+open Giraffe
+open Giraffe.EndpointRouting
+
 open enty.ResourceStorage
 
 
@@ -18,11 +18,13 @@ let inline getStorage (ctx: HttpContext) = ctx.GetService<IResourceStorage>()
 
 let (|Apply|) f x = f x
 
-let readHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
+let resourceNotFound (ResourceId rid) =
+    RequestErrors.notFound (text $"Resource {(rid: Guid)} not found")
+
+let handleRead (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     let storage = getStorage ctx
     match! storage.Read(rid) with
     | Ok (resReader, meta) ->
-
         let headers = ctx.Response.GetTypedHeaders()
         match meta.ContentType with Some x -> headers.ContentType <- MediaTypeHeaderValue(x) | _ -> ()
         match meta.ETag with Some x -> headers.ETag <- EntityTagHeaderValue(x) | _ -> ()
@@ -34,10 +36,10 @@ let readHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
         do! resReader.CompleteAsync()
         return! Successful.ok id next ctx
     | Error () ->
-        return! RequestErrors.notFound (text $"Resource {ResourceId.Unwrap rid} not found") next ctx
+        return! resourceNotFound rid next ctx
 }
 
-let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
+let handleWrite (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     use hashAlg: HashAlgorithm = upcast MD5.Create()
     let storage = getStorage ctx
 
@@ -59,7 +61,6 @@ let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
             file.ContentDisposition
             |> Option.ofObj
             |> Option.map ^fun contentDispositionString ->
-                printfn $">>>Content-Disposition: {contentDispositionString}"
                 let contentDisposition = ContentDisposition(contentDispositionString)
                 contentDisposition.Inline <- true
                 contentDisposition.ToString()
@@ -77,19 +78,17 @@ let writeHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     return! Successful.ok id next ctx
 }
 
-let deleteHandler (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
+let handleDelete (Apply ResourceId rid) : HttpHandler = fun next ctx -> task {
     let storage = getStorage ctx
     do! storage.Delete(rid)
     return! next ctx
 }
 
 
-open Giraffe.EndpointRouting
-
 let endpoints = [
-    GET [ routef "/%O" readHandler ]
-    POST [ routef "/%O" writeHandler ]
-    DELETE [ routef "/%O" deleteHandler ]
+    GET_HEAD [ routef "/%O" handleRead ]
+    POST [ routef "/%O" handleWrite ]
+    DELETE [ routef "/%O" handleDelete ]
 ]
 
 let notFoundHandler: HttpHandler =

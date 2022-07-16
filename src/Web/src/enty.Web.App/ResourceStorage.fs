@@ -28,5 +28,6 @@ module ResourceStorageHardcodeImpl =
     let init () = async {
         let! response = Fetch.fetch "/storage-address" [] |> Async.AwaitPromise
         let! baseUrl = response.text() |> Async.AwaitPromise
+        printfn $"[DBG] ResourceStorage base url: {baseUrl}"
         resourceStorage <- ResourceStorage(baseUrl)
     }

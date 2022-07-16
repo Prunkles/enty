@@ -29,12 +29,12 @@ type EntyDataConnection(options: LinqToDbConnectionOptions<EntyDataConnection>) 
     member this.Entities = this.GetTable<EntityDao>()
 
 
-type DbMind(logger: ILogger<DbMind>, db: EntyDataConnection) =
+type DbMindService(logger: ILogger<DbMindService>, db: EntyDataConnection) =
 
-    interface IMind with
+    interface IMindService with
         member this.Remember(EntityId entityId, sense) = async {
             logger.LogInformation("Remembering entity {EntityId}", entityId)
-            logger.LogTrace("Remembering entity {EntityId} with sense {@Sense}", entityId, sense)
+            logger.LogTrace("Remembering entity {EntityId} with sense {Sense}", entityId, sense)
             let senseJson = (Sense.toJToken sense).ToString()
             let dts = DateTime.Now
             do! db.ExecuteAsync("""
@@ -63,7 +63,7 @@ type DbMind(logger: ILogger<DbMind>, db: EntyDataConnection) =
         }
 
         member this.GetEntities(eids) = async {
-            logger.LogInformation("Getting entities {@EntityIds}", eids)
+            logger.LogInformation("Getting entities {EntityIds}", eids)
             let eids = eids |> Seq.map (fun (EntityId x) -> x)
             let q = query {
                 for entity in db.Entities do
@@ -82,9 +82,9 @@ type DbMind(logger: ILogger<DbMind>, db: EntyDataConnection) =
             return entities
         }
 
-        member this.Wish(wish, offset, limit) = async {
+        member this.Wish(wish, ordering, offset, limit) = async {
             logger.LogInformation("Wishing +{Offset}-{Limit} entities", offset, limit)
-            logger.LogTrace("Wishing +{Offset}-{Limit} entities by {@Wish}", offset, limit, wish)
+            logger.LogTrace("Wishing +{Offset}-{Limit} entities by {Wish}", offset, limit, wish)
             let selectEntitiesByIds ids = query {
                 for e in db.Entities do
                 join id in ids on (e.Id = id)
@@ -154,10 +154,18 @@ type DbMind(logger: ILogger<DbMind>, db: EntyDataConnection) =
                             .Distinct()
                     selectEntitiesByIds ids
 
-            let q = query {
-                for e in queryWish wish do
-                select e.Id
-            }
+            let q =
+                let unorderedEntities = queryWish wish
+                let orderedEntities =
+                    match ordering with
+                    | { Key = WishOrderingKey.ByCreation; Descending = false } -> unorderedEntities.OrderBy(fun e -> e.CreatedDts)
+                    | { Key = WishOrderingKey.ByCreation; Descending = true } -> unorderedEntities.OrderByDescending(fun e -> e.CreatedDts)
+                    | { Key = WishOrderingKey.ByUpdated; Descending = false } -> unorderedEntities.OrderBy(fun e -> e.UpdatedDts)
+                    | { Key = WishOrderingKey.ByUpdated; Descending = true } -> unorderedEntities.OrderByDescending(fun e -> e.UpdatedDts)
+                    | { Key = WishOrderingKey.ById; Descending = false } -> unorderedEntities.OrderBy(fun e -> e.Id)
+                    | { Key = WishOrderingKey.ById; Descending = true } -> unorderedEntities.OrderByDescending(fun e -> e.Id)
+                orderedEntities.Select(fun e -> e.Id)
+
 
             let! total = q.CountAsync() |> Async.AwaitTask
             let! eids = q.Skip(offset).Take(limit).Select(EntityId).ToArrayAsync() |> Async.AwaitTask

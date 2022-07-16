@@ -77,23 +77,22 @@ let App () =
             Mui.cssBaseline []
             AppBar ()
             Mui.container [
-                Mui.box [
+                Mui.box @+ [
                     box.sx {| pt = 2 |}
-                    box.children [
-                        match page with
-                        | Page.Index -> Html.h1 "Index"
-                        | Page.CreateEntity -> CreateEntityPage ()
-                        | Page.EditEntity eid -> EditEntityPage.EditEntityPage eid
-                        | Page.Wish props ->
-                            let initial =
-                                match props with
-                                | Some (wishString, pageNumber) -> Some { WishString = wishString; PageNumber = pageNumber }
-                                | None -> None
-                            WishPage {| Initials = initial |}
-                        | Page.Entity eid -> EntityPage eid
-                        | Page.DainselfButton -> DainselfButton.DainselfButton ()
-                        | Page.NotFound -> Html.h1 "Not found"
-                    ]
+                ] <| [
+                    match page with
+                    | Page.Index -> Html.h1 "Index"
+                    | Page.CreateEntity -> CreateEntityPage ()
+                    | Page.EditEntity eid -> EditEntityPage.EditEntityPage eid
+                    | Page.Wish props ->
+                        let initial =
+                            match props with
+                            | Some (wishString, pageNumber) -> Some { WishString = wishString; PageNumber = pageNumber }
+                            | None -> None
+                        WishPage {| Initials = initial |}
+                    | Page.Entity eid -> EntityPage eid
+                    | Page.DainselfButton -> DainselfButton.DainselfButton ()
+                    | Page.NotFound -> Html.h1 "Not found"
                 ]
             ]
         ]

@@ -1,15 +1,14 @@
 ﻿namespace enty.Mind.Client.Fable
 
-open System
 open Fable.Core
 open Fable.Core.JsInterop
-open Khonsu.Coding.Json
-open Khonsu.Coding.Json.Fable
-open enty.Core
-open SenseJsObject
-
 open Fable.SimpleHttp
 open Fetch
+open Khonsu.Coding.Json
+open Khonsu.Coding.Json.Fable
+
+open enty.Core
+open SenseJsObject
 
 
 [<AutoOpen>]
@@ -18,11 +17,20 @@ module AsyncBuilderPromiseExtensions =
         member this.Source(a: Async<'a>): Async<'a> = a
         member this.Source(p: JS.Promise<'a>): Async<'a> = Async.AwaitPromise(p)
 
+[<RequireQualifiedAccess>]
+type WishOrderingKey =
+    | ByCreation
+    | ByUpdated
+    | ById
+
+type WishOrdering =
+    { Descending: bool
+      Key: WishOrderingKey }
 
 type IMindApi =
     abstract Remember: eid: EntityId * senseString: string -> Async<Result<unit, string>>
     abstract Forget: eid: EntityId -> Async<unit>
-    abstract Wish: wishString: string * offset: int * limit: int -> Async<Result<EntityId[] * int, string>>
+    abstract Wish: wishString: string * ordering: WishOrdering * offset: int * limit: int -> Async<Result<EntityId[] * int, string>>
     abstract GetEntities: eids: EntityId[] -> Async<Entity[]>
 
 type FetchMindApi(baseAddress: string) =
@@ -81,10 +89,14 @@ type FetchMindApi(baseAddress: string) =
             else
                 return Ok ()
         }
-        member this.Wish(wishString, offset, limit) = async {
+        member this.Wish(wishString, ordering, offset, limit) = async {
             let requestBodyString =
                 let encoded = JsonAEncode.object [
                     "wishString", JsonAEncode.string wishString
+                    "ordering", JsonAEncode.object [
+                        "key", JsonAEncode.string <| match ordering.Key with WishOrderingKey.ByCreation -> "ByCreation" | WishOrderingKey.ByUpdated -> "ByUpdated" | WishOrderingKey.ById -> "ById"
+                        "descending", JsonAEncode.bool ordering.Descending
+                    ]
                 ]
                 jsonEncoding.EncodeToString(encoded jsonEncoding)
             let url = $"{baseAddress}/wish?offset={offset}&limit={limit}"

@@ -92,3 +92,25 @@ type Mui =
     static member inline pagination(props) = createElementImportDefault "@mui/material/Pagination" props
 
     static member inline circularProgress(props) = createElementImportDefault "@mui/material/CircularProgress" props
+
+    static member inline select(props) = createElementImportDefault "@mui/material/Select" props
+
+    static member inline menuItem(props) = createElementImportDefault "@mui/material/MenuItem" props
+
+    static member inline checkbox(props) = createElementImportDefault "@mui/material/Checkbox" props
+
+    static member inline link(props) = createElementImportDefault "@mui/material/Link" props
+
+    static member inline modal(props) = createElementImportDefault "@mui/material/Modal" props
+
+[<RequireQualifiedAccess>]
+module MuiE =
+
+    let inline boxSx (sx: obj) props =
+        Mui.box (box.sx sx :: props)
+
+    let inline stackCol props =
+        Mui.stack (stack.direction.column :: props)
+
+    let inline stackRow props =
+        Mui.stack (stack.direction.row :: props)

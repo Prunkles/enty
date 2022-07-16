@@ -17,9 +17,10 @@ services:
         container_name: mind
         image: mcr.microsoft.com/dotnet/sdk:6.0
         ports:
-            - "5010:5010"
+            - "5010:80"
         environment:
-            - ASPNETCORE_URLS=https://0.0.0.0:5010
+            - ASPNETCORE_ENVIRONMENT=Development
+            - ASPNETCORE_URLS=http://+:80
             - ConnectionStrings__Default=Database=enty; User ID=postgres; Password=password; Host=db; Port=5432;
         volumes:
             - ./src:/enty/src
@@ -27,6 +28,8 @@ services:
             - ./.cache/docker/mind/.dotnet:/root/.dotnet
             - ./.cache/docker/mind/.local/share/NuGet:/root/.local/share/NuGet
             - ./.cache/docker/mind/.nuget:/root/.nuget
+            - ./.cache/docker/mind/bin:/enty/src/enty.Mind.Server/bin
+            - ./.cache/docker/mind/obj:/enty/src/enty.Mind.Server/obj
         working_dir: /enty/src/enty.Mind.Server
         depends_on:
             - db
@@ -36,31 +39,14 @@ services:
                 dotnet dev-certs https --trust
                 dotnet watch run
             "
-    mind-gateway:
-        container_name: mind-gateway
-        image: mcr.microsoft.com/dotnet/sdk:6.0
-        ports:
-            - "5015:5015"
-        environment:
-            - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5015
-            - Mind__Address=https://mind:5010
-        volumes:
-            - ./src:/enty/src
-            - ./lib:/enty/lib
-            - ./.cache/docker/mind-gateway/.dotnet:/root/.dotnet
-            - ./.cache/docker/mind-gateway/.local/share/NuGet:/root/.local/share/NuGet
-            - ./.cache/docker/mind-gateway/.nuget:/root/.nuget
-        working_dir: /enty/src/enty.Mind.Gateway.Server
-        depends_on:
-            - mind
-        command: dotnet watch run
     storage:
         container_name: storage
         image: mcr.microsoft.com/dotnet/sdk:6.0
         ports:
-            - "5020:5020"
+            - "5020:80"
         environment:
-            - ASPNETCORE_URLS=http://0.0.0.0:5020
+            - ASPNETCORE_ENVIRONMENT=Development
+            - ASPNETCORE_URLS=http://+:80
             - Storage__Path=./storage/
         volumes:
             - ./src:/enty/src
@@ -69,8 +55,17 @@ services:
             - ./.cache/docker/storage/.local/share/NuGet:/root/.local/share/NuGet
             - ./.cache/docker/storage/.nuget:/root/.nuget
             - ./.cache/docker/storage/storage:/enty/src/enty.ResourceStorage.Server/storage
+            - ./.cache/docker/storage/bin:/enty/src/enty.ResourceStorage.Server/bin
+            - ./.cache/docker/storage/obj:/enty/src/enty.ResourceStorage.Server/obj
         working_dir: /enty/src/enty.ResourceStorage.Server
         command: dotnet watch run
+    imaginary:
+        container_name: imaginary
+        image: h2non/imaginary
+        network_mode: host
+        environment:
+            - PORT=9000
+        command: -enable-url-source
 #    webapp:
 #        container_name: webapp
 ##        image: prunkles/dotnet-node:dotnet-sdk-6.0_node-16
@@ -100,10 +95,10 @@ services:
             context: .
             dockerfile: ./src/Web/Dockerfile
         ports:
-            - "8081:80"
+            - "8080:80"
         environment:
-            - ENTY_MIND_ADDRESS=http://mind-gateway:5015/
+            - ENTY_MIND_ADDRESS=http://mind:5010/
             - ENTY_STORAGE_ADDRESS=http://localhost:5020/
         depends_on:
-            - mind-gateway
+            - mind
             - storage

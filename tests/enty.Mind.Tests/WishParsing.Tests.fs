@@ -5,7 +5,7 @@ open Swensen.Unquote
 
 open enty.Utils
 open enty.Mind
-open enty.Mind.Gateway.WishParsing
+open enty.Mind.Parsing.WishParsing
 
 
 [<Fact>]
@@ -48,14 +48,10 @@ let ``Parsing <!(a & b)>`` () : unit =
     let wish = Wish.parse wishString
     let expected =
         Wish.Operator (
-            WishOperator.And (
+            WishOperator.Not (
                 Wish.Operator (
-                    WishOperator.Not (
-                        Wish.ValueIs ([], "a")
-                    )
-                ),
-                Wish.Operator (
-                    WishOperator.Not (
+                    WishOperator.And (
+                        Wish.ValueIs ([], "a"),
                         Wish.ValueIs ([], "b")
                     )
                 )

@@ -11,4 +11,7 @@ server {
         add_header Content-Type text/plain;
         return 200 '${ENTY_STORAGE_ADDRESS}';
     }
+    location /image-thumbnail/ {
+        proxy_pass ${ENTY_IMAGE_THUMBNAIL_ADDRESS};
+    }
 }

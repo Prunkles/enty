@@ -10,11 +10,14 @@ open Feliz
 open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
+open FsToolkit.ErrorHandling
 open enty.Core
 open enty.Utils
 open enty.Web.App
-open enty.Web.App.SenseFormatting
 open enty.Web.App.Utils
+open enty.Web.App.SenseFormatting
+open enty.Web.App.SenseCreating.TagsShapeForm
+
 
 type FilesState =
     | Empty
@@ -23,8 +26,26 @@ type FilesState =
 [<ReactComponent>]
 let PreviewImage (file: File) =
     let src = React.useMemo((fun () -> emitJsExpr (file) "URL.createObjectURL($0)"), [|file|])
-    Html.img [
-        prop.src src
+    Mui.paper @+ [
+        prop.sx {|
+            height = 300
+            width = 250
+            display = "flex"
+            justifyContent = "center"
+            alignContent = "center"
+        |}
+    ] <| [
+        Mui.box @+ [
+            prop.sx {|
+                backgroundImage = $"url({src})"
+                backgroundSize = "contain"
+                backgroundRepeat = "no-repeat"
+                backgroundPosition = "center"
+                height = "100%"
+                width = "100%"
+            |}
+            prop.src src
+        ] <| [ ]
     ]
 
 [<ReactComponent>]
@@ -35,7 +56,7 @@ let DainselfButton () =
     let handleFilesSelected (files: File array) =
         setFiles (FilesState.Selected files)
 
-    let tagsSenseChanged (sense: Result<Sense, string>) =
+    let tagsSenseChanged (sense: Validation<Sense, string>) =
         match sense with
         | Ok sense ->
             setTags (Some sense)
@@ -57,6 +78,7 @@ let DainselfButton () =
                                     "uri", string uri
                                     "content-length", string file.size
                                     "content-type", file.``type``
+                                    "filename", file.name
                                 }
                             }
                         }
@@ -76,37 +98,42 @@ let DainselfButton () =
         }
         |> Async.startSafe
 
-    Mui.box [
-        box.children [
-            Mui.button [
-                button.variant.outlined
-                button.component' "label"
-                button.children [
-                    Html.text "Select images"
-                    Html.input [
-                        input.type' "file"
-                        prop.multiple true
-                        prop.hidden true
-                        prop.onChange (fun (e: Event) ->
-                            let files: File array = e.target?files
-                            handleFilesSelected files
-                        )
-                    ]
-                ]
+    Mui.stack @+ [
+        stack.spacing 1
+    ] <| [
+        Mui.button @+ [
+            button.variant.outlined
+            button.component' "label"
+        ] <| [
+            Html.text "Select images"
+            Html.input [
+                input.type' "file"
+                prop.multiple true
+                prop.hidden true
+                prop.onChange (fun (e: Event) ->
+                    let files: File array = e.target?files
+                    handleFilesSelected files
+                )
             ]
-            EntityCreating.TagSenseShapeForm (Sense.empty ()) tagsSenseChanged
-            match files with
-            | FilesState.Empty -> ()
-            | FilesState.Selected files ->
-                Mui.box [
-                    box.children [
-                        for file in files ->
-                            PreviewImage file
-                    ]
-                ]
-                Mui.button [
-                    prop.text "Batch create"
-                    prop.onClick (fun _ -> handleBatchCreateClicked files)
-                ]
         ]
+        TagsSenseShapeForm (Sense.empty ()) tagsSenseChanged
+        match files with
+        | FilesState.Empty -> ()
+        | FilesState.Selected files ->
+            Mui.box @+ [
+                prop.sx {|
+                    display = "flex"
+                    flexWrap = "wrap"
+                    flexDirection = "row"
+                    justifyContent = "center"
+                    gap = 1
+                |}
+            ] <| [
+                for file in files ->
+                    PreviewImage file
+            ]
+            Mui.button [
+                prop.text "Batch create"
+                prop.onClick (fun _ -> handleBatchCreateClicked files)
+            ]
     ]

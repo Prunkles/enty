@@ -7,6 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="..\enty.Mind.Api\openapi.yaml">
+          <Link>openapi.yaml</Link>
+        </None>
         <Content Include="Dockerfile" />
         <Content Include="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -18,17 +21,17 @@
         <Compile Include="LinqToDbPostgresExtensions.fs" />
         <Compile Include="SenseJToken.fs" />
         <Compile Include="Mind.fs" />
-        <Compile Include="DbMind.fs" />
+        <Compile Include="DbMindService.fs" />
         <Compile Include="Database\Migrations.fs" />
-        <Compile Include="GrpcServerMindService.fs" />
+        <Compile Include="Endpoints.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\lib\Khonsu.Coding.Json.Net\Khonsu.Coding.Json.Net.fsproj" />
-        <ProjectReference Include="..\enty.Mind.Grpc.Server\enty.Mind.Grpc.Server.csproj" />
-        <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
         <ProjectReference Include="..\pdewebq.Extensions.Serilog\pdewebq.Extensions.Serilog.fsproj" />
+        <ProjectReference Include="..\enty.Mind.Parsing\enty.Mind.Parsing.fsproj" />
+        <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -36,12 +39,12 @@
         <PackageReference Include="FluentMigrator.Extensions.Postgres" Version="3.3.1" />
         <PackageReference Include="FluentMigrator.Runner" Version="3.3.1" />
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.1" />
-        <PackageReference Include="FParsec" Version="1.1.1" />
         <PackageReference Include="Giraffe" Version="5.0.0" />
         <PackageReference Include="linq2db" Version="3.6.0" />
         <PackageReference Include="linq2db.AspNet" Version="3.6.0" />
         <PackageReference Include="Npgsql" Version="6.0.2" />
         <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
+        <PackageReference Include="Serilog.Enrichers.MessageTemplate" Version="1.0.1" />
     </ItemGroup>
 
 </Project>

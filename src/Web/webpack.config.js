@@ -64,12 +64,19 @@ module.exports = {
         hot: true,
         proxy: {
             '/mind/**': {
-                target: 'http://localhost:' + '5015',
+                target: 'http://localhost:' + '5010',
                 changeOrigin: true,
                 pathRewrite: {
                     '^/mind': '',
                 },
             },
+            '/image-thumbnail/**': {
+                target: 'http://localhost:' + '9000',
+                changeOrigin: true,
+                pathRewrite: {
+                    '^/image-thumbnail': '',
+                },
+            }
         },
         setupMiddlewares: (middlewares, devServer) => {
             devServer.app.get('/storage-address', (_, response) => {

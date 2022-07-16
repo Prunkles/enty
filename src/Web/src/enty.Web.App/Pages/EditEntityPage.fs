@@ -5,19 +5,20 @@ open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
 open Feliz.Router
+open FsToolkit.ErrorHandling
 open enty.Core
 
 open enty.Web.App
 open enty.Web.App.Utils
-open enty.Web.App.EntityCreating
 open enty.Web.App.SenseFormatting
 open enty.Web.App.SenseParsing
+open enty.Web.App.SenseCreating.SenseCreateForm
 
 
 [<ReactComponent>]
 let EditEntityPage (entityId: EntityId) =
     let isCreatedSnackbarOpened, setIsCreatedSnackbarOpened = React.useState(false)
-    let handleSenseCreated (sense: Sense) =
+    let handleSenseEdited (sense: Sense) =
         async {
             let senseString = sense |> Sense.format
             let! result = MindApiImpl.mindApi.Remember(entityId, senseString)
@@ -35,10 +36,20 @@ let EditEntityPage (entityId: EntityId) =
         | [| entity |] -> return entity
         | _ -> return failwith $"Entity {entityId} not found"
     })
+    let editButton (sense: Validation<Sense, string>) =
+        Mui.button [
+            button.variant.contained
+            match sense with
+            | Ok sense ->
+                prop.onClick (fun _ -> handleSenseEdited sense)
+            | Error _errors ->
+                button.disabled true
+            button.children "Edit"
+        ]
     match entity with
     | Some entity ->
         React.fragment [
-            EntityCreateForm handleSenseCreated entity.Sense "Edit"
+            SenseCreateForm entity.Sense editButton
             Mui.snackbar [
                 snackbar.open' isCreatedSnackbarOpened
                 snackbar.onClose (fun _ -> handleCreatedSnackbarClosed ())
