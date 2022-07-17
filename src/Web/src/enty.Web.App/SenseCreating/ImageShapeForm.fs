@@ -29,20 +29,24 @@ module ImageSenseShapeForm =
           ContentLength: int option
           Filename: string option }
 
-    [<RequireQualifiedAccess>]
-    type Msg =
-        | UrlInputChanged of string
-        | FileSelected of File
-        | FileUploaded of File * Uri
-        | ImageMetadataReceived of ImageMetadata * Uri
-
-    type Status =
+    type UrlStatus =
         | Loading
         | Valid of Uri
         | Invalid
 
+    [<RequireQualifiedAccess>]
+    type Msg =
+        | UrlInputChanged of string
+        | UriValidated of UrlStatus
+        | FileSelected of File
+        | FileUploaded of Uri
+        | ImageSizesReceived of width: int * height: int
+        | ImageMetadataReceived of ImageMetadata
+
     type State =
-        { Status: Status
+        { Url: UrlStatus
+          Metadata: ImageMetadata option
+          ImageSize: (int * int) option
           UrlInput: string }
 
     let init (sense: Sense) =
@@ -50,16 +54,11 @@ module ImageSenseShapeForm =
             match ImageSenseShape.parse sense with
             | Some imageShape -> Cmd.ofMsg (Msg.UrlInputChanged imageShape.Uri)
             | None -> Cmd.none
-        { Status = Status.Invalid
+        { Url = UrlStatus.Invalid
+          Metadata = None
+          ImageSize = None
           UrlInput = String.Empty }
         , cmd
-
-    let imageSense (uri: Uri) =
-        senseMap {
-            "resource", senseMap {
-                "uri", string uri
-            }
-        }
 
     open global.Fetch
 
@@ -105,11 +104,11 @@ module ImageSenseShapeForm =
             return Ok metadata
     }
 
-    let update (onSenseChanged: Validation<Sense, string> -> unit) (msg: Msg) (state: State) : State * Cmd<Msg> =
+    let update (msg: Msg) (state: State) : State * Cmd<Msg> =
         match msg with
         | Msg.UrlInputChanged input ->
-            let uri = Uri.TryCreate(input, UriKind.Absolute) |> Option.ofTryByref
             let uriHeadCmd = Cmd.ofAsyncDispatch ^fun dispatch -> async {
+                let uri = Uri.TryCreate(input, UriKind.Absolute) |> Option.ofTryByref
                 match uri with
                 | Some uri ->
                     match! getImageMetadata (string uri) with
@@ -117,18 +116,26 @@ module ImageSenseShapeForm =
                         if metadata.ContentType.IsNone then printfn "WRN: Couldn't fetch image metadata ContentType"
                         if metadata.ContentLength.IsNone then printfn "WRN: Couldn't fetch image metadata ContentLength"
                         if metadata.Filename.IsNone then printfn "WRN: Couldn't fetch image metadata Filename"
-                        dispatch (Msg.ImageMetadataReceived (metadata, uri))
+                        dispatch (Msg.UriValidated (UrlStatus.Valid uri))
+                        dispatch (Msg.ImageMetadataReceived metadata)
                     | Error ex ->
-                        printfn $"WRN: Failed fetch image metadata: {ex}"
+                        dispatch (Msg.UriValidated UrlStatus.Invalid)
+                        // printfn $"WRN: Failed fetch image metadata: {ex}"
                 | None -> ()
             }
-            let status =
-                match uri with
-                | Some uri -> Status.Valid uri
-                | None -> Status.Invalid
-            { state with Status = status; UrlInput = input }
+            { state with UrlInput = input }
             , uriHeadCmd
+        | Msg.UriValidated urlStatus ->
+            { state with Url = urlStatus }, Cmd.none
+        | Msg.ImageSizesReceived (width, height) ->
+            let state = { state with ImageSize = Some (width, height) }
+            state, Cmd.none
         | Msg.FileSelected file ->
+            let imageMetadata =
+                { ContentType = Some file.``type``
+                  ContentLength = Some file.size
+                  Filename = Some file.name }
+            let state = { state with Metadata = Some imageMetadata }
             let uploadCmd =
                 Cmd.ofAsyncDispatch ^fun dispatch -> async {
                     let formData =
@@ -137,49 +144,58 @@ module ImageSenseShapeForm =
                     let! result = ResourceStorageHardcodeImpl.resourceStorage.Create(formData)
                     match result with
                     | Ok uri ->
-                        dispatch (Msg.FileUploaded (file, uri))
+                        dispatch (Msg.FileUploaded uri)
                     | Error reason ->
                         eprintfn $"{reason}"
                 }
             state, uploadCmd
-        | Msg.ImageMetadataReceived (imageMetadata, uri) ->
-            let sense = senseMap {
-                "image", senseMap {
-                    "resource", senseMap {
-                        "uri", string uri
-                        match imageMetadata.ContentType with Some contentType -> "content-type", contentType | _ -> ()
-                        match imageMetadata.ContentLength with Some contentLength -> "content-length", string contentLength | _ -> ()
-                        match imageMetadata.Filename with Some filename -> "filename", filename | _ -> ()
-                    }
-                    "size", "TODO"
-                }
-            }
-            { state with Status = Status.Valid uri; UrlInput = string uri }
-            , Cmd.ofSub (fun _ -> onSenseChanged (Ok sense))
-        | Msg.FileUploaded (file, uri) ->
-            let sense = senseMap {
-                "image", senseMap {
-                    "resource", senseMap {
-                        "uri", string uri
-                        "content-type", file.``type``
-                        "content-length", string file.size
-                        "filename", file.name
-                    }
-                    "size", "TODO"
-                }
-            }
-            { state with Status = Status.Valid uri; UrlInput = string uri }
-            , Cmd.ofSub (fun _ -> onSenseChanged (Ok sense))
+        | Msg.ImageMetadataReceived imageMetadata ->
+            let state = { state with Metadata = Some imageMetadata }
+            state, Cmd.none
+        | Msg.FileUploaded uri ->
+            let state = { state with Url = UrlStatus.Valid uri; UrlInput = string uri }
+            state, Cmd.none
 
 
 [<ReactComponent>]
 let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, string> -> unit) =
-    let state, dispatch = React.useElmish(ImageSenseShapeForm.init, ImageSenseShapeForm.update onSenseChanged, initialSense)
+    let state, dispatch = React.useElmish(ImageSenseShapeForm.init, ImageSenseShapeForm.update, initialSense)
     let selectFiles (ev: Event) =
         let selectedFile: Browser.Types.File = ev.target?files?(0)
         dispatch (ImageSenseShapeForm.Msg.FileSelected selectedFile)
     let changeUrlInput (input: string) =
         dispatch (ImageSenseShapeForm.Msg.UrlInputChanged input)
+
+    let handleImageLoaded (width: int) (height: int) =
+        dispatch (ImageSenseShapeForm.Msg.ImageSizesReceived (width, height))
+
+    React.useEffect(fun () ->
+        match state.Url with
+        | ImageSenseShapeForm.UrlStatus.Valid uri ->
+            let sense = senseMap {
+                "image", senseMap {
+                    "resource", senseMap {
+                        "uri", string uri
+                        match state.Metadata with
+                        | Some imageMetadata ->
+                            match imageMetadata.ContentType with Some contentType -> "content-type", contentType | _ -> ()
+                            match imageMetadata.ContentLength with Some contentLength -> "content-length", string contentLength | _ -> ()
+                            match imageMetadata.Filename with Some filename -> "filename", filename | _ -> ()
+                        | None -> ()
+                    }
+                    match state.ImageSize with
+                    | Some (width, height) ->
+                        "size", senseMap {
+                            "width", string width
+                            "height", string height
+                        }
+                    | None -> ()
+                }
+            }
+            onSenseChanged (Ok sense)
+        | _ ->
+            onSenseChanged (Validation.error $"Invalid URI: {state.UrlInput}")
+    , [| state :> obj |])
 
     Mui.box [
         Mui.stack @+ [ stack.direction.column; stack.spacing 1 ] <| [
@@ -190,13 +206,13 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
                     textField.variant.outlined
                     textField.value state.UrlInput
                     textField.onChange changeUrlInput
-                    match state.Status with
-                    | ImageSenseShapeForm.Status.Invalid ->
+                    match state.Url with
+                    | ImageSenseShapeForm.UrlStatus.Invalid ->
                         textField.error true
                         textField.helperText "Invalid URI"
-                    | ImageSenseShapeForm.Status.Loading ->
+                    | ImageSenseShapeForm.UrlStatus.Loading ->
                         textField.disabled true
-                    | ImageSenseShapeForm.Status.Valid _ ->
+                    | ImageSenseShapeForm.UrlStatus.Valid _ ->
                         textField.helperText "Valid URI"
                 ]
                 Mui.stack @+ [
@@ -219,8 +235,8 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
                     ]
                 ]
             ]
-            match state.Status with
-            | ImageSenseShapeForm.Status.Valid uri ->
+            match state.Url with
+            | ImageSenseShapeForm.UrlStatus.Valid uri ->
                 Mui.box @+ [] <| [
                     Html.img [
                         prop.src (string uri)
@@ -228,6 +244,10 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
                             style.maxHeight (length.px 600)
                             style.maxWidth (length.perc 100)
                         ]
+                        prop.onLoad (fun event ->
+                            let img = (event.target :?> HTMLImageElement)
+                            handleImageLoaded (int img.naturalWidth) (int img.naturalHeight)
+                        )
                     ]
                 ]
             | _ -> ()
