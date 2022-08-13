@@ -78,7 +78,10 @@ let App () =
             AppBar ()
             Mui.container [
                 Mui.box @+ [
-                    box.sx {| pt = 2 |}
+                    box.sx {|
+                        pt = 2
+                        pb = 4
+                    |}
                 ] <| [
                     match page with
                     | Page.Index -> Html.h1 "Index"
