@@ -12,3 +12,6 @@ module Todo =
         raise (System.NotImplementedException("TODO"))
 
 let (|Const|) x _ = x
+
+[<return: Struct>]
+let inline (|Equals|_|) x y = if x = y then ValueSome Equals else ValueNone
