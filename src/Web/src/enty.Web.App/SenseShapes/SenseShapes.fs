@@ -1,7 +1,9 @@
 namespace enty.Web.App.SenseShapes
 
+open System
 open FsToolkit.ErrorHandling
 open enty.Core
+open enty.Utils
 
 type ImageSenseShape =
     { Uri: string }
@@ -28,4 +30,18 @@ module TagsSenseShape =
             let! tags = sense |> Sense.tryItem "tags"
             let! tags = tags |> Sense.tryAsList
             return { Tags = tags }
+        }
+
+type UserSenseShape =
+    { UserName: string
+      Rating: float option }
+
+[<RequireQualifiedAccess>]
+module UserSenseShape =
+    let parse (sense: Sense) : UserSenseShape option =
+        option {
+            let! user = sense |> Sense.tryItem "user"
+            let! username = user |> Sense.tryItem "username" |> Option.bind Sense.tryAsValue
+            let rating = user |> Sense.tryItem "rating" |> Option.bind Sense.tryAsValue |> Option.bind (Double.TryParse >> Option.ofTryByref)
+            return { UserName = username; Rating = rating }
         }

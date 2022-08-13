@@ -94,6 +94,7 @@ let forms =
     let data: (string * SenseShapeFormElement) list = [
         "Image", ImageSenseShapeForm
         "Tags", TagsSenseShapeForm
+        "User", UserShapeForm.UserSenseShapeForm
     ]
     data
     |> Seq.indexed

@@ -22,6 +22,7 @@
         <Compile Include="SenseShapes\SenseShapes.fs" />
         <Compile Include="SenseCreating\ImageShapeForm.fs" />
         <Compile Include="SenseCreating\TagsShapeForm.fs" />
+        <Compile Include="SenseCreating\UserShapeForm.fs" />
         <Compile Include="SenseCreating\SenseCreateForm.fs" />
         <Compile Include="EntityThumbnail.fs" />
         <Compile Include="Pages\Page.fs" />
