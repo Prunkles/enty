@@ -5,6 +5,19 @@ open System.Text
 open enty.Core
 
 [<RequireQualifiedAccess>]
+module Map =
+
+    let tryExactlyOne (map: Map<'k, 'v>) : ('k * 'v) option =
+        map |> Map.toSeq |> Seq.tryExactlyOne
+
+    let (|ExactlyOne|_|) map =
+        tryExactlyOne map
+
+    let (|Empty|NonEmpty|) map =
+        if Map.isEmpty map then Empty else NonEmpty
+
+
+[<RequireQualifiedAccess>]
 module Sense =
 
     let private isValueSimple (value: string) =
@@ -52,21 +65,39 @@ module Sense =
                 then sb.Append(value) |> ignore
                 else sb.Append('"').Append(value).Append('"') |> ignore
             | Sense.List list ->
-                append "["
-                for value in list do
-                    appendLineIndentIndented ""
-                    appendSenseIndented value
-                appendLineIndent ""
-                append "]"
+                match list with
+                | [] ->
+                    append "[ ]"
+                | [ Sense.Value v ] ->
+                    append "[ "
+                    append v
+                    append " ]"
+                | list ->
+                    append "["
+                    for value in list do
+                        appendLineIndentIndented ""
+                        appendSenseIndented value
+                    appendLineIndent ""
+                    append "]"
             | Sense.Map map ->
-                append "{"
-                for KeyValue (key, value) in map do
-                    appendLineIndentIndented ""
-                    append key
+                match map with
+                | Map.Empty ->
+                    sb.Append("{ }") |> ignore
+                | Map.ExactlyOne (k, Sense.Value v) ->
+                    append "{ "
+                    append k
                     append " "
-                    appendSenseIndented value
-                appendLineIndent ""
-                append "}"
+                    append v
+                    append " }"
+                | map ->
+                    append "{"
+                    for KeyValue (key, value) in map do
+                        appendLineIndentIndented ""
+                        append key
+                        append " "
+                        appendSenseIndented value
+                    appendLineIndent ""
+                    append "}"
         let sb = StringBuilder()
         appendSense sb 0 sense
         sb.ToString()
