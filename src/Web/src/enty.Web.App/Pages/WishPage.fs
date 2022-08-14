@@ -255,6 +255,7 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                                 height = 300
                                 width = 250
                             |}
+                            prop.key (entity.Id |> EntityId.Unwrap)
                             box.children [
                                 EntityThumbnail.EntityThumbnail entity
                             ]
