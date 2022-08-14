@@ -13,6 +13,24 @@ open enty.Core
 open enty.Web.App.Pages
 open enty.Web.App.Utils
 
+[<ReactComponent>]
+let AppBarHeaderButton (name: string) (page: Page) =
+    let url = React.useMemo(fun () ->
+        page |> Page.formatPath
+    , [| page |])
+    Mui.button [
+        button.component' "button"
+        prop.sx {|
+            my=2; color="white"; display="block"
+            textAlign = "center"
+        |}
+        prop.text name
+        prop.onClick (fun event ->
+            event.preventDefault()
+            Router.navigatePath(url)
+        )
+        button.href url
+    ]
 
 [<ReactComponent>]
 let AppBar () =
@@ -41,21 +59,9 @@ let AppBar () =
                             Mui.box [
                                 box.sx {| flexGrow=1; display ="flex" |}
                                 box.children [
-                                    Mui.button [
-                                        prop.sx {| my=2; color="white"; display="block" |}
-                                        prop.text "Create"
-                                        prop.onClick (fun _ -> Router.navigatePath(Page.CreateEntity |> Page.formatPath))
-                                    ]
-                                    Mui.button [
-                                        prop.sx {| my=2; color="white"; display="block" |}
-                                        prop.text "Wish"
-                                        prop.onClick (fun _ -> Router.navigatePath(Page.Wish None |> Page.formatPath))
-                                    ]
-                                    Mui.button [
-                                        prop.sx {| my=2; color="white"; display="block" |}
-                                        prop.text "Dainself Button"
-                                        prop.onClick (fun _ -> Router.navigatePath(Page.DainselfButton |> Page.formatPath))
-                                    ]
+                                    AppBarHeaderButton "Create" Page.CreateEntity
+                                    AppBarHeaderButton "Wish" (Page.Wish None)
+                                    AppBarHeaderButton "Dainself Button" Page.DainselfButton
                                 ]
                             ]
                         ]
