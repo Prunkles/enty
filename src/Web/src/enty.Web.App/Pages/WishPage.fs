@@ -170,10 +170,14 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
         Mui.box @+ [ prop.sx {| display = "flex"; flexDirection = "row"; gap = 1 |} ] <| [
             Mui.box @+ [ prop.sx {| flexGrow = 1 |} ] <| [
                 Mui.textField [
-                    textField.value (state.WishInput |> function Some i -> i | None -> "")
-                    textField.fullWidth true
-                    textField.variant.outlined
                     textField.label "Wish"
+                    textField.variant.outlined
+                    textField.fullWidth true
+                    textField.value (state.WishInput |> function Some i -> i | None -> "")
+                    textField.onChange handleWishInputChanged
+                    match state.WishInput with
+                    | Some _ -> prop.onKeyUp(key.enter, fun _ -> handleSearch ())
+                    | _ -> ()
                     textField.InputProps [
                         input.endAdornment (
                             Mui.button [
@@ -185,8 +189,6 @@ let WishPage (props: {| Initials: WishPageInitials option |}) =
                             ]
                         )
                     ]
-                    prop.onKeyUp(key.enter, fun _ -> handleSearch ())
-                    textField.onChange handleWishInputChanged
                     match state.Status with
                     | Status.Error error ->
                         textField.error true
