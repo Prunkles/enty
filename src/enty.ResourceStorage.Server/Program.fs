@@ -3,6 +3,7 @@
 open System
 open System.IO
 open Microsoft.Net.Http.Headers
+open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
@@ -71,6 +72,15 @@ let createHostBuilder args =
             webBuilder
                 .ConfigureServices(Startup.configureServices)
                 .Configure(Startup.configureApp)
+                .UseKestrel(fun ctx options ->
+                    // https://github.com/dotnet/aspnetcore/issues/4765
+                    let s = ctx.Configuration.GetSection("Kestrel:Limits:MaxRequestBodySize")
+                    if s.Exists() then
+                        options.Limits.MaxRequestBodySize <-
+                            if s.Value = "null"
+                            then Nullable()
+                            else Nullable(s.Get<int64>())
+                )
             |> ignore
         )
 
