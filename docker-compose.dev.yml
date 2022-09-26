@@ -97,7 +97,7 @@ services:
         ports:
             - "8080:80"
         environment:
-            - ENTY_MIND_ADDRESS=http://mind:5010/
+            - ENTY_MIND_ADDRESS=http://mind/
             - ENTY_STORAGE_ADDRESS=http://localhost:5020/
         depends_on:
             - mind
