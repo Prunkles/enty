@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.7'
 
 services:
     db:
@@ -66,6 +66,15 @@ services:
         environment:
             - PORT=9000
         command: -enable-url-source
+    imaginary-cache:
+        image: nginx
+        volumes:
+            - ./src/Web/caching-layer:/etc/nginx/templates
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        environment:
+            - PORT=80
+            - PROXY_PASS=http://host.docker.internal:9000/
 #    webapp:
 #        container_name: webapp
 ##        image: prunkles/dotnet-node:dotnet-sdk-6.0_node-16
@@ -99,6 +108,7 @@ services:
         environment:
             - ENTY_MIND_ADDRESS=http://mind/
             - ENTY_STORAGE_ADDRESS=http://localhost:5020/
+            - ENTY_IMAGE_THUMBNAIL_ADDRESS=http://imaginary-cache/
         depends_on:
             - mind
             - storage

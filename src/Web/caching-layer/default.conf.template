@@ -1,0 +1,11 @@
+proxy_cache_path /var/cache/nginx keys_zone=my_cache:10m;
+server {
+    listen ${PORT};
+    proxy_cache my_cache;
+    location / {
+        proxy_set_header Host $host;
+        proxy_pass ${PROXY_PASS};
+        proxy_cache_key $scheme://$host$uri$is_args$query_string;
+        proxy_cache_valid 200 24h;
+    }
+}
