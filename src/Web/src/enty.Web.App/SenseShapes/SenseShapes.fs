@@ -45,3 +45,15 @@ module UserSenseShape =
             let rating = user |> Sense.tryItem "rating" |> Option.bind Sense.tryAsValue |> Option.bind (Double.TryParse >> Option.ofTryByref)
             return { UserName = username; Rating = rating }
         }
+
+type FeatsSenseShape =
+    { Feats: Map<string, Sense> }
+
+[<RequireQualifiedAccess>]
+module FeatsSenseShape =
+    let parse (sense: Sense) : FeatsSenseShape option = option {
+        let! feats = sense |> Sense.tryItem "feats"
+        match feats with
+        | Sense.Map feats -> return { Feats = feats }
+        | _ -> return! None
+    }

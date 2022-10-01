@@ -94,6 +94,7 @@ module Builders =
     type SenseMapBuilder() =
         member _.Yield((k: string, v: Sense)) = [ (k, v) ]
         member _.Yield((k: string, v: string)) = [ (k, Sense.Value v) ]
+        member _.YieldFrom(kvs: (string * Sense) list) = kvs
         member _.Zero() = []
         member _.For(sequence: 'a seq, body: 'a -> (string * Sense) list) = sequence |> Seq.collect body |> Seq.toList
         member _.Combine(ss1, ss2) = ss1 @ ss2

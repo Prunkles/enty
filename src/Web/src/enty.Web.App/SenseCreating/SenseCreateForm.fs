@@ -95,6 +95,7 @@ let forms =
         "Image", ImageSenseShapeForm
         "Tags", TagsSenseShapeForm
         "User", UserShapeForm.UserSenseShapeForm
+        "Feats", FeatsSenseShapeForm.FeatsSenseShapeForm
     ]
     data
     |> Seq.indexed
