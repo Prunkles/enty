@@ -59,18 +59,20 @@ module Sense =
             let appendLineIndent (s: string) = sb.AppendLine(s).Append(String(' ', 4 * indent)) |> ignore
             let appendLineIndentIndented (s: string) = sb.AppendLine(s).Append(String(' ', 4 * (indent + 1))) |> ignore
             let appendSenseIndented sense = appendSense sb (indent + 1) sense
-            match sense with
-            | Sense.Value value ->
+            let appendSenseValue (value: string) =
                 if isValueSimple value
                 then sb.Append(value) |> ignore
                 else sb.Append('"').Append(value).Append('"') |> ignore
+            match sense with
+            | Sense.Value value ->
+                appendSenseValue value
             | Sense.List list ->
                 match list with
                 | [] ->
                     append "[ ]"
                 | [ Sense.Value v ] ->
                     append "[ "
-                    append v
+                    appendSenseValue v
                     append " ]"
                 | list ->
                     append "["
@@ -87,7 +89,7 @@ module Sense =
                     append "{ "
                     append k
                     append " "
-                    append v
+                    appendSenseValue v
                     append " }"
                 | map ->
                     append "{"
