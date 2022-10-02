@@ -103,6 +103,11 @@ type Mui =
 
     static member inline modal(props) = createElementImportDefault "@mui/material/Modal" props
 
+    static member inline iconButton(props) = createElementImportDefault "@mui/material/IconButton" props
+
+    static member inline icon(props) = createElementImportDefault "@mui/material/Icon" props
+    static member inline icon(value: string) = createElementImportDefault "@mui/material/Icon" [ icon.children value ]
+
 [<RequireQualifiedAccess>]
 module MuiE =
 

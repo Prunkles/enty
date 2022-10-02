@@ -1,36 +1,37 @@
 module enty.Web.App.SenseParsing
 
 open System.Text
+open FsToolkit.ErrorHandling
 open enty.Core
 
 
 // TODO: Use abstract parse lib
 
 [<RequireQualifiedAccess>]
+type SenseParseErrorKind =
+    | UnexpectedChar
+
+    | ExpectedIdent
+    | ExpectedQuoteClosing
+    | UnexpectedQuoteOpening
+    | UnescapedChar
+    | ExpectedEscapedChar
+
+    | ExpectedList
+    | ExpectedListClosing
+
+    | ExpectedMap
+    | ExpectedMapValue
+    | ExpectedMapClosing
+
+type SenseParseError =
+    { Input: string
+      Location: int
+      Kind: SenseParseErrorKind
+      Alt: SenseParseError option }
+
+[<RequireQualifiedAccess>]
 module Sense =
-
-    [<RequireQualifiedAccess>]
-    type ParseErrorKind =
-        | UnexpectedChar
-
-        | ExpectedIdent
-        | ExpectedQuoteClosing
-        | UnexpectedQuoteOpening
-        | UnescapedChar
-        | ExpectedEscapedChar
-
-        | ExpectedList
-        | ExpectedListClosing
-
-        | ExpectedMap
-        | ExpectedMapValue
-        | ExpectedMapClosing
-
-    type ParseError =
-        { Input: string
-          Location: int
-          Kind: ParseErrorKind
-          Alt: ParseError option }
 
     type private ParseState =
         { Input: string
@@ -61,7 +62,7 @@ module Sense =
             then None
             else Some state.Input.[state.Location + 1]
 
-        let inline error (kind: ParseErrorKind) (state: ParseState) : ParseError =
+        let inline error (kind: SenseParseErrorKind) (state: ParseState) : SenseParseError =
             { Input = state.Input
               Location = state.Location
               Kind = kind
@@ -70,27 +71,27 @@ module Sense =
         let inline current (state: ParseState) : char =
             state.Input.[state.Location]
 
-    let private parseIdentStateful (ps: ParseState) : Result<string * ParseState, ParseError> =
+    let private parseIdentStateful (ps: ParseState) : Result<string * ParseState, SenseParseError> =
         if ParseState.isEmpty ps then
-            Error (ParseState.error ParseErrorKind.ExpectedIdent ps)
+            Error (ParseState.error SenseParseErrorKind.ExpectedIdent ps)
         else
 
-        let rec parse (ps: ParseState) (quote: QuoteMode) (acc: StringBuilder) : Result<string * ParseState, ParseError> =
+        let rec parse (ps: ParseState) (quote: QuoteMode) (acc: StringBuilder) : Result<string * ParseState, SenseParseError> =
             if ParseState.isEmpty ps then
                 if quote <> QuoteMode.None
-                then Error (ParseState.error ParseErrorKind.ExpectedQuoteClosing ps)
+                then Error (ParseState.error SenseParseErrorKind.ExpectedQuoteClosing ps)
                 else Ok (acc.ToString(), ps)
             else
 
             match ParseState.current ps with
             | '"' when quote = QuoteMode.Double -> Ok (acc.ToString(), ParseState.next ps)
-            | '"' when quote = QuoteMode.None -> Error (ParseState.error ParseErrorKind.UnexpectedQuoteOpening ps)
+            | '"' when quote = QuoteMode.None -> Error (ParseState.error SenseParseErrorKind.UnexpectedQuoteOpening ps)
             | '\'' when quote = QuoteMode.Single -> Ok (acc.ToString(), ParseState.next ps)
-            | '\'' when quote = QuoteMode.None -> Error (ParseState.error ParseErrorKind.UnexpectedQuoteOpening ps)
+            | '\'' when quote = QuoteMode.None -> Error (ParseState.error SenseParseErrorKind.UnexpectedQuoteOpening ps)
             | '\\' ->
                 let escaped = ParseState.next ps
                 if ParseState.isEmpty escaped then
-                    Error (ParseState.error ParseErrorKind.ExpectedEscapedChar escaped)
+                    Error (ParseState.error SenseParseErrorKind.ExpectedEscapedChar escaped)
                 else
                     let inline appendCont (ch: char) =
                         acc.Append(ch) |> ignore
@@ -101,7 +102,7 @@ module Sense =
                     | '\'' | '\"'
                     | ' '
                     | '{' | '}' | '[' | ']' as ch -> appendCont ch
-                    | _ -> Error (ParseState.error ParseErrorKind.UnescapedChar escaped)
+                    | _ -> Error (ParseState.error SenseParseErrorKind.UnescapedChar escaped)
             | ' ' | '\t' | '\n' | '{' | '}' | '[' | ']' when quote = QuoteMode.None ->
                 Ok (acc.ToString(), ps)
             | ch ->
@@ -113,7 +114,7 @@ module Sense =
         | '"' -> parse (ParseState.next ps) QuoteMode.Double sb
         | '\'' -> parse (ParseState.next ps) QuoteMode.Single sb
         | ' ' | '\t' | '\n'
-        | '{' | '}' | '[' | ']' -> Error (ParseState.error ParseErrorKind.ExpectedIdent ps)
+        | '{' | '}' | '[' | ']' -> Error (ParseState.error SenseParseErrorKind.ExpectedIdent ps)
         | _ -> parse ps QuoteMode.None sb
 
     let private skipWs (ps: ParseState) : ParseState =
@@ -125,8 +126,8 @@ module Sense =
             | _ -> ps
         loop ps
 
-    let rec private parseExprStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
-        let maxErr (errs: ParseError list) : ParseError =
+    let rec private parseExprStateful (ps: ParseState) : Result<Sense * ParseState, SenseParseError> =
+        let maxErr (errs: SenseParseError list) : SenseParseError =
            List.maxBy (fun x -> x.Location) errs
         match parseIdentStateful ps with
         | Ok (ident, ps) -> Ok ((Sense.Value ident), ps)
@@ -140,11 +141,11 @@ module Sense =
                     Error <| maxErr [identErr; arrayErr; mapErr]
                     //Error { identErr with Alt = Some { arrayErr with Alt = Some mapErr } }
 
-    and private parseListStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
-        let rec loop (ps: ParseState) (acc: Sense list) : Result<Sense * ParseState, ParseError> =
+    and private parseListStateful (ps: ParseState) : Result<Sense * ParseState, SenseParseError> =
+        let rec loop (ps: ParseState) (acc: Sense list) : Result<Sense * ParseState, SenseParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
-                Error (ParseState.error ParseErrorKind.ExpectedListClosing ps)
+                Error (ParseState.error SenseParseErrorKind.ExpectedListClosing ps)
             else
             match ParseState.current ps with
             | ']' -> Ok (Sense.List (List.rev acc), ParseState.next ps)
@@ -153,23 +154,23 @@ module Sense =
                 | Ok (sense, ps) -> loop ps (sense::acc)
                 | Error e -> Error e
         if ParseState.isEmpty ps then
-            Error (ParseState.error ParseErrorKind.ExpectedList ps)
+            Error (ParseState.error SenseParseErrorKind.ExpectedList ps)
         else
         match ParseState.current ps with
         | '[' -> loop (ParseState.next ps) []
-        | _ -> Error (ParseState.error ParseErrorKind.ExpectedList ps)
+        | _ -> Error (ParseState.error SenseParseErrorKind.ExpectedList ps)
 
-    and private parseMapStateful (ps: ParseState) : Result<Sense * ParseState, ParseError> =
-        let rec loop (ps: ParseState) (key: string option) (map: Map<string, Sense>) : Result<Sense * ParseState, ParseError> =
+    and private parseMapStateful (ps: ParseState) : Result<Sense * ParseState, SenseParseError> =
+        let rec loop (ps: ParseState) (key: string option) (map: Map<string, Sense>) : Result<Sense * ParseState, SenseParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
-                Error (ParseState.error ParseErrorKind.ExpectedListClosing ps)
+                Error (ParseState.error SenseParseErrorKind.ExpectedListClosing ps)
             else
             match ParseState.current ps with
             | '}' ->
                 match key with
                 | None -> Ok (Sense.Map map, ParseState.next ps)
-                | Some _ -> Error (ParseState.error ParseErrorKind.ExpectedMapValue ps)
+                | Some _ -> Error (ParseState.error SenseParseErrorKind.ExpectedMapValue ps)
             | _ ->
                 match key with
                 | None ->
@@ -181,13 +182,13 @@ module Sense =
                     | Ok (value, ps) -> loop ps None (Map.add key value map)
                     | Error e -> Error e
         if ParseState.isEmpty ps then
-            Error (ParseState.error ParseErrorKind.ExpectedMap ps)
+            Error (ParseState.error SenseParseErrorKind.ExpectedMap ps)
         else
         match ParseState.current ps with
         | '{' -> loop (ParseState.next ps) None Map.empty
-        | _ -> Error (ParseState.error ParseErrorKind.ExpectedMap ps)
+        | _ -> Error (ParseState.error SenseParseErrorKind.ExpectedMap ps)
 
-    let parse (input: string) : Result<Sense, string> =
+    let parse (input: string) : Result<Sense, SenseParseError> =
         let ps: ParseState = { Input = input; Location = 0 }
         let ps = skipWs ps
         let res = parseExprStateful ps
@@ -197,7 +198,7 @@ module Sense =
             if ParseState.isEmpty ps then
                 Ok sense
             else
-                let e = ParseState.error ParseErrorKind.UnexpectedChar ps
-                Error $"%A{e}"
+                let e = ParseState.error SenseParseErrorKind.UnexpectedChar ps
+                Error e
         | Error e ->
-            Error $"%A{e}"
+            Error e

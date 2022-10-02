@@ -8,6 +8,7 @@ open Feliz.MaterialUI
 open Feliz.MaterialUI.Mui5
 
 open enty.Core
+open enty.Utils
 open enty.Web.App.Utils
 open enty.Web.App.SenseShapes
 open enty.Web.App.SenseParsing
@@ -29,9 +30,10 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
             let res = Sense.parse $"[ %s{tagsInput} ]"
             match res with
             | Ok (Sense.List tags) ->
-                Validation.ok tags
-            | Error error | Const "Result is not a list, pretty unreachable" error ->
-                Validation.error error
+                Ok tags
+            | Error error ->
+                Error error
+            | Unreachable x -> x
         , [| Operators.box tagsInput |])
 
     React.useEffect(fun () ->
@@ -41,9 +43,9 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
                 senseMap {
                     "tags", Sense.List tags
                 }
-            onSenseChanged (Ok sense)
+            onSenseChanged (Validation.ok sense)
         | Error error ->
-            onSenseChanged (Error error)
+            onSenseChanged (Validation.error $"%A{error}")
     , [| Operators.box tags |])
 
     Mui.stack @+ [
