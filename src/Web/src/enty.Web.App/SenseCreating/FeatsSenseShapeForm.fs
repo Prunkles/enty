@@ -30,20 +30,22 @@ module private FeatsSenseShapeForm =
         | CreateFeat
         | RemoveFeat of FeatId
 
-    type FeatValue =
-        { Input: string
-          Sense: Result<Sense, SenseParseError> }
-
-    type FeatName =
-        { Input: string
-          Value: Result<string, string> }
-
     type Feat =
-        { Name: FeatName
-          Value: FeatValue }
+        { Name: Result<string, string>
+          Value: Result<Sense, SenseParseError> }
+
+    // TODO?: Remove it?
+    type FeatField =
+        { NameField: string
+          ValueField: string }
+
+    type FeatFeatField =
+        { Feat: Feat
+          Field: FeatField }
 
     type State =
-        { Feats: Map<FeatId, Feat>
+        { Feats: Map<FeatId, FeatFeatField>
+          FeatNameDuplicates: Set<string>
           LastFeatId: FeatId }
 
     let init (initialSense: Sense) : State * Cmd<Msg> =
@@ -55,38 +57,44 @@ module private FeatsSenseShapeForm =
                 |> Map.toSeq
                 |> Seq.indexed
                 |> Seq.map ^fun (featId, (featName, featValue)) ->
-                    FeatId featId, {
-                        Name = {
-                            Input = featName
-                            Value = Ok featName
-                        }
-                        Value = {
-                            Input = Sense.formatMultiline featValue
-                            Sense = Ok featValue
-                        }
-                    }
+                    let featId = FeatId featId
+                    let field = { NameField = featName; ValueField = Sense.formatMultiline featValue }
+                    let feat = { Name = Ok featName; Value = Ok featValue }
+                    featId, { Feat = feat; Field = field }
                 |> Map.ofSeq
         let state = {
             Feats = feats
+            FeatNameDuplicates = Set.empty
             LastFeatId = FeatId (feats.Count - 1)
         }
         state, Cmd.none
 
     module FeatValue =
-        let parse (input: string) : FeatValue =
-            { Input = input
-              Sense = Sense.parse input }
+        let parse (input: string) : Result<Sense, SenseParseError> =
+            Sense.parse input
 
-    let parseFeatName (featNameInput: string) : FeatName =
-        let nameValue =
+    module FeatName =
+        let parse (featNameInput: string) : Result<string, string> =
             if String.IsNullOrEmpty(featNameInput) then
                 Error "Empty"
             else
                 Ok featNameInput
-        { Input = featNameInput; Value = nameValue }
 
     [<RequireQualifiedAccess>]
     module State =
+
+        let private validateFeatNameDuplicates (state: State) : State =
+            let featNameDuplicates =
+                state.Feats
+                |> Map.toSeq
+                |> Seq.choose ^fun (featId, feat) ->
+                    match feat.Feat.Name with
+                    | Ok nameValue -> Some (featId, nameValue)
+                    | _ -> None
+                |> Seq.countBy (fun (_id, nameValue) -> nameValue)
+                |> Seq.choose (fun (name, c) -> if c >= 2 then Some name else None)
+                |> Set.ofSeq
+            { state with FeatNameDuplicates = featNameDuplicates }
 
         let nextFeatId (state: State) : State * FeatId =
             let featId = state.LastFeatId |> fun (FeatId i) -> FeatId (i + 1)
@@ -94,66 +102,100 @@ module private FeatsSenseShapeForm =
             state, featId
 
         let createFeat (featId: FeatId) (state: State) : State =
-            let feat = { Name = parseFeatName ""; Value = { Input = ""; Sense = Ok (Sense.empty ()) } }
-            let state = { state with Feats = state.Feats |> Map.add featId feat }
+            let feat = { Name = FeatName.parse ""; Value = Ok (Sense.empty ()) }
+            let field = { NameField = ""; ValueField = "" }
+            let state = { state with Feats = state.Feats |> Map.add featId { Feat = feat; Field = field } }
             state
 
         let removeFeat (featId: FeatId) (state: State) : State =
             let state = { state with Feats = state.Feats |> Map.remove featId }
+            let state = state |> validateFeatNameDuplicates
             state
 
-        let updateFeat (featId: FeatId) (updater: Feat -> Feat) (state: State) : State =
-            let feat = state.Feats.[featId]
-            let feats = state.Feats |> Map.add featId (updater feat)
+        let updateFeat (featId: FeatId) (updater: FeatFeatField -> FeatFeatField) (state: State) : State =
+            let feats =
+                let feat = state.Feats.[featId]
+                state.Feats |> Map.add featId (updater feat)
             let state = { state with Feats = feats }
+            let state = state |> validateFeatNameDuplicates
             state
 
-    let update (msg: Msg) (state: State) : State * Cmd<Msg> =
-        match msg with
-        | Msg.CreateFeat ->
-            let state, featId = state |> State.nextFeatId
-            let state = state |> State.createFeat featId
-            state, Cmd.none
-        | Msg.RemoveFeat featId ->
-            let state = state |> State.removeFeat featId
-            state, Cmd.none
-        | Msg.FeatValueInputChanged (featId, featValueInput) ->
-            let state = state |> State.updateFeat featId (fun feat -> { feat with Value = FeatValue.parse featValueInput })
-            state, Cmd.none
-        | Msg.FeatNameInputChanged (featId, featNameInput) ->
-            let state = state |> State.updateFeat featId (fun feat -> { feat with Name = parseFeatName featNameInput })
-            state, Cmd.none
+    let setFeatName (feat: FeatFeatField) (featName: string) : FeatFeatField =
+        { feat with
+            Feat = { feat.Feat with Name = FeatName.parse featName }
+            Field = { feat.Field with NameField = featName }
+        }
+
+    let setFeatValue (feat: FeatFeatField) (featValue: string) : FeatFeatField =
+        { feat with
+            Feat = { feat.Feat with Value = FeatValue.parse featValue }
+            Field = { feat.Field with ValueField = featValue }
+        }
+
+    let getCheckedFeatName (state: State) (feat: Feat) : Result<string, string> =
+        match feat.Name with
+        | Ok featName ->
+            if state.FeatNameDuplicates |> Set.contains featName then
+                Error $"Feat {featName} already exists"
+            else
+                Ok featName
+        | Error e -> Error e
+
+    let update
+            (onSenseChanged: Validation<Sense, string> -> unit)
+            (msg: Msg) (state: State)
+            : State * Cmd<Msg> =
+        let state, cmd =
+            match msg with
+            | Msg.CreateFeat ->
+                let state, featId = state |> State.nextFeatId
+                let state = state |> State.createFeat featId
+                state, Cmd.none
+            | Msg.RemoveFeat featId ->
+                let state = state |> State.removeFeat featId
+                state, Cmd.none
+            | Msg.FeatValueInputChanged (featId, featValueInput) ->
+                let state =
+                    state
+                    |> State.updateFeat featId (fun feat ->
+                        setFeatValue feat featValueInput
+                    )
+                state, Cmd.none
+            | Msg.FeatNameInputChanged (featId, featNameInput) ->
+                let state =
+                    state
+                    |> State.updateFeat featId (fun feat ->
+                        setFeatName feat featNameInput
+                    )
+                state, Cmd.none
+        state, cmd @ Cmd.ofSub ^fun _dispatch ->
+            onSenseChanged ^ validation {
+                let! feats =
+                    state.Feats
+                    |> Map.values
+                    |> Seq.toList
+                    |> List.traverseResultA ^fun feat -> validation {
+                        let feat = feat.Feat
+                        let! featName = getCheckedFeatName state feat |> Result.mapError (fun e -> $"Feat name: {e}")
+                        and! featValueSense = feat.Value |> Result.mapError (fun e -> $"Feat value: %A{e}")
+                        return featName, featValueSense
+                    }
+                    |> Result.mapError (List.collect id)
+                return senseMap {
+                    "feats", senseMap {
+                        yield! feats
+                    }
+                }
+            }
 
 [<ReactComponent>]
 let FeatsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, string> -> unit) =
     let state, dispatch =
         React.useElmish(
             (fun () -> FeatsSenseShapeForm.init initialSense),
-            FeatsSenseShapeForm.update,
+            FeatsSenseShapeForm.update onSenseChanged,
             ()
         )
-
-    // ----
-
-    React.useEffect(fun () ->
-        onSenseChanged ^ validation {
-            let! feats =
-                state.Feats
-                |> Map.values
-                |> Seq.toList
-                |> List.traverseResultA ^fun feat -> validation {
-                    let! featName = feat.Name.Value |> Result.mapError (fun e -> $"Feat name: {e}")
-                    and! featValueSense = feat.Value.Sense |> Result.mapError (fun e -> $"Feat value: %A{e}")
-                    return featName, featValueSense
-                }
-                |> Result.mapError (List.collect id)
-            return senseMap {
-                "feats", senseMap {
-                    yield! feats
-                }
-            }
-        }
-    , [| state.Feats :> obj |])
 
     // ----
 
@@ -175,9 +217,10 @@ let FeatsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
             ] <| [
                 Mui.textField [
                     textField.label "Name"
-                    textField.value feat.Name.Input
+                    textField.size.small
                     textField.onChange (handleFeatNameChanged featId)
-                    match feat.Name.Value with
+                    let featName = FeatsSenseShapeForm.getCheckedFeatName state feat.Feat
+                    match featName with
                     | Ok _ -> ()
                     | Error error ->
                         textField.error true
@@ -185,11 +228,11 @@ let FeatsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
                 ]
                 Mui.textField [
                     textField.label "Value"
+                    textField.size.small
                     textField.multiline true
                     textField.fullWidth true
-                    textField.value feat.Value.Input
                     textField.onChange (handleFeatValueInputChanged featId)
-                    match feat.Value.Sense with
+                    match feat.Feat.Value with
                     | Ok _ -> ()
                     | Error error ->
                         textField.error true
