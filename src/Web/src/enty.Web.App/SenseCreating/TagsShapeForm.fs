@@ -13,6 +13,7 @@ open enty.Web.App.Utils
 open enty.Web.App.SenseShapes
 open enty.Web.App.SenseParsing
 open enty.Web.App.SenseFormatting
+open enty.Web.App.Components
 
 
 [<ReactComponent>]
@@ -52,22 +53,36 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
         stack.direction.column
         stack.spacing 1
     ] <| [
-        Mui.textField [
-            textField.label "Tags"
-            textField.value tagsInput
-            textField.onChange setTagsInput
-            match tags with
-            | Error errors ->
-                textField.error true
-                textField.helperText (
-                    Html.pre [
-                        prop.style [
-                            style.margin 0
-                        ]
-                        prop.text $"{errors}"
+        Mui.stack @+ [
+            prop.style [
+                style.alignItems.baseline
+            ]
+            stack.direction.row
+            stack.spacing 1
+        ] <| [
+            let inline bracket (symbol: string) =
+                Mui.typography [
+                    prop.text symbol
+                    typography.color.textSecondary
+                    typography.variant.h4
+                    prop.style [
+                        style.userSelect.none
                     ]
-                )
-            | _ -> ()
+
+                ]
+            bracket "["
+            Mui.textField [
+                textField.label "Tags"
+                textField.fullWidth true
+                textField.value tagsInput
+                textField.onChange setTagsInput
+                match tags with
+                | Error error ->
+                    textField.error true
+                    textField.helperText (SenseParseErrorComp error)
+                | _ -> ()
+            ]
+            bracket "]"
         ]
         match tags with
         | Ok tags ->
