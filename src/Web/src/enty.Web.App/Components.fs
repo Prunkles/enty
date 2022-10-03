@@ -33,6 +33,7 @@ let SenseParseErrorComp parseError =
             prop.style [
                 style.textDecoration.underline
                 style.textDecorationStyle.wavy
+                style.custom("text-decoration-skip-ink", "none")
             ]
             prop.text (string sym)
         ]
