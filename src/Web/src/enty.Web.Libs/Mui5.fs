@@ -108,6 +108,8 @@ type Mui =
     static member inline icon(props) = createElementImportDefault "@mui/material/Icon" props
     static member inline icon(value: string) = createElementImportDefault "@mui/material/Icon" [ icon.children value ]
 
+    static member inline inputAdornment(props) = createElementImportDefault "@mui/material/InputAdornment" props
+
 [<RequireQualifiedAccess>]
 module MuiE =
 

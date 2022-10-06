@@ -64,13 +64,12 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
                 Mui.typography [
                     prop.text symbol
                     typography.color.textSecondary
-                    typography.variant.h4
+                    typography.variant.h5
                     prop.style [
                         style.userSelect.none
                     ]
 
                 ]
-            bracket "["
             Mui.textField [
                 textField.label "Tags"
                 textField.fullWidth true
@@ -81,8 +80,21 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
                     textField.error true
                     textField.helperText (SenseParseErrorComp error)
                 | _ -> ()
+                textField.InputProps [
+                    input.startAdornment (
+                        Mui.inputAdornment [
+                            inputAdornment.position.start
+                            inputAdornment.children (bracket "[")
+                        ]
+                    )
+                    input.endAdornment (
+                        Mui.inputAdornment [
+                            inputAdornment.position.end'
+                            inputAdornment.children (bracket "]")
+                        ]
+                    )
+                ]
             ]
-            bracket "]"
         ]
         match tags with
         | Ok tags ->
