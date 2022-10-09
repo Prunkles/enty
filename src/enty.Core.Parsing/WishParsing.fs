@@ -59,7 +59,7 @@ module Grammar =
 
     type [<RequireQualifiedAccess>]
         WishExpr =
-        | Value of ValueExpr
+        | Atom of AtomExpr
         | Map of MapExpr
         | List of ListExpr
         | Any
@@ -75,8 +75,8 @@ module Grammar =
         | Element of WishExpr
 
     and [<RequireQualifiedAccess>]
-        ValueExpr =
-        | Operator of OperatorExpr<ValueExpr>
+        AtomExpr =
+        | Operator of OperatorExpr<AtomExpr>
         | Value of string
 
 
@@ -130,15 +130,15 @@ module Grammar =
         |>> ignore
         <?> "any"
 
-    let valueExpr =
-        let value =
+    let atomExpr =
+        let atom =
             between (pchar '"') (pchar '"' <?> "closing \"")
                 (manySatisfy (fun c -> c <> '"'))
             <|> ident
-            |>> ValueExpr.Value
-        let operator = genericOperatorExpr value ValueExpr.Operator
+            |>> AtomExpr.Value
+        let operator = genericOperatorExpr atom AtomExpr.Operator
         (between (pchar '<' >>. ws) (pchar '>') (operator .>> ws))
-        <|> value
+        <|> atom
         <?> "value"
 
     let listExpr =
@@ -169,15 +169,14 @@ module Grammar =
             anyExpr |>> fun () -> WishExpr.Any
             listExpr |>> WishExpr.List
             mapExpr |>> WishExpr.Map
-            valueExpr |>> WishExpr.Value
+            atomExpr |>> WishExpr.Atom
         ]
 
 
 open Grammar
 
+[<RequireQualifiedAccess>]
 module Wish =
-
-    open Grammar
 
     let private parseWith parser input =
         let p = ws >>. parser .>> ws .>> eof
@@ -193,7 +192,7 @@ module Wish =
 
         let rec appendPath path wish =
             match wish with
-            | Wish.ValueIs (path', value) -> Wish.ValueIs (path @ path', value)
+            | Wish.AtomIs (path', value) -> Wish.AtomIs (path @ path', value)
             | Wish.ListContains (path', element) -> Wish.ListContains (path @ path', element)
             | Wish.MapFieldIs (path', fieldKey, fieldValue) -> Wish.MapFieldIs (path @ path', fieldKey, fieldValue)
             | Wish.Any path' -> Wish.Any (path @ path')
@@ -213,23 +212,23 @@ module Wish =
             | OperatorExpr.Not valueExpr ->
                 WishOperator.Not (mapping valueExpr)
 
-        let rec valueExprToWish (valueExpr: ValueExpr) : Wish =
-            match valueExpr with
-            | ValueExpr.Value v -> Wish.ValueIs ([], v)
-            | ValueExpr.Operator op -> operatorExprToWish valueExprToWish op |> Wish.Operator
+        let rec atomExprToWish (atomExpr: AtomExpr) : Wish =
+            match atomExpr with
+            | AtomExpr.Value v -> Wish.AtomIs ([], v)
+            | AtomExpr.Operator op -> operatorExprToWish atomExprToWish op |> Wish.Operator
 
         and listExprToWish (listExpr: ListExpr) : Wish =
             match listExpr with
             | ListExpr.Element elWishExpr ->
                 match elWishExpr with
-                | WishExpr.Value valueExpr ->
-                    let rec valueExprInListExprToWish valueExpr =
-                        match valueExpr with
-                        | ValueExpr.Value value ->
+                | WishExpr.Atom atomExpr ->
+                    let rec valueExprInListExprToWish atomExpr =
+                        match atomExpr with
+                        | AtomExpr.Value value ->
                             let path = []
                             Wish.ListContains (path, value)
-                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInListExprToWish |> Wish.Operator
-                    valueExprInListExprToWish valueExpr
+                        | AtomExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInListExprToWish |> Wish.Operator
+                    valueExprInListExprToWish atomExpr
                 | WishExpr.List listExpr ->
                     listExprToWish listExpr |> appendPath [ WishPathEntry.ListEntry ]
                 | WishExpr.Map mapExpr ->
@@ -242,14 +241,14 @@ module Wish =
             match mapExpr with
             | MapExpr.Field (path, fieldKey, fieldWishExpr) ->
                 match fieldWishExpr with
-                | WishExpr.Value valueExpr ->
-                    let rec valueExprInMapToWish valueExpr =
-                        match valueExpr with
-                        | ValueExpr.Value value ->
+                | WishExpr.Atom atomExpr ->
+                    let rec valueExprInMapToWish atomExpr =
+                        match atomExpr with
+                        | AtomExpr.Value value ->
                             let path = path |> List.map WishPathEntry.MapEntry
                             Wish.MapFieldIs (path, fieldKey, value)
-                        | ValueExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInMapToWish |> Wish.Operator
-                    valueExprInMapToWish valueExpr
+                        | AtomExpr.Operator opExpr -> opExpr |> operatorExprToWish valueExprInMapToWish |> Wish.Operator
+                    valueExprInMapToWish atomExpr
                 | WishExpr.List listExpr ->
                     let path = (path @ [fieldKey]) |> List.map WishPathEntry.MapEntry
                     listExprToWish listExpr |> appendPath path
@@ -263,7 +262,7 @@ module Wish =
 
         and wishExprToWish (expr: WishExpr) : Wish =
             match expr with
-            | WishExpr.Value valueExpr -> valueExprToWish valueExpr
+            | WishExpr.Atom atomExpr -> atomExprToWish atomExpr
             | WishExpr.List listExpr -> listExprToWish listExpr
             | WishExpr.Map mapExpr -> mapExprToWish mapExpr
             | WishExpr.Any -> Wish.Any []

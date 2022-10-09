@@ -17,8 +17,8 @@ let ``Explicit And`` () : unit =
     let expected =
         Wish.Operator (
             WishOperator.And (
-                Wish.ValueIs ([], "a"),
-                Wish.ValueIs ([], "b")
+                Wish.AtomIs ([], "a"),
+                Wish.AtomIs ([], "b")
             )
         )
     test <@ Ok expected = wish @>
@@ -32,8 +32,8 @@ let ``Implicit And`` () : unit =
     let expected =
         Wish.Operator (
             WishOperator.And (
-                Wish.ValueIs ([], "a"),
-                Wish.ValueIs ([], "b")
+                Wish.AtomIs ([], "a"),
+                Wish.AtomIs ([], "b")
             )
         )
     test <@ Ok expected = wish @>
@@ -51,8 +51,8 @@ let ``Parsing <!(a & b)>`` () : unit =
             WishOperator.Not (
                 Wish.Operator (
                     WishOperator.And (
-                        Wish.ValueIs ([], "a"),
-                        Wish.ValueIs ([], "b")
+                        Wish.AtomIs ([], "a"),
+                        Wish.AtomIs ([], "b")
                     )
                 )
             )

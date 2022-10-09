@@ -109,7 +109,7 @@ type DbMindService(logger: ILogger<DbMindService>, db: EntyDataConnection) =
 
             let rec queryWish wish =
                 match wish with
-                | Wish.ValueIs (path, value) ->
+                | Wish.AtomIs (path, value) ->
                     let path = stringPath path
                     let jsonpath = $"${path} == \"{value}\""
                     selectEntitiesByJsonpath jsonpath
