@@ -10,15 +10,15 @@ open enty.Utils
 //     | Map of Map<string, Sense>
 //     | List of Sense list
 
-type SenseValue = SenseValue of string
+type SenseAtom = SenseAtom of string
 
-type SenseList = SenseList of SenseEntry list
+type SenseList = SenseList of SenseValue list
 
-and SenseMap = SenseMap of Map<string, SenseEntry>
+and SenseMap = SenseMap of Map<string, SenseValue>
 
 and [<RequireQualifiedAccess>]
-    SenseEntry =
-    | Value of SenseValue
+    SenseValue =
+    | Atom of SenseAtom
     | List of SenseList
     | Map of SenseMap
 
@@ -32,47 +32,47 @@ module Map =
         Map.fold (fun m k v' -> Map.add k (match Map.tryFind k m with Some v -> combiner k v v' | None -> v') m) source1 source2
 
 [<RequireQualifiedAccess>]
-module SenseEntry =
+module SenseValue =
 
-    let rec tryGet (path: string list) (entry: SenseEntry) : SenseEntry option =
+    let rec tryGet (path: string list) (sense: SenseValue) : SenseValue option =
         match path with
         | key :: tailPath ->
-            match entry with
-            | SenseEntry.Map (SenseMap map) ->
+            match sense with
+            | SenseValue.Map (SenseMap map) ->
                 option {
                     let! innerValue = map |> Map.tryFind key
                     return! tryGet tailPath innerValue
                 }
-            | SenseEntry.List (SenseList ls) ->
+            | SenseValue.List (SenseList ls) ->
                 option {
                     let! intKey = Int32.TryParse(key) |> Option.ofTryByref
                     let! innerValue = ls |> List.tryItem intKey
                     return! tryGet tailPath innerValue
                 }
             | _ -> None
-        | [] -> Some entry
+        | [] -> Some sense
 
-    let tryAsValue (sense: SenseEntry) : string option =
+    let tryAsValue (sense: SenseValue) : string option =
         match sense with
-        | SenseEntry.Value (SenseValue v) -> Some v
+        | SenseValue.Atom (SenseAtom v) -> Some v
         | _ -> None
 
-    let tryGetValue (path: string list) (entry: SenseEntry) : string option =
-        tryGet path entry |> Option.bind tryAsValue
+    let tryGetValue (path: string list) (sense: SenseValue) : string option =
+        tryGet path sense |> Option.bind tryAsValue
 
-    let tryItem (key: string) (entry: SenseEntry) : SenseEntry option =
-        tryGet [key] entry
+    let tryItem (key: string) (sense: SenseValue) : SenseValue option =
+        tryGet [key] sense
 
-    let tryAsList (entry: SenseEntry) : SenseEntry list option =
-        match entry with
-        | SenseEntry.List (SenseList entries) -> Some entries
+    let tryAsList (sense: SenseValue) : SenseValue list option =
+        match sense with
+        | SenseValue.List (SenseList senses) -> Some senses
         | _ -> None
 
 [<RequireQualifiedAccess>]
 module Sense =
 
-    let asEntry (sense: Sense) : SenseEntry =
-        sense |> function Sense senseMap -> SenseEntry.Map senseMap
+    let asValue (sense: Sense) : SenseValue =
+        sense |> function Sense senseMap -> SenseValue.Map senseMap
 
     // let rec tryMerge (sense1: Sense) (sense2: Sense) : Sense option =
     //     match sense1, sense2 with
@@ -100,26 +100,26 @@ module Sense =
 module Builders =
 
     type SenseListBuilder() =
-        member inline _.Source(entries: SenseEntry list) = entries
-        member inline _.Yield(entry: SenseEntry) = [entry]
-        member inline _.YieldFrom(entries: SenseEntry list) = entries
+        member inline _.Source(senses: SenseValue list) = senses
+        member inline _.Yield(sense: SenseValue) = [sense]
+        member inline _.YieldFrom(senses: SenseValue list) = senses
         member inline _.Zero() = []
         member inline _.Combine(ss1, ss2) = ss1 @ ss2
         member inline _.Delay(f) = f ()
-        member inline _.For(sequence: 'a seq, body: 'a -> SenseEntry list) = sequence |> Seq.collect body |> Seq.toList
-        member inline _.Run(entries: SenseEntry list) = SenseList entries
+        member inline _.For(sequence: 'a seq, body: 'a -> SenseValue list) = sequence |> Seq.collect body |> Seq.toList
+        member inline _.Run(senses: SenseValue list) = SenseList senses
 
     [<AutoOpen>]
     module SenseListBuilderExtensions =
         type SenseListBuilder with
-            member inline this.Yield(senseValue: SenseValue) = this.Yield(SenseEntry.Value senseValue)
-            member inline this.Yield(senseMap: SenseMap) = this.Yield(SenseEntry.Map senseMap)
-            member inline this.Yield(senseList: SenseList) = this.Yield(SenseEntry.List senseList)
-            member inline this.Yield(value: string) = this.Yield(SenseValue value)
-            member inline this.Yield(sense: Sense) = this.Yield(Sense.asEntry sense)
+            member inline this.Yield(senseAtom: SenseAtom) = this.Yield(SenseValue.Atom senseAtom)
+            member inline this.Yield(senseMap: SenseMap) = this.Yield(SenseValue.Map senseMap)
+            member inline this.Yield(senseList: SenseList) = this.Yield(SenseValue.List senseList)
+            member inline this.Yield(atom: string) = this.Yield(SenseAtom atom)
+            member inline this.Yield(sense: Sense) = this.Yield(Sense.asValue sense)
 
-            member inline this.Source(values: string list) = values |> List.map (SenseValue >> SenseEntry.Value)
-            member inline this.Source(senseValues: SenseValue list) = senseValues |> List.map SenseEntry.Value
+            member inline this.Source(values: string list) = values |> List.map (SenseAtom >> SenseValue.Atom)
+            member inline this.Source(atoms: SenseAtom list) = atoms |> List.map SenseValue.Atom
 
     let senseList = SenseListBuilder()
 
@@ -127,9 +127,9 @@ module Builders =
 
     [<AbstractClass>]
     type SenseMapBuilderBase() =
-        member inline _.Source(kvs: (string * SenseEntry) list) = kvs
-        member inline _.Yield((k: string, v: SenseEntry)) = [ (k, v) ]
-        member inline _.YieldFrom(kvs: (string * SenseEntry) list) = kvs
+        member inline _.Source(kvs: (string * SenseValue) list) = kvs
+        member inline _.Yield((k: string, v: SenseValue)) = [ (k, v) ]
+        member inline _.YieldFrom(kvs: (string * SenseValue) list) = kvs
         member inline _.Zero() = []
         member inline _.Combine(ss1, ss2) = ss1 @ ss2
         member inline _.Delay(f) = f ()
@@ -140,17 +140,17 @@ module Builders =
         type SenseMapBuilderBase with
             member inline this.Source(SenseMap senseMap) = senseMap |> Map.toList
 
-            member inline this.Yield((k: string, senseValue: SenseValue)) = this.Yield((k, SenseEntry.Value senseValue))
-            member inline this.Yield((k: string, senseList: SenseList)) = this.Yield((k, SenseEntry.List senseList))
-            member inline this.Yield((k: string, senseMap: SenseMap)) = this.Yield((k, SenseEntry.Map senseMap))
-            member inline this.Yield((k: string, value: string)) = this.Yield((k, SenseEntry.Value (SenseValue value)))
-            member inline this.Yield((k: string, sense: Sense)) = this.Yield((k, Sense.asEntry sense))
+            member inline this.Yield((k: string, senseAtom: SenseAtom)) = this.Yield((k, SenseValue.Atom senseAtom))
+            member inline this.Yield((k: string, senseList: SenseList)) = this.Yield((k, SenseValue.List senseList))
+            member inline this.Yield((k: string, senseMap: SenseMap)) = this.Yield((k, SenseValue.Map senseMap))
+            member inline this.Yield((k: string, value: string)) = this.Yield((k, SenseValue.Atom (SenseAtom value)))
+            member inline this.Yield((k: string, sense: Sense)) = this.Yield((k, Sense.asValue sense))
 
     // ----
 
     type SenseMapBuilder() =
         inherit SenseMapBuilderBase()
-        member inline _.Run(kvs: (string * SenseEntry) list): SenseMap = SenseMap (Map.ofList kvs)
+        member inline _.Run(kvs: (string * SenseValue) list): SenseMap = SenseMap (Map.ofList kvs)
 
     let senseMap = SenseMapBuilder()
 
@@ -158,7 +158,7 @@ module Builders =
 
     type SenseBuilder() =
         inherit SenseMapBuilderBase()
-        member inline _.Run(kvs: (string * SenseEntry) list): Sense = Sense (SenseMap (Map.ofList kvs))
+        member inline _.Run(kvs: (string * SenseValue) list): Sense = Sense (SenseMap (Map.ofList kvs))
 
     let sense = SenseBuilder()
 
@@ -170,8 +170,8 @@ module Builders =
             "k2", senseMap {
                 ()
             }
-            "k3", SenseValue "a"
-            "k4", SenseEntry.Value (SenseValue "a")
+            "k3", SenseAtom "a"
+            "k4", SenseValue.Atom (SenseAtom "a")
             "k5", sense {
                 ()
             }

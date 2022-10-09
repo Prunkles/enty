@@ -128,23 +128,23 @@ module Sense =
             | _ -> ps
         loop ps
 
-    let rec private parseEntryStateful (ps: ParseState) : Result<SenseEntry * ParseState, SenseParseError> =
+    let rec private parseEntryStateful (ps: ParseState) : Result<SenseValue * ParseState, SenseParseError> =
         let maxErr (errs: SenseParseError list) : SenseParseError =
            List.maxBy (fun x -> x.Location) errs
         match parseIdentStateful ps with
-        | Ok (ident, ps) -> Ok (SenseEntry.Value (SenseValue ident), ps)
+        | Ok (ident, ps) -> Ok (SenseValue.Atom (SenseAtom ident), ps)
         | Error identErr ->
             match parseListStateful false ps with
-            | Ok (list, ps) -> Ok (SenseEntry.List list, ps)
+            | Ok (list, ps) -> Ok (SenseValue.List list, ps)
             | Error arrayErr ->
                 match parseMapStateful false ps with
-                | Ok (map, ps) -> Ok (SenseEntry.Map map, ps)
+                | Ok (map, ps) -> Ok (SenseValue.Map map, ps)
                 | Error mapErr ->
                     let entryError = ParseState.error SenseParseErrorKind.ExpectedEntry ps
                     Error <| maxErr [entryError; identErr; arrayErr; mapErr]
 
     and private parseListStateful (rootMode: bool) (ps: ParseState) : Result<SenseList * ParseState, SenseParseError> =
-        let rec loop (ps: ParseState) (acc: SenseEntry list) : Result<SenseList * ParseState, SenseParseError> =
+        let rec loop (ps: ParseState) (acc: SenseValue list) : Result<SenseList * ParseState, SenseParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
                 if rootMode
@@ -169,7 +169,7 @@ module Sense =
         | _ -> Error (ParseState.error SenseParseErrorKind.ExpectedList ps)
 
     and private parseMapStateful (rootMode: bool) (ps: ParseState) : Result<SenseMap * ParseState, SenseParseError> =
-        let rec loop (ps: ParseState) (key: string option) (map: Map<string, SenseEntry>) : Result<SenseMap * ParseState, SenseParseError> =
+        let rec loop (ps: ParseState) (key: string option) (map: Map<string, SenseValue>) : Result<SenseMap * ParseState, SenseParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
                 if rootMode then
@@ -221,7 +221,7 @@ module Sense =
         | Error e ->
             Error e
 
-    let parse (input: string) : Result<SenseEntry, SenseParseError> =
+    let parse (input: string) : Result<SenseValue, SenseParseError> =
         parseWith parseEntryStateful input
 
     let parseMap (input: string) : Result<SenseMap, SenseParseError> =

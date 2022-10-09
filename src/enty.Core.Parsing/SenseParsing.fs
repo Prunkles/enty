@@ -7,7 +7,7 @@ module Grammar =
 
     [<RequireQualifiedAccess>]
     type Expr =
-        | Value of string
+        | Atom of string
         | Map of (string * Expr) list
         | List of Expr list
 
@@ -23,7 +23,7 @@ module Grammar =
         let options = IdentifierOptions(isAsciiId, isAsciiId)
         identifier options
 
-    let value =
+    let atom =
         between (pchar '"') (pchar '"' <?> "closing \"") (manySatisfy (fun c -> c <> '"'))
         <|> ident
         <?> "value"
@@ -46,7 +46,7 @@ module Grammar =
 
     do exprRef.Value <-
         choice [
-            value |>> Expr.Value
+            atom |>> Expr.Atom
             map |>> Expr.Map
             list |>> Expr.List
         ]
@@ -58,11 +58,11 @@ module Sense =
     open enty.Core
     open Grammar
 
-    let rec private exprToSense (expr: Expr) : SenseEntry =
+    let rec private exprToSense (expr: Expr) : SenseValue =
         match expr with
-        | Expr.Value value -> SenseEntry.Value <| SenseValue value
-        | Expr.List elements -> SenseEntry.List <| exprListToSense elements
-        | Expr.Map els -> SenseEntry.Map <| exprMapToSense els
+        | Expr.Atom value -> SenseValue.Atom <| SenseAtom value
+        | Expr.List elements -> SenseValue.List <| exprListToSense elements
+        | Expr.Map els -> SenseValue.Map <| exprMapToSense els
 
     and exprListToSense (exprs: Expr list) : SenseList =
         SenseList (exprs |> List.map exprToSense)
