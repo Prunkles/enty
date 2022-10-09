@@ -94,7 +94,7 @@ type DbMindService(logger: ILogger<DbMindService>, db: EntyDataConnection) =
                 path
                 |> Seq.map ^function
                     | WishPathEntry.ListEntry -> "[*]"
-                    | WishPathEntry.MapEntry key -> $".{key}"
+                    | WishPathEntry.MapEntry key -> $".\"{key}\""
                 |> String.concat ""
             let selectEntitiesByJsonpath jsonpath = query {
                 for entity in db.Entities do
@@ -115,7 +115,7 @@ type DbMindService(logger: ILogger<DbMindService>, db: EntyDataConnection) =
                     selectEntitiesByJsonpath jsonpath
                 | Wish.MapFieldIs (path, key, value) ->
                     let path = stringPath path
-                    let jsonpath = $"${path}.{key} == \"{value}\""
+                    let jsonpath = $"${path}.\"{key}\" == \"{value}\""
                     selectEntitiesByJsonpath jsonpath
                 | Wish.ListContains (path, value) ->
                     let path = stringPath path
