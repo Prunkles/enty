@@ -28,16 +28,20 @@ module Grammar =
         <|> ident
         <?> "value"
 
+    let insideList = ws >>. sepEndBy expr ws <?> "inside list"
+
     let list =
-        between (pchar '[') (pchar ']' <?> "closing ]")
-            (ws >>. sepEndBy expr ws)
+        between (pchar '[') (pchar ']' <?> "closing ]") insideList
         <?> "list"
 
-    let map =
+    let insideMap =
         let mapElement =
             ident .>> ws .>>. (expr <?> "map element value")
-        between (pchar '{') (pchar '}' <?> "closing }")
-            (ws >>. sepEndBy mapElement ws)
+        ws >>. sepEndBy mapElement ws
+        <?> "inside map"
+
+    let map =
+        between (pchar '{') (pchar '}' <?> "closing }") insideMap
         <?> "map"
 
     do exprRef.Value <-
@@ -54,15 +58,25 @@ module Sense =
     open enty.Core
     open Grammar
 
-    let rec private exprToSense (expr: Expr) : Sense =
+    let rec private exprToSense (expr: Expr) : SenseEntry =
         match expr with
-        | Expr.Value value -> Sense.Value value
-        | Expr.List elements -> Sense.List (elements |> List.map exprToSense)
-        | Expr.Map els -> els |> Seq.map (fun (k, v) -> k, exprToSense v) |> Map.ofSeq |> Sense.Map
+        | Expr.Value value -> SenseEntry.Value <| SenseValue value
+        | Expr.List elements -> SenseEntry.List <| exprListToSense elements
+        | Expr.Map els -> SenseEntry.Map <| exprMapToSense els
 
-    let parse input =
-        let p = ws >>. expr .>> ws
+    and exprListToSense (exprs: Expr list) : SenseList =
+        SenseList (exprs |> List.map exprToSense)
+
+    and exprMapToSense (entries: (string * Expr) list) : SenseMap =
+        entries |> Seq.map (fun (k, v) -> k, exprToSense v) |> Map.ofSeq |> SenseMap
+
+    let private parseWith parser input =
+        let p = ws >>. parser .>> ws
         let result = runParserOnString p () "" input
         match result with
-        | Success (r, _, _) -> Result.Ok (exprToSense r)
+        | Success (r, _, _) -> Result.Ok r
         | Failure (err, _, _) -> Result.Error err
+
+    let parse input = parseWith (expr |>> exprToSense) input
+    let parseMap input = parseWith (insideMap |>> exprMapToSense) input
+    let parseList input = parseWith (insideList |>> exprListToSense) input
