@@ -225,10 +225,10 @@ module Sense =
         parseWith parseEntryStateful input
 
     let parseMap (input: string) : Result<SenseMap, SenseParseError> =
-        parseWith (parseMapStateful false) input
+        parseWith (parseMapStateful true) input
 
     let parseList (input: string) : Result<SenseList, SenseParseError> =
-        parseWith (parseListStateful false) input
+        parseWith (parseListStateful true) input
 
     let parseIdent (input: string) : Result<string, SenseParseError> =
         parseWith parseIdentStateful input
