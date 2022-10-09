@@ -1,4 +1,4 @@
-module enty.Mind.Tests.WishParsing
+module enty.Core.Parsing.Tests.WishParsingTests
 
 open Xunit
 open Swensen.Unquote

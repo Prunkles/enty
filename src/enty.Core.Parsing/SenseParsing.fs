@@ -77,6 +77,6 @@ module Sense =
         | Success (r, _, _) -> Result.Ok r
         | Failure (err, _, _) -> Result.Error err
 
-    let parse input = parseWith (expr |>> exprToSense) input
-    let parseMap input = parseWith (insideMap |>> exprMapToSense) input
-    let parseList input = parseWith (insideList |>> exprListToSense) input
+    let parseMap input : Result<SenseMap, _> = parseWith (insideMap |>> exprMapToSense) input
+    let parseList input : Result<SenseList, _> = parseWith (insideList |>> exprListToSense) input
+    let parse input : Result<Sense, _> = parseMap input |> Result.map Sense

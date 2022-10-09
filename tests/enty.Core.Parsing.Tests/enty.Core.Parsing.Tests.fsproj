@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <Compile Include="WishParsing.Tests.fs" />
+        <Compile Include="SenseParsing.Tests.fs" />
     </ItemGroup>
 
     <ItemGroup>
