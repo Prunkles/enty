@@ -9,8 +9,8 @@ open Khonsu.Coding.Json.Net
 open Thoth.Json.Net
 open enty.Utils
 open enty.Core
-open enty.Mind.Parsing.SenseParsing
-open enty.Mind.Parsing.WishParsing
+open enty.Core.Parsing.SenseParsing
+open enty.Core.Parsing.WishParsing
 open enty.Mind.Server.SenseJToken
 
 

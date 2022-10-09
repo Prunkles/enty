@@ -30,8 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\lib\Khonsu.Coding.Json.Net\Khonsu.Coding.Json.Net.fsproj" />
         <ProjectReference Include="..\pdewebq.Extensions.Serilog\pdewebq.Extensions.Serilog.fsproj" />
-        <ProjectReference Include="..\enty.Mind.Parsing\enty.Mind.Parsing.fsproj" />
-        <ProjectReference Include="..\enty.Mind\enty.Mind.fsproj" />
+        <ProjectReference Include="..\enty.Core.Parsing\enty.Core.Parsing.fsproj" />
     </ItemGroup>
 
     <ItemGroup>

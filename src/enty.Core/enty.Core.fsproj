@@ -7,7 +7,8 @@
 
     <ItemGroup>
         <Compile Include="Sense.fs" />
-        <Compile Include="Library.fs" />
+        <Compile Include="Wish.fs" />
+        <Compile Include="Entity.fs" />
     </ItemGroup>
 
     <ItemGroup>

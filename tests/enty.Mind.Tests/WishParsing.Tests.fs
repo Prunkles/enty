@@ -4,8 +4,8 @@ open Xunit
 open Swensen.Unquote
 
 open enty.Utils
-open enty.Mind
-open enty.Mind.Parsing.WishParsing
+open enty.Core
+open enty.Core.Parsing.WishParsing
 
 
 [<Fact>]

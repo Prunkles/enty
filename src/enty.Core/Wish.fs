@@ -1,4 +1,4 @@
-namespace enty.Mind
+namespace enty.Core
 
 
 [<RequireQualifiedAccess>]

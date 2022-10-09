@@ -6,11 +6,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
+        <Compile Include="SenseParsing.fs" />
+        <Compile Include="WishParsing.fs" />
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="Wish.fs" />
+        <PackageReference Include="FParsec" Version="1.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\enty.Core\enty.Core.fsproj" />
     </ItemGroup>
 
 </Project>

@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\enty.Mind.Parsing\enty.Mind.Parsing.fsproj" />
+      <ProjectReference Include="..\..\src\enty.Core.Parsing\enty.Core.Parsing.fsproj" />
     </ItemGroup>
 
 </Project>

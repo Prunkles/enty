@@ -1,7 +1,7 @@
-namespace enty.Mind.Parsing.WishParsing
+namespace enty.Core.Parsing.WishParsing
 
 open FParsec
-open enty.Mind
+open enty.Core
 
 module Grammar =
 

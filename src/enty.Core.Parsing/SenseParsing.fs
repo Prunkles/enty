@@ -1,4 +1,4 @@
-namespace enty.Mind.Parsing.SenseParsing
+namespace enty.Core.Parsing.SenseParsing
 
 
 module Grammar =
