@@ -6,7 +6,7 @@ COPY ["lib/Khonsu.Coding.Json.Net/Khonsu.Coding.Json.Net.fsproj", "lib/Khonsu.Co
 COPY ["src/pdewebq.Extensions.Serilog/pdewebq.Extensions.Serilog.fsproj", "src/pdewebq.Extensions.Serilog/"]
 COPY ["src/enty.Utils/enty.Utils.fsproj", "src/enty.Utils/"]
 COPY ["src/enty.Core/enty.Core.fsproj", "src/enty.Core/"]
-COPY ["src/enty.Core.Parsing/enty.Core.Parsing.fsproj", "src/enty.Mind.Parsing/"]
+COPY ["src/enty.Core.Parsing/enty.Core.Parsing.fsproj", "src/enty.Core.Parsing/"]
 COPY ["src/enty.Mind.Server/enty.Mind.Server.fsproj", "src/enty.Mind.Server/"]
 RUN dotnet restore "src/enty.Mind.Server/enty.Mind.Server.fsproj"
 COPY . .
