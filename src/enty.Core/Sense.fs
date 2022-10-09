@@ -74,27 +74,22 @@ module Sense =
     let asValue (sense: Sense) : SenseValue =
         sense |> function Sense senseMap -> SenseValue.Map senseMap
 
-    // let rec tryMerge (sense1: Sense) (sense2: Sense) : Sense option =
-    //     match sense1, sense2 with
-    //     | Sense.List ls1, Sense.List ls2 ->
-    //         Some ^ Sense.List (ls1 @ ls2)
-    //     | Sense.Map mp1, Sense.Map mp2 ->
-    //         // TODO: Merge fields
-    //         Some ^ Sense.Map (Map.toList mp1 @ Map.toList mp2 |> Map.ofList)
-    //     | _ -> None
-
     let empty () : Sense =
         Sense (SenseMap Map.empty)
 
+    let rec private mergeValues (sense1: SenseValue) (sense2: SenseValue) : SenseValue =
+        match sense1, sense2 with
+        | SenseValue.Map (SenseMap map1), SenseValue.Map (SenseMap map2) ->
+            (map1, map2)
+            ||> Map.mergeWith (fun _ -> mergeValues)
+            |> SenseMap |> SenseValue.Map
+        // TODO?: Merge lists
+        | _ ->
+            sense2
+
     let rec merge (sense1: Sense) (sense2: Sense) : Sense =
-        // match sense1, sense2 with
-        // | Sense.List ls1, Sense.List ls2 ->
-        //     Sense.List (ls1 @ ls2)
-        // | Sense.Map mp1, Sense.Map mp2 ->
-        //     Sense.Map ^ Map.mergeWith merge mp1 mp2
-        // | (Sense.Value _ as vl1), (Sense.Value _ as vl2) -> Sense.List [ vl1; vl2 ]
-        // | _ -> invalidOp $"Cannot merge {sense1} and {sense2}"
-        todo
+        mergeValues (asValue sense1) (asValue sense2)
+        |> function SenseValue.Map senseMap -> Sense senseMap | Unreachable x -> x
 
 [<AutoOpen>]
 module Builders =
