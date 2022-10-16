@@ -20,19 +20,22 @@ module Map =
 [<RequireQualifiedAccess>]
 module SenseValue =
 
-    let private isValueSimple (value: string) =
-        value
-        |> Seq.forall ^fun c ->
-            Char.IsLetter(c)
-            || Char.IsDigit(c)
-            || c = '-' || c = '_'
+    let private isAtomSimple (atom: string) =
+        if atom = String.Empty then
+            false
+        else
+            atom
+            |> Seq.forall ^fun c ->
+                Char.IsLetter(c)
+                || Char.IsDigit(c)
+                || c = '-' || c = '_'
 
     let format (senseValue: SenseValue) : string =
         let sb = StringBuilder()
         let rec printSense (sb: StringBuilder) sense =
             match sense with
             | SenseValue.Atom (SenseAtom a) ->
-                if isValueSimple a
+                if isAtomSimple a
                 then sb.Append(a) |> ignore
                 else sb.Append('"').Append(a).Append('"') |> ignore
             | SenseValue.List (SenseList l) ->
@@ -60,7 +63,7 @@ module SenseValue =
             let appendLineIndentIndented (s: string) = sb.AppendLine(s).Append(String(' ', 4 * (indent + 1))) |> ignore
             let appendSenseIndented sense = appendSense sb (indent + 1) sense
             let appendSenseValue (value: string) =
-                if isValueSimple value
+                if isAtomSimple value
                 then sb.Append(value) |> ignore
                 else sb.Append('"').Append(value).Append('"') |> ignore
             match senseValue with
