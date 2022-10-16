@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="WishParsing.Tests.fs" />
         <Compile Include="SenseParsing.Tests.fs" />
+        <Compile Include="WishParsing.Tests.fs" />
     </ItemGroup>
 
     <ItemGroup>

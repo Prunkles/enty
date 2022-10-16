@@ -158,7 +158,7 @@ module Grammar =
             |>> fun ((path, key), value) -> MapExpr.Field (path, key, value)
 
         let operator = genericOperatorExpr field MapExpr.Operator
-        operator .>> ws <?> "inner map"
+        operator .>> ws
 
     let mapExpr =
         between (pchar '{'  >>. ws) (pchar '}') innerMapExpr
@@ -177,16 +177,6 @@ open Grammar
 
 [<RequireQualifiedAccess>]
 module Wish =
-
-    let private parseWith parser input =
-        let p = ws >>. parser .>> ws .>> eof
-        let result = runParserOnString p () "" input
-        match result with
-        | Success (expr, _, _) -> Result.Ok expr
-        | Failure (err, _, _) -> Result.Error err
-
-    let parseExpr input =
-        parseWith wishExpr input
 
     let private exprToWish (expr: WishExpr) : Wish =
 
@@ -269,5 +259,13 @@ module Wish =
 
         wishExprToWish expr
 
-    let parse input = parseExpr input |> Result.map exprToWish
-    let parseMap input = parseWith innerMapExpr input |> Result.map (WishExpr.Map >> exprToWish)
+    let private parseWith parser input =
+        let p = ws >>. parser .>> ws .>> eof
+        let result = runParserOnString p () "" input
+        match result with
+        | Success (expr, _, _) -> Result.Ok expr
+        | Failure (err, _, _) -> Result.Error err
+
+    let parse (input: string) : Result<Wish, _> =
+        parseWith innerMapExpr input
+        |> Result.map (WishExpr.Map >> exprToWish)

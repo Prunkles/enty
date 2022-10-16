@@ -7,75 +7,73 @@ open enty.Utils
 open enty.Core
 open enty.Core.Parsing.WishParsing
 
+let rootEntry = WishPathEntry.MapEntry "r"
 
-[<Fact>]
-let ``Explicit And`` () : unit =
-    let wishString = String.rawMultiline """
-        <a & b>
+let tests: (string * Result<Wish, string -> bool>) list = [
+    String.rawMultiline """
+        r <a & b>
         """
-    let wish = Wish.parse wishString
-    let expected =
-        Wish.Operator (
-            WishOperator.And (
-                Wish.AtomIs ([], "a"),
-                Wish.AtomIs ([], "b")
-            )
+    , Ok ^ Wish.Operator (
+        WishOperator.And (
+            Wish.MapFieldIs ([], "r", "a"),
+            Wish.MapFieldIs ([], "r", "b")
         )
-    test <@ Ok expected = wish @>
+    )
 
-[<Fact(Skip="Not implemented")>]
-let ``Implicit And`` () : unit =
-    let wishString = String.rawMultiline """
-        <a b>
+    // NOTE: Not implemented
+    // String.rawMultiline """
+    //     r <a b>
+    //     """
+    // , Ok ^ Wish.Operator (
+    //     WishOperator.And (
+    //         Wish.AtomIs ([rootEntry], "a"),
+    //         Wish.AtomIs ([rootEntry], "b")
+    //     )
+    // )
+
+    String.rawMultiline """
+        r <!(a & b)>
         """
-    let wish = Wish.parse wishString
-    let expected =
-        Wish.Operator (
-            WishOperator.And (
-                Wish.AtomIs ([], "a"),
-                Wish.AtomIs ([], "b")
-            )
-        )
-    test <@ Ok expected = wish @>
-
-// ----
-
-[<Fact>]
-let ``Parsing <!(a & b)>`` () : unit =
-    let wishString = String.rawMultiline """
-        <!(a & b)>
-        """
-    let wish = Wish.parse wishString
-    let expected =
-        Wish.Operator (
-            WishOperator.Not (
-                Wish.Operator (
-                    WishOperator.And (
-                        Wish.AtomIs ([], "a"),
-                        Wish.AtomIs ([], "b")
-                    )
+    , Ok ^ Wish.Operator (
+        WishOperator.Not (
+            Wish.Operator (
+                WishOperator.And (
+                    Wish.MapFieldIs ([], "r", "a"),
+                    Wish.MapFieldIs ([], "r", "b")
                 )
             )
         )
-    test <@ Ok expected = wish @>
+    )
 
-[<Fact>]
-let ``Complex case #1`` () : unit =
-    let wishString = String.rawMultiline """
-        { tags [ a & b ] }
+    String.rawMultiline """
+        tags [ a & b ]
         """
-    let wish = Wish.parse wishString
-    let expected =
-        Wish.Operator (
-            WishOperator.And (
-                Wish.ListContains (
-                    [ WishPathEntry.MapEntry "tags" ],
-                    "a"
-                ),
-                Wish.ListContains (
-                    [ WishPathEntry.MapEntry "tags" ],
-                    "b"
-                )
+    , Ok ^ Wish.Operator (
+        WishOperator.And (
+            Wish.ListContains (
+                [ WishPathEntry.MapEntry "tags" ],
+                "a"
+            ),
+            Wish.ListContains (
+                [ WishPathEntry.MapEntry "tags" ],
+                "b"
             )
         )
-    test <@ Ok expected = wish @>
+    )
+]
+
+[<Fact>]
+let ``Wish parsing`` () : unit =
+    for actualInput, expected in tests do
+        let actual = Wish.parse actualInput
+        match expected with
+        | Ok expected -> test <@ actual = Ok expected @>
+        | Error expectedErrorF ->
+            match actual with
+            | Ok actual -> failwith $"'{actualInput}' - expected Error, got %A{actual}"
+            | Error actualError ->
+                let isErrorExpected = expectedErrorF actualError
+                if isErrorExpected then
+                    ()
+                else
+                    failwith $"'%A{actualInput}' - expected an expected Error, got %A{actual}"
