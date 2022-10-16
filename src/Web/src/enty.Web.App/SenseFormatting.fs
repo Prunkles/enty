@@ -27,6 +27,47 @@ module Map =
     let (|Empty|NonEmpty|) map =
         if Map.isEmpty map then Empty else NonEmpty
 
+// ----
+
+// TODO: Rename to something more conventional
+type StringBuilderF = StringBuilder -> unit
+
+[<RequireQualifiedAccess>]
+module StringBuilderF =
+
+    let apply (sb: StringBuilder) (sbf: StringBuilderF) : unit =
+        sbf sb
+
+    let run (sbf: StringBuilderF) : string =
+        let sb = StringBuilder()
+        sbf sb
+        string sb
+
+type StringBuilderBuilder() =
+    member inline _.Zero(): StringBuilderF =
+        fun _sb -> ()
+    member inline _.Bind(sbf: StringBuilderF, binder: unit -> StringBuilderF): StringBuilderF =
+        fun sb ->
+            sbf sb
+            let sbf2 = binder ()
+            sbf2 sb
+    member inline _.For(sequence: 'a seq, body: 'a -> StringBuilderF): StringBuilderF =
+        fun sb ->
+            for x in sequence do
+                let sbf = body x
+                sbf sb
+    member inline _.Combine(sbf1: StringBuilderF, sbf2: StringBuilderF): StringBuilderF =
+        fun sb ->
+            sbf1 sb
+            sbf2 sb
+    member inline _.Delay(f: unit -> StringBuilderF): StringBuilderF =
+        fun sb ->
+            let sbf = f ()
+            sbf sb
+
+let stringBuilderF = StringBuilderBuilder()
+
+// ----
 
 [<RequireQualifiedAccess>]
 module SenseValueFormatting =
@@ -40,114 +81,118 @@ module SenseValueFormatting =
                 Char.IsLetterOrDigit(c)
                 || c = '-' || c = '_'
 
-    let append (sb: StringBuilder) (s: string) = sb.Append(s) |> ignore
-    let appendLine (sb: StringBuilder) = sb.AppendLine() |> ignore
+    let append (s: string) : StringBuilderF =
+        fun sb -> sb.Append(s) |> ignore
+    let appendLine () : StringBuilderF =
+        fun sb -> sb.AppendLine() |> ignore
 
-    let appendAtom (sb: StringBuilder) (SenseAtom atom) : unit =
+    let appendAtom (SenseAtom atom) = stringBuilderF {
         if isAtomSimple atom then
-            append sb atom
+            do! append atom
         else
-            append sb "\""
-            append sb atom
-            append sb "\""
+            do! append "\""
+            do! append atom
+            do! append "\""
+    }
 
     module Oneline =
 
-        let rec appendMapContent (sb: StringBuilder) (senseMap: SenseMap) : unit =
+        let rec appendMapContent (senseMap: SenseMap) = stringBuilderF {
             let (SenseMap map) = senseMap
             for isLatest, (k, v) in map |> Map.toSeq |> Seq.withIsLatest do
-                append sb k
-                append sb " "
-                appendSenseValue sb v
+                do! append k
+                do! append " "
+                do! appendSenseValue v
                 if not isLatest then
-                    append sb " "
+                    do! append " "
+        }
 
-        and appendSenseValue (sb: StringBuilder) (senseValue: SenseValue) : unit =
+        and appendSenseValue (senseValue: SenseValue) = stringBuilderF {
             match senseValue with
             | SenseValue.Atom atom ->
-                appendAtom sb atom
+                do! appendAtom atom
             | SenseValue.List (SenseList l) ->
-                append sb "["
-                append sb " "
+                do! append "["
+                do! append " "
                 for e in l do
-                    appendSenseValue sb e
-                    append sb " "
-                append sb "]"
+                    do! appendSenseValue e
+                    do! append " "
+                do! append "]"
             | SenseValue.Map senseMap ->
-                append sb "{"
-                append sb " "
-                appendMapContent sb senseMap
-                append sb "}"
+                do! append "{"
+                do! append " "
+                do! appendMapContent senseMap
+                do! append "}"
+        }
 
     module Multiline =
 
-        let appendIndent (sb: StringBuilder) (indent: int) : unit =
-            append sb (String(' ', 4 * indent))
+        let appendIndent (indent: int) = stringBuilderF {
+            do! append (String(' ', 4 * indent))
+        }
 
-        let rec appendSenseMapContent (sb: StringBuilder) (indent: int) (senseMap: SenseMap) : unit =
+        let rec appendSenseMapContent (indent: int) (senseMap: SenseMap) = stringBuilderF {
             let (SenseMap map) = senseMap
             for isLatest, (key, value) in map |> Map.toSeq |> Seq.withIsLatest do
-                appendIndent sb indent
-                append sb key
-                append sb " "
-                appendSenseValue sb indent value
+                do! appendIndent indent
+                do! append key
+                do! append " "
+                do! appendSenseValue indent value
                 if not isLatest then
-                    appendLine sb
+                    do! appendLine ()
+        }
 
-        and appendSenseValue (sb: StringBuilder) (indent: int) (senseValue: SenseValue) : unit =
+        and appendSenseValue (indent: int) (senseValue: SenseValue) = stringBuilderF {
             match senseValue with
             | SenseValue.Atom atom ->
-                appendAtom sb atom
+                do! appendAtom atom
             | SenseValue.List (SenseList list) ->
                 match list with
                 | [] ->
-                    append sb "[ ]"
+                    do! append "[ ]"
                 | [ SenseValue.Atom atom ] ->
-                    append sb "[ "
-                    appendAtom sb atom
-                    append sb " ]"
+                    do! append "[ "
+                    do! appendAtom atom
+                    do! append " ]"
                 | list ->
-                    append sb "["
-                    appendLine sb
+                    do! append "["
+                    do! appendLine ()
                     for isLatest, value in list |> List.toSeq |> Seq.withIsLatest do
-                        appendIndent sb (indent + 1)
-                        appendSenseValue sb (indent + 1) value
+                        do! appendIndent (indent + 1)
+                        do! appendSenseValue (indent + 1) value
                         if not isLatest then
-                            appendLine sb
-                    appendLine sb
-                    appendIndent sb indent
-                    append sb "]"
+                            do! appendLine ()
+                    do! appendLine ()
+                    do! appendIndent indent
+                    do! append "]"
             | SenseValue.Map (SenseMap map as senseMap) ->
                 match map with
                 | Map.Empty ->
-                    append sb "{ }"
+                    do! append "{ }"
                 | Map.ExactlyOne (k, SenseValue.Atom atom) ->
-                    append sb "{ "
-                    append sb k
-                    append sb " "
-                    appendAtom sb atom
-                    append sb " }"
+                    do! append "{ "
+                    do! append k
+                    do! append " "
+                    do! appendAtom atom
+                    do! append " }"
                 | _ ->
-                    append sb "{"
-                    appendLine sb
-                    appendSenseMapContent sb (indent + 1) senseMap
-                    appendLine sb
-                    appendIndent sb indent
-                    append sb "}"
+                    do! append "{"
+                    do! appendLine ()
+                    do! appendSenseMapContent (indent + 1) senseMap
+                    do! appendLine ()
+                    do! appendIndent indent
+                    do! append "}"
+        }
 
 
 [<RequireQualifiedAccess>]
 module SenseValue =
 
     let format (senseValue: SenseValue) : string =
-        let sb = StringBuilder()
-        SenseValueFormatting.Oneline.appendSenseValue sb senseValue
-        string sb
+        SenseValueFormatting.Oneline.appendSenseValue senseValue |> StringBuilderF.run
 
     let formatMultiline (senseValue: SenseValue) : string =
-        let sb = StringBuilder()
-        SenseValueFormatting.Multiline.appendSenseValue sb 0 senseValue
-        string sb
+        SenseValueFormatting.Multiline.appendSenseValue 0 senseValue |> StringBuilderF.run
 
 
 [<RequireQualifiedAccess>]
@@ -155,13 +200,9 @@ module Sense =
 
     let format (sense: Sense) : string =
         let (Sense senseMap) = sense
-        let sb = StringBuilder()
-        SenseValueFormatting.Oneline.appendMapContent sb senseMap
-        string sb
+        SenseValueFormatting.Oneline.appendMapContent senseMap |> StringBuilderF.run
 
     let formatMultiline (sense: Sense) : string =
         let (Sense senseMap) = sense
-        let sb = StringBuilder()
-        SenseValueFormatting.Multiline.appendSenseMapContent sb 0 senseMap
-        string sb
+        SenseValueFormatting.Multiline.appendSenseMapContent 0 senseMap |> StringBuilderF.run
 
