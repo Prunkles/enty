@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="SenseParsing.Tests.fs" />
         <Compile Include="WishParsing.Tests.fs" />
     </ItemGroup>
 

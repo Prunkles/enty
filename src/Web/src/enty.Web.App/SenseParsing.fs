@@ -11,6 +11,8 @@ open enty.Core
 type SenseParseErrorKind =
     | UnexpectedChar
 
+    | ExpectedEntry
+
     | ExpectedIdent
     | ExpectedQuoteClosing
     | UnexpectedQuoteOpening
@@ -31,7 +33,7 @@ type SenseParseError =
       Alt: SenseParseError option }
 
 [<RequireQualifiedAccess>]
-module Sense =
+module SenseValue =
 
     type private ParseState =
         { Input: string
@@ -126,51 +128,64 @@ module Sense =
             | _ -> ps
         loop ps
 
-    let rec private parseExprStateful (ps: ParseState) : Result<Sense * ParseState, SenseParseError> =
+    let rec private parseEntryStateful (ps: ParseState) : Result<SenseValue * ParseState, SenseParseError> =
         let maxErr (errs: SenseParseError list) : SenseParseError =
            List.maxBy (fun x -> x.Location) errs
         match parseIdentStateful ps with
-        | Ok (ident, ps) -> Ok ((Sense.Value ident), ps)
+        | Ok (ident, ps) -> Ok (SenseValue.Atom (SenseAtom ident), ps)
         | Error identErr ->
-            match parseListStateful ps with
-            | Ok (array, ps) -> Ok (array, ps)
+            match parseListStateful false ps with
+            | Ok (list, ps) -> Ok (SenseValue.List list, ps)
             | Error arrayErr ->
-                match parseMapStateful ps with
-                | Ok (map, ps) -> Ok (map, ps)
+                match parseMapStateful false ps with
+                | Ok (map, ps) -> Ok (SenseValue.Map map, ps)
                 | Error mapErr ->
-                    Error <| maxErr [identErr; arrayErr; mapErr]
-                    //Error { identErr with Alt = Some { arrayErr with Alt = Some mapErr } }
+                    let entryError = ParseState.error SenseParseErrorKind.ExpectedEntry ps
+                    Error <| maxErr [entryError; identErr; arrayErr; mapErr]
 
-    and private parseListStateful (ps: ParseState) : Result<Sense * ParseState, SenseParseError> =
-        let rec loop (ps: ParseState) (acc: Sense list) : Result<Sense * ParseState, SenseParseError> =
+    and private parseListStateful (rootMode: bool) (ps: ParseState) : Result<SenseList * ParseState, SenseParseError> =
+        let rec loop (ps: ParseState) (acc: SenseValue list) : Result<SenseList * ParseState, SenseParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
-                Error (ParseState.error SenseParseErrorKind.ExpectedListClosing ps)
+                if rootMode
+                then Ok (SenseList (List.rev acc), ps)
+                else Error (ParseState.error SenseParseErrorKind.ExpectedListClosing ps)
             else
             match ParseState.current ps with
-            | ']' -> Ok (Sense.List (List.rev acc), ParseState.next ps)
+            | ']' when not rootMode -> Ok (SenseList (List.rev acc), ParseState.next ps)
+            | ']' when rootMode -> Error (ParseState.error SenseParseErrorKind.UnexpectedChar ps)
             | _ ->
-                match parseExprStateful ps with
+                match parseEntryStateful ps with
                 | Ok (sense, ps) -> loop ps (sense::acc)
                 | Error e -> Error e
         if ParseState.isEmpty ps then
-            Error (ParseState.error SenseParseErrorKind.ExpectedList ps)
+            if rootMode
+            then Ok (SenseList [], ps)
+            else Error (ParseState.error SenseParseErrorKind.ExpectedList ps)
         else
         match ParseState.current ps with
-        | '[' -> loop (ParseState.next ps) []
+        | '[' when not rootMode -> loop (ParseState.next ps) []
+        | _ when rootMode -> loop ps []
         | _ -> Error (ParseState.error SenseParseErrorKind.ExpectedList ps)
 
-    and private parseMapStateful (ps: ParseState) : Result<Sense * ParseState, SenseParseError> =
-        let rec loop (ps: ParseState) (key: string option) (map: Map<string, Sense>) : Result<Sense * ParseState, SenseParseError> =
+    and private parseMapStateful (rootMode: bool) (ps: ParseState) : Result<SenseMap * ParseState, SenseParseError> =
+        let rec loop (ps: ParseState) (key: string option) (map: Map<string, SenseValue>) : Result<SenseMap * ParseState, SenseParseError> =
             let ps = skipWs ps
             if ParseState.isEmpty ps then
-                Error (ParseState.error SenseParseErrorKind.ExpectedListClosing ps)
+                if rootMode then
+                    match key with
+                    | None -> Ok (SenseMap map, ParseState.next ps)
+                    | Some _ -> Error (ParseState.error SenseParseErrorKind.ExpectedMapValue ps)
+                else
+                    Error (ParseState.error SenseParseErrorKind.ExpectedListClosing ps)
             else
             match ParseState.current ps with
-            | '}' ->
+            | '}' when not rootMode ->
                 match key with
-                | None -> Ok (Sense.Map map, ParseState.next ps)
+                | None -> Ok (SenseMap map, ParseState.next ps)
                 | Some _ -> Error (ParseState.error SenseParseErrorKind.ExpectedMapValue ps)
+            | '}' when rootMode ->
+                Error (ParseState.error SenseParseErrorKind.UnexpectedChar ps)
             | _ ->
                 match key with
                 | None ->
@@ -178,27 +193,48 @@ module Sense =
                     | Ok (key, ps) -> loop ps (Some key) map
                     | Error e -> Error e
                 | Some key ->
-                    match parseExprStateful ps with
+                    match parseEntryStateful ps with
                     | Ok (value, ps) -> loop ps None (Map.add key value map)
                     | Error e -> Error e
         if ParseState.isEmpty ps then
-            Error (ParseState.error SenseParseErrorKind.ExpectedMap ps)
+            if rootMode
+            then Ok (SenseMap Map.empty, ps)
+            else Error (ParseState.error SenseParseErrorKind.ExpectedMap ps)
         else
         match ParseState.current ps with
-        | '{' -> loop (ParseState.next ps) None Map.empty
+        | '{' when not rootMode -> loop (ParseState.next ps) None Map.empty
+        | _ when rootMode -> loop ps None Map.empty
         | _ -> Error (ParseState.error SenseParseErrorKind.ExpectedMap ps)
 
-    let parse (input: string) : Result<Sense, SenseParseError> =
+    let private parseWith (f: ParseState -> Result<'a * ParseState, SenseParseError>) (input: string) : Result<'a, SenseParseError> =
         let ps: ParseState = { Input = input; Location = 0 }
         let ps = skipWs ps
-        let res = parseExprStateful ps
+        let res = f ps
         match res with
-        | Ok (sense, ps) ->
+        | Ok (res, ps) ->
             let ps = skipWs ps
             if ParseState.isEmpty ps then
-                Ok sense
+                Ok res
             else
                 let e = ParseState.error SenseParseErrorKind.UnexpectedChar ps
                 Error e
         | Error e ->
             Error e
+
+    let parse (input: string) : Result<SenseValue, SenseParseError> =
+        parseWith parseEntryStateful input
+
+    let parseMap (input: string) : Result<SenseMap, SenseParseError> =
+        parseWith (parseMapStateful true) input
+
+    let parseList (input: string) : Result<SenseList, SenseParseError> =
+        parseWith (parseListStateful true) input
+
+    let parseIdent (input: string) : Result<string, SenseParseError> =
+        parseWith parseIdentStateful input
+
+[<RequireQualifiedAccess>]
+module Sense =
+
+    let parse (input: string) : Result<Sense, SenseParseError> =
+        SenseValue.parseMap input |> Result.map Sense

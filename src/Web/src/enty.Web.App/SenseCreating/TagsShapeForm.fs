@@ -22,27 +22,26 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
         React.useState(fun () ->
             match TagsSenseShape.parse initialSense with
             | Some tagsShape ->
-                tagsShape.Tags |> Seq.map Sense.format |> fun ts -> String.Join(" ", ts)
+                tagsShape.Tags |> Seq.map SenseValue.format |> fun ts -> String.Join(" ", ts)
             | _ -> ""
         )
 
-    let tags =
+    let tags: Result<SenseValue list, _> =
         React.useMemo(fun () ->
-            let res = Sense.parse $"[ %s{tagsInput} ]"
+            let res = SenseValue.parse $"[ %s{tagsInput} ]"
             match res with
-            | Ok (Sense.List tags) ->
+            | Ok (SenseValue.List (SenseList tags) | Unreachable tags) ->
                 Ok tags
             | Error error ->
                 Error error
-            | Unreachable x -> x
         , [| Operators.box tagsInput |])
 
     React.useEffect(fun () ->
         match tags with
         | Ok tags ->
             let sense =
-                senseMap {
-                    "tags", Sense.List tags
+                Sense ^ senseMap {
+                    "tags", SenseList tags
                 }
             onSenseChanged (Validation.ok sense)
         | Error error ->
@@ -68,7 +67,6 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
                     prop.style [
                         style.userSelect.none
                     ]
-
                 ]
             Mui.textField [
                 textField.label "Tags"
@@ -104,7 +102,7 @@ let TagsSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
             ] <| [
                 for tag in tags do
                     Mui.chip [
-                        chip.label (Sense.format tag)
+                        chip.label (SenseValue.format tag)
                         chip.variant.outlined
                     ]
             ]

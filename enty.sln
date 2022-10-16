@@ -51,7 +51,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{50648B47
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Web.Libs", "src\Web\src\enty.Web.Libs\enty.Web.Libs.fsproj", "{CBB4DC7F-576B-4B50-8ED0-FAB26AC62173}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Mind.Tests", "tests\enty.Mind.Tests\enty.Mind.Tests.fsproj", "{3CB142DB-8EA6-4457-B070-F90F326B71B1}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Core.Parsing.Tests", "tests\enty.Core.Parsing.Tests\enty.Core.Parsing.Tests.fsproj", "{3CB142DB-8EA6-4457-B070-F90F326B71B1}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "enty.Core.Parsing", "src\enty.Core.Parsing\enty.Core.Parsing.fsproj", "{BAE4A4A4-C0C0-45B6-B40F-5B60EE6726D1}"
 EndProject

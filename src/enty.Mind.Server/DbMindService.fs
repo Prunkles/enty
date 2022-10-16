@@ -13,6 +13,7 @@ open enty.Mind
 open enty.Mind.Server
 open enty.Mind.Server.SenseJToken
 open enty.Mind.Server.LinqToDbPostgresExtensions
+open enty.Utils
 
 
 [<Table(Name="entities")>]
@@ -74,8 +75,9 @@ type DbMindService(logger: ILogger<DbMindService>, db: EntyDataConnection) =
             let entities =
                 entityDaos
                 |> Seq.map (fun (eid, senseString) ->
+                    let sense = JToken.Parse(senseString) |> Sense.parseJToken |> Result.expectOk (sprintf "Expected a valid sense, got: %A")
                     { Id = EntityId eid
-                      Sense = JToken.Parse(senseString) |> Sense.ofJToken }
+                      Sense = sense }
                 )
                 |> Seq.toArray
 
@@ -109,7 +111,7 @@ type DbMindService(logger: ILogger<DbMindService>, db: EntyDataConnection) =
 
             let rec queryWish wish =
                 match wish with
-                | Wish.ValueIs (path, value) ->
+                | Wish.AtomIs (path, value) ->
                     let path = stringPath path
                     let jsonpath = $"${path} == \"{value}\""
                     selectEntitiesByJsonpath jsonpath

@@ -172,7 +172,7 @@ let ImageSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense,
     React.useEffect(fun () ->
         match state.Url with
         | ImageSenseShapeForm.UrlStatus.Valid uri ->
-            let sense = senseMap {
+            let sense = Sense ^ senseMap {
                 "image", senseMap {
                     "resource", senseMap {
                         "uri", string uri

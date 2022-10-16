@@ -9,6 +9,7 @@ open Khonsu.Coding.Json.Fable
 
 open enty.Core
 open SenseJsObject
+open enty.Utils
 
 
 [<AutoOpen>]
@@ -64,7 +65,8 @@ type FetchMindApi(baseAddress: string) =
                 let decodeEntity = jsonADecoder {
                     let! id = JsonADecode.field "id" JsonADecode.guid
                     and! sense = JsonADecode.field "sense" JsonADecode.raw
-                    return { Id = EntityId id; Sense = Sense.ofJsObject sense }
+                    let sense = sense |> Sense.parseJsObject |> Result.expectOk (sprintf "Expected a valid sense, got %A")
+                    return { Id = EntityId id; Sense = sense }
                 }
                 let decoder = JsonADecode.field "entities" (JsonADecode.array decodeEntity)
                 jsonDecoding.DecodeFromString(responseBodyString, decoder jsonDecoding)
