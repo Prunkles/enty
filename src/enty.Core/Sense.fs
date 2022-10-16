@@ -34,6 +34,10 @@ module Map =
 [<RequireQualifiedAccess>]
 module SenseValue =
 
+    let atom (value: string) : SenseValue = SenseValue.Atom (SenseAtom value)
+    let list (values: SenseValue list) : SenseValue = SenseValue.List (SenseList values)
+    let map (entries: Map<string, SenseValue>) : SenseValue = SenseValue.Map (SenseMap entries)
+
     let rec tryGet (path: string list) (sense: SenseValue) : SenseValue option =
         match path with
         | key :: tailPath ->
@@ -73,6 +77,11 @@ module Sense =
 
     let asValue (sense: Sense) : SenseValue =
         sense |> function Sense senseMap -> SenseValue.Map senseMap
+
+    let parseSenseValue (senseValue: SenseValue) : Result<Sense, string> =
+        match senseValue with
+        | SenseValue.Map senseMap -> Ok (Sense senseMap)
+        | _ -> Error "Not a map"
 
     let empty () : Sense =
         Sense (SenseMap Map.empty)

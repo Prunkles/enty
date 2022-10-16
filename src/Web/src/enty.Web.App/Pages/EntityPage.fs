@@ -79,7 +79,7 @@ let EntityPage (entityId: EntityId) =
                 ] <| [
                     for tag in tagsSense.Tags do
                         Mui.chip [
-                            chip.label (Sense.format tag)
+                            chip.label (SenseValue.format tag)
                             chip.variant.outlined
                         ]
                 ]

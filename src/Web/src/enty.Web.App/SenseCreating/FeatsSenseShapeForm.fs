@@ -32,7 +32,7 @@ module private FeatsSenseShapeForm =
 
     type Feat =
         { Name: Result<string, string>
-          Value: Result<Sense, SenseParseError> }
+          Value: Result<SenseValue, SenseParseError> }
 
     // TODO?: Remove it?
     type FeatField =
@@ -58,7 +58,7 @@ module private FeatsSenseShapeForm =
                 |> Seq.indexed
                 |> Seq.map ^fun (featId, (featName, featValue)) ->
                     let featId = FeatId featId
-                    let field = { NameField = featName; ValueField = Sense.formatMultiline featValue }
+                    let field = { NameField = featName; ValueField = SenseValue.formatMultiline featValue }
                     let feat = { Name = Ok featName; Value = Ok featValue }
                     featId, { Feat = feat; Field = field }
                 |> Map.ofSeq
@@ -70,8 +70,8 @@ module private FeatsSenseShapeForm =
         state, Cmd.none
 
     module FeatValue =
-        let parse (input: string) : Result<Sense, SenseParseError> =
-            Sense.parse input
+        let parse (input: string) : Result<SenseValue, SenseParseError> =
+            SenseValue.parse input
 
     module FeatName =
         let parse (featNameInput: string) : Result<string, string> =
@@ -102,7 +102,7 @@ module private FeatsSenseShapeForm =
             state, featId
 
         let createFeat (featId: FeatId) (state: State) : State =
-            let feat = { Name = FeatName.parse ""; Value = Ok (Sense.empty ()) }
+            let feat = { Name = FeatName.parse ""; Value = Ok (SenseValue.atom "") }
             let field = { NameField = ""; ValueField = "" }
             let state = { state with Feats = state.Feats |> Map.add featId { Feat = feat; Field = field } }
             state
@@ -181,7 +181,7 @@ module private FeatsSenseShapeForm =
                         return featName, featValueSense
                     }
                     |> Result.mapError (List.collect id)
-                return senseMap {
+                return Sense ^ senseMap {
                     "feats", senseMap {
                         yield! feats
                     }

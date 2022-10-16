@@ -7,6 +7,10 @@ module Result =
         | Ok x -> x
         | Error e -> invalidOp $"Result is Error %A{e}"
 
+    let expectOk message = function
+        | Ok x -> x
+        | Error e -> invalidOp (message e)
+
     let allIsOk (results: Result<'a, 'e> list) : Result<'a list, 'e> =
         ((None: Result<'a list, 'e> option), results) ||> List.fold (fun s r ->
             match s with

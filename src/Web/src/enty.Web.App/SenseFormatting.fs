@@ -18,7 +18,7 @@ module Map =
 
 
 [<RequireQualifiedAccess>]
-module Sense =
+module SenseValue =
 
     let private isValueSimple (value: string) =
         value
@@ -27,22 +27,22 @@ module Sense =
             || Char.IsDigit(c)
             || c = '-' || c = '_'
 
-    let format (sense: Sense) : string =
+    let format (senseValue: SenseValue) : string =
         let sb = StringBuilder()
         let rec printSense (sb: StringBuilder) sense =
             match sense with
-            | Sense.Value v ->
-                if isValueSimple v
-                then sb.Append(v) |> ignore
-                else sb.Append('"').Append(v).Append('"') |> ignore
-            | Sense.List l ->
+            | SenseValue.Atom (SenseAtom a) ->
+                if isValueSimple a
+                then sb.Append(a) |> ignore
+                else sb.Append('"').Append(a).Append('"') |> ignore
+            | SenseValue.List (SenseList l) ->
                 sb.Append('[') |> ignore
                 sb.Append(' ') |> ignore
                 for e in l do
                     printSense sb e
                     sb.Append(' ') |> ignore
                 sb.Append(']') |> ignore
-            | Sense.Map m ->
+            | SenseValue.Map (SenseMap m) ->
                 sb.Append('{') |> ignore
                 sb.Append(' ') |> ignore
                 for KeyValue (k, v) in m do
@@ -50,11 +50,11 @@ module Sense =
                     printSense sb v
                     sb.Append(' ') |> ignore
                 sb.Append('}') |> ignore
-        printSense sb sense
+        printSense sb senseValue
         sb.ToString()
 
-    let formatMultiline (sense: Sense) : string =
-        let rec appendSense (sb: StringBuilder) (indent: int) (sense: Sense) =
+    let formatMultiline (senseValue: SenseValue) : string =
+        let rec appendSense (sb: StringBuilder) (indent: int) (senseValue: SenseValue) =
             let append (s: string) = sb.Append(s) |> ignore
             let appendLineIndent (s: string) = sb.AppendLine(s).Append(String(' ', 4 * indent)) |> ignore
             let appendLineIndentIndented (s: string) = sb.AppendLine(s).Append(String(' ', 4 * (indent + 1))) |> ignore
@@ -63,16 +63,16 @@ module Sense =
                 if isValueSimple value
                 then sb.Append(value) |> ignore
                 else sb.Append('"').Append(value).Append('"') |> ignore
-            match sense with
-            | Sense.Value value ->
+            match senseValue with
+            | SenseValue.Atom (SenseAtom value) ->
                 appendSenseValue value
-            | Sense.List list ->
+            | SenseValue.List (SenseList list) ->
                 match list with
                 | [] ->
                     append "[ ]"
-                | [ Sense.Value v ] ->
+                | [ SenseValue.Atom (SenseAtom a) ] ->
                     append "[ "
-                    appendSenseValue v
+                    appendSenseValue a
                     append " ]"
                 | list ->
                     append "["
@@ -81,15 +81,15 @@ module Sense =
                         appendSenseIndented value
                     appendLineIndent ""
                     append "]"
-            | Sense.Map map ->
+            | SenseValue.Map (SenseMap map) ->
                 match map with
                 | Map.Empty ->
                     sb.Append("{ }") |> ignore
-                | Map.ExactlyOne (k, Sense.Value v) ->
+                | Map.ExactlyOne (k, SenseValue.Atom (SenseAtom a)) ->
                     append "{ "
                     append k
                     append " "
-                    appendSenseValue v
+                    appendSenseValue a
                     append " }"
                 | map ->
                     append "{"
@@ -101,5 +101,16 @@ module Sense =
                     appendLineIndent ""
                     append "}"
         let sb = StringBuilder()
-        appendSense sb 0 sense
+        appendSense sb 0 senseValue
         sb.ToString()
+
+
+[<RequireQualifiedAccess>]
+module Sense =
+
+    let format (sense: Sense) : string =
+        SenseValue.format (Sense.asValue sense)
+
+    let formatMultiline (sense: Sense) : string =
+        SenseValue.formatMultiline (Sense.asValue sense)
+

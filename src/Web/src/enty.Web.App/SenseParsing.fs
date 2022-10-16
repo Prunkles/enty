@@ -33,7 +33,7 @@ type SenseParseError =
       Alt: SenseParseError option }
 
 [<RequireQualifiedAccess>]
-module Sense =
+module SenseValue =
 
     type private ParseState =
         { Input: string
@@ -232,3 +232,9 @@ module Sense =
 
     let parseIdent (input: string) : Result<string, SenseParseError> =
         parseWith parseIdentStateful input
+
+[<RequireQualifiedAccess>]
+module Sense =
+
+    let parse (input: string) : Result<Sense, SenseParseError> =
+        SenseValue.parseMap input |> Result.map Sense

@@ -60,7 +60,7 @@ let UserSenseShapeForm (initialSense: Sense) (onSenseChanged: Validation<Sense, 
         onSenseChanged ^ validation {
             let! username = username |> function Some u -> Validation.ok u | None -> Validation.error "No username"
             and! rating = rating
-            return senseMap {
+            return Sense ^ senseMap {
                 "user", senseMap {
                     "username", username
                     match rating with

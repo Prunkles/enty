@@ -72,7 +72,7 @@ let DainselfButton () =
                 match result with
                 | Ok uri ->
                     let sense =
-                        senseMap {
+                        Sense ^ senseMap {
                             "image", senseMap {
                                 "resource", senseMap {
                                     "uri", string uri
@@ -85,7 +85,7 @@ let DainselfButton () =
                         |> Sense.merge ^
                             match tagsSense with
                             | Some tagsSense -> tagsSense
-                            | None -> Sense.Map Map.empty
+                            | None -> Sense.empty ()
                     let entityId = EntityId (Guid.NewGuid())
                     let! rememberResult = MindApiImpl.mindApi.Remember(entityId, sense |> Sense.format)
                     match rememberResult with

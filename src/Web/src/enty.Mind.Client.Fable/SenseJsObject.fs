@@ -17,35 +17,42 @@ module Sense =
         let inline isArray (o: JsonValue) : bool = JS.Constructors.Array.isArray(o)
         let inline isObject (o: JsonValue) : bool = emitJsExpr (o) "$0 === null ? false : (Object.getPrototypeOf($0 || false) === Object.prototype)"
 
-        let rec parseJsonToSense (json: JsonValue) : Sense =
+        let rec private parseJsonToSenseValue (json: JsonValue) : SenseValue =
             if isString json then
-                Sense.Value !!json
+                SenseValue.atom !!json
             elif isArray json then
                 Seq.ofArray !!json
-                |> Seq.map parseJsonToSense
-                |> Seq.toList |> Sense.List
+                |> Seq.map parseJsonToSenseValue
+                |> Seq.toList
+                |> SenseValue.list
             elif isObject json then
                 let entries = JS.Constructors.Object.entries(json)
                 [ for entry in entries do
                     let key, value = entry?(0), entry?(1)
-                    key, parseJsonToSense value ]
+                    key, parseJsonToSenseValue value ]
                 |> Map.ofList
-                |> Sense.Map
+                |> SenseValue.map
             else
                 invalidOp "JSON isn't any supported type"
 
-    let ofJsObject (o: obj) =
+        let rec parseJsonToSense (json: JsonValue) : Result<Sense, string> =
+            parseJsonToSenseValue json |> Sense.parseSenseValue
+
+    let parseJsObject (o: obj) : Result<Sense, string> =
         parseJsonToSense o
 
-    let rec toJsObject (sense: Sense) : obj =
-        match sense with
-        | Sense.Value value -> !!value
-        | Sense.List ls ->
-            let arr = ls |> Seq.map toJsObject |> Seq.toArray
+    let rec private senseValueToJsObject (senseValue: SenseValue) : obj =
+        match senseValue with
+        | SenseValue.Atom (SenseAtom value) -> !!value
+        | SenseValue.List (SenseList ls) ->
+            let arr = ls |> Seq.map senseValueToJsObject |> Seq.toArray
             !!JS.Constructors.Array.from(arr)
-        | Sense.Map mp ->
+        | SenseValue.Map (SenseMap mp) ->
             let obj = obj()
             mp |> Map.iter (fun key value ->
-                obj?(key) <- toJsObject value
+                obj?(key) <- senseValueToJsObject value
             )
             obj
+
+    let rec toJsObject (sense: Sense) : obj =
+        sense |> Sense.asValue |> senseValueToJsObject
