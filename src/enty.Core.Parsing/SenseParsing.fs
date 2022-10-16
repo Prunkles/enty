@@ -20,28 +20,30 @@ module Grammar =
 
     let ident =
         let isAsciiId c = isAsciiLetter c || isDigit c || c = '_' || c = '-'
-        let options = IdentifierOptions(isAsciiId, isAsciiId)
-        identifier options
+        identifier (IdentifierOptions(isAsciiId, isAsciiId))
 
     let atom =
-        between (pchar '"') (pchar '"' <?> "closing \"") (manySatisfy (fun c -> c <> '"'))
+        between (pchar '"') (pchar '"' <?> "closing \"")
+            (manySatisfy (fun c -> c <> '"'))
         <|> ident
         <?> "value"
 
-    let insideList = ws >>. sepEndBy expr ws <?> "inside list"
+    let insideList =
+        sepEndBy expr ws
 
     let list =
-        between (pchar '[') (pchar ']' <?> "closing ]") insideList
+        between (pchar '[') (pchar ']' <?> "closing ]")
+            (ws >>. insideList)
         <?> "list"
 
     let insideMap =
         let mapElement =
             ident .>> ws .>>. (expr <?> "map element value")
-        ws >>. sepEndBy mapElement ws
-        <?> "inside map"
+        sepEndBy mapElement ws
 
     let map =
-        between (pchar '{') (pchar '}' <?> "closing }") insideMap
+        between (pchar '{') (pchar '}' <?> "closing }")
+            (ws >>. insideMap)
         <?> "map"
 
     do exprRef.Value <-
@@ -58,25 +60,24 @@ module Sense =
     open enty.Core
     open Grammar
 
-    let rec private exprToSense (expr: Expr) : SenseValue =
+    let rec private exprToSenseValue (expr: Expr) : SenseValue =
         match expr with
         | Expr.Atom value -> SenseValue.Atom <| SenseAtom value
-        | Expr.List elements -> SenseValue.List <| exprListToSense elements
-        | Expr.Map els -> SenseValue.Map <| exprMapToSense els
+        | Expr.List elements -> SenseValue.List <| exprListToSenseList elements
+        | Expr.Map els -> SenseValue.Map <| exprMapToSenseMap els
 
-    and exprListToSense (exprs: Expr list) : SenseList =
-        SenseList (exprs |> List.map exprToSense)
+    and private exprListToSenseList (exprs: Expr list) : SenseList =
+        SenseList (exprs |> List.map exprToSenseValue)
 
-    and exprMapToSense (entries: (string * Expr) list) : SenseMap =
-        entries |> Seq.map (fun (k, v) -> k, exprToSense v) |> Map.ofSeq |> SenseMap
+    and private exprMapToSenseMap (entries: (string * Expr) list) : SenseMap =
+        entries |> Seq.map (fun (k, v) -> k, exprToSenseValue v) |> Map.ofSeq |> SenseMap
 
     let private parseWith parser input =
-        let p = ws >>. parser .>> ws
+        let p = ws >>. parser .>> ws .>> eof
         let result = runParserOnString p () "" input
         match result with
         | Success (r, _, _) -> Result.Ok r
         | Failure (err, _, _) -> Result.Error err
 
-    let parseMap input : Result<SenseMap, _> = parseWith (insideMap |>> exprMapToSense) input
-    let parseList input : Result<SenseList, _> = parseWith (insideList |>> exprListToSense) input
-    let parse input : Result<Sense, _> = parseMap input |> Result.map Sense
+    let parse input : Result<Sense, _> =
+        parseWith (insideMap |>> exprMapToSenseMap) input |> Result.map Sense
