@@ -1,35 +1,40 @@
 namespace pdewebq.Extensions.Serilog
 
 open System
-open System.Text.RegularExpressions
+open System.Runtime.CompilerServices
 open Serilog
 open Serilog.Configuration
-open Serilog.Events
 open Serilog.Formatting
-open Serilog.Templates
+
 
 [<AutoOpen>]
 module LogSinkConfigurationExtensions =
     type LoggerSinkConfiguration with
-        member this.MapSourceContextAndDate(templates: Map<string, string>, path: string -> DateOnly -> string, configure: ITextFormatter option -> string -> LoggerSinkConfiguration -> unit) =
+
+        member this.MapSourceContext(configure: string -> LoggerSinkConfiguration -> unit, ?sinkMapCountLimit: int) =
             this.Map(
-                fun e ->
-                    let sourceContext = (e.Properties.["SourceContext"] :?> ScalarValue).Value :?> string
-                    sourceContext, DateOnly.FromDateTime(e.Timestamp.Date)
-                ,
-                fun (sourceContext, date: DateOnly) (wt: LoggerSinkConfiguration) ->
-                    let path = path sourceContext date
-                    let template =
-                        templates
-                        |> Map.toSeq
-                        |> Seq.tryPick (fun (srcCtxPattern, template) ->
-                            if Regex.IsMatch(sourceContext, srcCtxPattern)
-                            then Some template else None
-                        )
-                    match template with
-                    | Some template ->
-                        let formatter = ExpressionTemplate(template)
-                        configure (Some formatter) path wt
-                    | None ->
-                        configure None path wt
+                Serilog.Core.Constants.SourceContextPropertyName,
+                "DefaultSourceContext",
+                configure,
+                ?sinkMapCountLimit=sinkMapCountLimit
             )
+
+        member this.MapDateOnly(configure: DateOnly -> LoggerSinkConfiguration -> unit, ?sinkMapCountLimit: int) =
+            this.Map(
+                (fun logEvent -> DateOnly.FromDateTime(logEvent.Timestamp.Date)),
+                configure,
+                ?sinkMapCountLimit=sinkMapCountLimit
+            )
+
+// NOTE: Explicit C#-like extensions, because Serilog.Settings searches sealed abstract (i.e. static) classes
+[<Extension; Sealed; AbstractClass>]
+type LogSinkConfigurationExtensions =
+    [<Extension>]
+    static member MapDateFile(this: LoggerSinkConfiguration, pathTemplate: string, formatter: ITextFormatter) =
+        this.MapDateOnly(
+            (fun date wt ->
+                let path = pathTemplate.Replace("{Date}", date.ToString("yyyy'-'MM'-'dd"))
+                wt.File(formatter, path) |> ignore
+            ),
+            sinkMapCountLimit=1
+        )

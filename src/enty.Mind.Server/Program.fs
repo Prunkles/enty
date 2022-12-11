@@ -1,5 +1,6 @@
 ﻿module enty.Mind.Server.Program
 
+open System
 open System.IO
 open FSharp.Control
 open Microsoft.AspNetCore.Hosting
@@ -17,10 +18,13 @@ open Giraffe.EndpointRouting
 
 open Serilog
 open Serilog.Configuration
+open Serilog.Templates
+open Serilog.Templates.Themes
 open pdewebq.Extensions.Serilog
 
 open enty.Core
 open enty.Mind.Server
+open pdewebq.Extensions.Serilog.TemplateLogging
 
 
 module Startup =
@@ -70,33 +74,38 @@ module Startup =
 
         migrate app
 
+    let configureSerilog (context: HostBuilderContext) (services: IServiceProvider) (configuration: LoggerConfiguration) : unit =
+        let consoleTemplates = LoggingTemplate.parseConfigurationMany (context.Configuration.GetRequiredSection("pdewebq:Logging:Console:Templates")) |> function Ok x -> x | Error e -> failwith $"{e}"
+        let fileTemplates = LoggingTemplate.parseConfigurationMany (context.Configuration.GetRequiredSection("pdewebq:Logging:File:Templates")) |> function Ok x -> x | Error e -> failwith $"{e}"
+        let filePathTemplate = context.Configuration.["pdewebq:Logging:File:Path"]
+        configuration
+            .MinimumLevel.Information()
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .WriteTo.MapTemplates(consoleTemplates, fun template _sourceContext wt ->
+                let formatter = ExpressionTemplate(template.Template, theme=TemplateTheme.Code, applyThemeWhenOutputIsRedirected=true)
+                wt.Console(formatter, ?restrictedToMinimumLevel=template.MinLevel) |> ignore
+            )
+            .WriteTo.MapTemplates(fileTemplates, fun template sourceContext wt ->
+                wt.MapDateOnly(
+                    (fun date wt ->
+                        let formatter = ExpressionTemplate(template.Template)
+                        let filePath = filePathTemplate.Replace("{SourceContext}", sourceContext).Replace("{Date}", date.ToString("yyyy'-'MM'-'dd"))
+                        wt.File(
+                            formatter, filePath,
+                            ?restrictedToMinimumLevel=template.MinLevel
+                        ) |> ignore
+                    ),
+                    sinkMapCountLimit=1
+                ) |> ignore
+            )
+        |> ignore
+
 
 [<CompiledName "CreateHostBuilder">]
 let createHostBuilder args =
     Host.CreateDefaultBuilder(args)
-        .UseSerilog(fun context services configuration ->
-            let basePath = context.Configuration.["PLogging:BasePath"]
-            let templates =
-                context.Configuration.GetSection("PLogging:SourceContextTemplates").GetChildren()
-                |> Seq.map ^fun c -> c.["SourceContext"], c.["Template"]
-                |> Map.ofSeq
-            configuration
-                .MinimumLevel.Information()
-                .ReadFrom.Configuration(context.Configuration)
-                .ReadFrom.Services(services)
-                .Enrich.WithMessageTemplate()
-                .WriteTo.MapSourceContextAndDate(
-                    templates
-                    , fun sourceContext date ->
-                        let dateS = date.ToString("yyyy'-'MM'-'dd")
-                        Path.Combine(basePath, $"%s{dateS}_%s{sourceContext}.log")
-                    , fun formatter path wt ->
-                        match formatter with
-                        | Some formatter -> wt.File(formatter, path) |> ignore
-                        | None -> wt.File(path) |> ignore
-                )
-            |> ignore
-        )
+        .UseSerilog(Startup.configureSerilog)
         .ConfigureWebHostDefaults(fun webBuilder ->
             webBuilder
                 .Configure(Startup.configureApp)
